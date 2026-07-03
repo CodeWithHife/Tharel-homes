@@ -58,7 +58,7 @@ function StatItem({ value, suffix, label, animate }) {
   );
 }
 
-// ===== 3 IMAGES: 1 local + 2 Unsplash (all working) =====
+// ===== 3 IMAGES: 1 local + 2 Unsplash =====
 const heroImages = [
   {
     src: "/images/hero/hero.png",
@@ -371,7 +371,8 @@ export default function Hero() {
                 <Link href="/properties" className="h-btn-primary">
                   Explore Properties
                 </Link>
-                <Link href="/contact" className="h-btn-secondary">
+                {/* 🔹 FIXED: Contact Us now goes to homepage contact section */}
+                <Link href="/#contact" className="h-btn-secondary">
                   Contact Us
                 </Link>
               </div>
