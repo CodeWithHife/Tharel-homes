@@ -427,6 +427,7 @@ export function seedAdminUser() {
 
 /**
  * Get platform-wide statistics for admin dashboard
+ * 🔹 Excludes admin users from plan distribution and revenue
  */
 export function getAdminStats() {
   var users = getAllUsers();
@@ -434,7 +435,7 @@ export function getAdminStats() {
   var hotelBookings = [];
   var hotels = getHotelListings();
 
-  // Collect all hotel bookings from all hotel users
+  // Collect all hotel bookings from all hotel users (including admin hotels? but admin won't have hotels)
   users.forEach(function (u) {
     if (u.role === "hotel") {
       var bookings = getHotelBookings(u.id);
@@ -452,7 +453,7 @@ export function getAdminStats() {
   var hotelOwners = users.filter(function (u) { return u.role === "hotel"; }).length;
   var admins = users.filter(function (u) { return u.role === "admin"; }).length;
 
-  // Plan distribution
+  // Plan distribution – EXCLUDE admins
   var planDistribution = {
     basic: 0,
     plus: 0,
@@ -460,15 +461,17 @@ export function getAdminStats() {
     super: 0,
   };
   users.forEach(function (u) {
+    if (u.role === "admin") return; // skip admins
     var plan = u.subscriptionPlan || "basic";
     if (planDistribution.hasOwnProperty(plan)) {
       planDistribution[plan]++;
     }
   });
 
-  // Revenue: only count paid plans (plus: 5000, premium: 25000, super: 50000)
+  // Revenue – EXCLUDE admins
   var revenue = 0;
   users.forEach(function (u) {
+    if (u.role === "admin") return;
     var plan = u.subscriptionPlan || "basic";
     if (plan === "plus") revenue += 5000;
     else if (plan === "premium") revenue += 25000;
