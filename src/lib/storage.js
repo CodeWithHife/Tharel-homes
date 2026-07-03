@@ -358,3 +358,118 @@ export function getHotelUsage(userId) {
     isExceeded: maxListings !== Infinity && used > maxListings,
   };
 }
+
+
+// ── ADMIN ──────────────────────────────────────────
+
+/**
+ * Seed a default admin user if no users exist
+ */
+export function seedAdminUser() {
+  var users = getAllUsers();
+  if (users.length === 0) {
+    var admin = {
+      id: "admin_" + Date.now(),
+      firstName: "Admin",
+      lastName: "User",
+      email: "tharel2024@gmail.com",
+      phone: "08000000000",
+      password: "admin123", // CHANGE THIS IN PRODUCTION
+      role: "admin",
+      onboardingDone: true,
+      onboardingAnswers: {},
+      subscriptionPlan: "super",
+      subscriptionExpiry: null,
+      createdAt: new Date().toISOString(),
+    };
+    users.push(admin);
+    localStorage.setItem("tharel_users", JSON.stringify(users));
+    console.log("✅ Admin user created: admin@tharelhomes.com / admin123");
+  }
+}
+
+/**
+ * Get platform-wide statistics for admin dashboard
+ */
+export function getAdminStats() {
+  var users = getAllUsers();
+  var properties = getAllProperties();
+  var hotelBookings = [];
+  var hotels = getHotelListings();
+
+  // Collect all hotel bookings from all hotel users
+  users.forEach(function (u) {
+    if (u.role === "hotel") {
+      var bookings = getHotelBookings(u.id);
+      hotelBookings = hotelBookings.concat(bookings);
+    }
+  });
+
+  var totalUsers = users.length;
+  var totalProperties = properties.length;
+  var totalBookings = hotelBookings.length;
+  var totalHotels = hotels.length;
+
+  var buyers = users.filter(function (u) { return u.role === "buyer"; }).length;
+  var realtors = users.filter(function (u) { return u.role === "realtor"; }).length;
+  var hotelOwners = users.filter(function (u) { return u.role === "hotel"; }).length;
+  var admins = users.filter(function (u) { return u.role === "admin"; }).length;
+
+  // Plan distribution
+  var planDistribution = {
+    basic: 0,
+    plus: 0,
+    premium: 0,
+    super: 0,
+  };
+  users.forEach(function (u) {
+    var plan = u.subscriptionPlan || "basic";
+    if (planDistribution.hasOwnProperty(plan)) {
+      planDistribution[plan]++;
+    }
+  });
+
+  // Revenue: only count paid plans (plus: 5000, premium: 25000, super: 50000)
+  var revenue = 0;
+  users.forEach(function (u) {
+    var plan = u.subscriptionPlan || "basic";
+    if (plan === "plus") revenue += 5000;
+    else if (plan === "premium") revenue += 25000;
+    else if (plan === "super") revenue += 50000;
+  });
+
+  return {
+    totalUsers: totalUsers,
+    totalProperties: totalProperties,
+    totalBookings: totalBookings,
+    totalHotels: totalHotels,
+    buyers: buyers,
+    realtors: realtors,
+    hotelOwners: hotelOwners,
+    admins: admins,
+    planDistribution: planDistribution,
+    revenue: revenue,
+  };
+}
+
+/**
+ * Get all users (for admin management)
+ */
+export function getAllUsersForAdmin() {
+  return getAllUsers();
+}
+
+/**
+ * Delete a user (admin only)
+ */
+export function deleteUser(userId) {
+  try {
+    var users = getAllUsers();
+    users = users.filter(function (u) { return u.id !== userId; });
+    localStorage.setItem("tharel_users", JSON.stringify(users));
+    // Also remove their favourites and bookings
+    localStorage.removeItem("tharel_favs_" + userId);
+    localStorage.removeItem("tharel_bookings_" + userId);
+    return true;
+  } catch (e) { return false; }
+}
