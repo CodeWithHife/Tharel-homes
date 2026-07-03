@@ -1,4 +1,4 @@
-import { getPropertyBySlug, getAllProperties } from "@/lib/storage";
+import { getPropertyBySlugOrName } from "@/lib/storage";
 import { MapPin, BedDouble, Bath, Maximize, Phone, CheckCircle2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import AddToFavouritesButton from "@/components/AddToFavouritesButton";
@@ -6,19 +6,9 @@ import AddToFavouritesButton from "@/components/AddToFavouritesButton";
 export default function PropertyDetails({ params }) {
   const slug = decodeURIComponent(params.slug);
 
-  // 1. Try to find by actual slug field
-  let property = getPropertyBySlug(slug);
+  // 🔹 Use the unified helper – tries both slug and name-based slug
+  const property = getPropertyBySlugOrName(slug);
 
-  // 2. Fallback: find by generating slug from name
-  if (!property) {
-    const allProperties = getAllProperties();
-    property = allProperties.find((p) => {
-      const generatedSlug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      return generatedSlug === slug;
-    });
-  }
-
-  // 3. Still nothing? 404
   if (!property) {
     console.warn(`❌ Property with slug "${slug}" not found.`);
     return notFound();
@@ -29,7 +19,11 @@ export default function PropertyDetails({ params }) {
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
         {/* Main Image */}
         <div style={{ position: "relative", width: "100%", height: "420px", borderRadius: "12px", overflow: "hidden", marginBottom: "24px" }}>
-          <img src={property.image} alt={property.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src={property.image}
+            alt={property.name}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
         </div>
 
         {/* Gallery */}
