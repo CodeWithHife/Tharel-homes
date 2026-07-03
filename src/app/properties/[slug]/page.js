@@ -1,4 +1,4 @@
-import properties from "@/data/properties";
+import { getPropertyBySlug } from "@/lib/storage";
 import { MapPin, BedDouble, Bath, Maximize, Phone, CheckCircle2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import AddToFavouritesButton from "@/components/AddToFavouritesButton";
@@ -7,12 +7,8 @@ export default function PropertyDetails({ params }) {
   // Decode the slug (handles URL encoding like %20)
   const slug = decodeURIComponent(params.slug);
 
-  // Debug: log the incoming slug and available slugs
-  console.log("🔍 Looking for slug:", slug);
-  console.log("📋 Available slugs:", properties.map(p => p.slug));
-
-  // Find the property by slug
-  const property = properties.find((p) => p.slug === slug);
+  // 🔹 Use storage to find the property (static + user-added)
+  const property = getPropertyBySlug(slug);
 
   // If not found, return 404
   if (!property) {
