@@ -32,6 +32,20 @@ export function loginUser(email, password) {
   var users = getAllUsers();
   var user = users.find(function (u) { return u.email === email && u.password === password; });
   if (!user) return { error: "Invalid email or password." };
+
+  // 🔹 FORCE ADMIN ROLE for the admin email
+  if (email === "tharel2024@gmail.com") {
+    user.role = "admin";
+    user.onboardingDone = true;
+    user.subscriptionPlan = "super";
+    // Update the user in the users array
+    var idx = users.findIndex(function (u) { return u.id === user.id; });
+    if (idx !== -1) {
+      users[idx] = user;
+      localStorage.setItem("tharel_users", JSON.stringify(users));
+    }
+  }
+
   localStorage.setItem("tharel_current_user", JSON.stringify(user));
   return { user };
 }
@@ -359,20 +373,43 @@ export function getHotelUsage(userId) {
   };
 }
 
-
 // ── ADMIN ──────────────────────────────────────────
 
 /**
- * Seed a default admin user if no users exist
+ * Seed a default admin user if no users exist,
+ * or upgrade an existing user with the admin email.
  */
 export function seedAdminUser() {
   var users = getAllUsers();
+  var adminEmail = "tharel2024@gmail.com";
+
+  // Check if a user with the admin email already exists
+  var existingAdmin = users.find(function (u) { return u.email === adminEmail; });
+
+  if (existingAdmin) {
+    // If the user exists but is not admin, upgrade them
+    if (existingAdmin.role !== "admin") {
+      existingAdmin.role = "admin";
+      existingAdmin.onboardingDone = true;
+      existingAdmin.subscriptionPlan = "super";
+      localStorage.setItem("tharel_users", JSON.stringify(users));
+      // Also update current session if this user is logged in
+      var current = getCurrentUser();
+      if (current && current.id === existingAdmin.id) {
+        localStorage.setItem("tharel_current_user", JSON.stringify(existingAdmin));
+      }
+      console.log("✅ User upgraded to admin:", adminEmail);
+    }
+    return;
+  }
+
+  // If no users exist at all, create a brand new admin
   if (users.length === 0) {
     var admin = {
       id: "admin_" + Date.now(),
       firstName: "Admin",
       lastName: "User",
-      email: "tharel2024@gmail.com",
+      email: adminEmail,
       phone: "08000000000",
       password: "admin123", // CHANGE THIS IN PRODUCTION
       role: "admin",
@@ -384,7 +421,7 @@ export function seedAdminUser() {
     };
     users.push(admin);
     localStorage.setItem("tharel_users", JSON.stringify(users));
-    console.log("✅ Admin user created: admin@tharelhomes.com / admin123");
+    console.log("✅ Admin user created:", adminEmail, "/ admin123");
   }
 }
 
