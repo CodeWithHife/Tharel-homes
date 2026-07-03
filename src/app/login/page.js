@@ -35,6 +35,8 @@ export default function LoginPage() {
       var user = result.user;
       if (!user.onboardingDone) {
         router.push("/onboarding");
+      } else if (user.role === "admin") {
+        router.push("/dashboard/admin");
       } else if (user.role === "realtor") {
         router.push("/dashboard/realtor");
       } else if (user.role === "hotel") {
@@ -44,8 +46,6 @@ export default function LoginPage() {
       }
     }, 800);
   }
-
- 
 
   return (
     <>
