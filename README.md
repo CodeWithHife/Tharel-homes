@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🏠 The 10th Homes & Apartments Ltd
 
-## Getting Started
+> A modern Nigerian real estate platform for buyers, realtors, and hotel operators.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📋 Table of Contents
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Installation](#installation)
+- [Project Structure](#project-structure)
+- [Roles](#roles)
+- [Subscription Plans](#subscription-plans)
+- [Deployment](#deployment)
+- [License](#license)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔍 Overview
 
-## Learn More
+The 10th Homes is a full‑stack Next.js application that connects property buyers, real estate agents (realtors), and hotel operators. Users can browse verified properties, list their own properties, manage hotel bookings, and upgrade subscription plans.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✨ Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### **General**
+- User registration & login with role selection (Buyer, Realtor, Hotel)
+- Role‑based onboarding questions
+- Responsive design (mobile, tablet, desktop)
+- Smooth scroll, animated hero, auto‑playing testimonials
 
-## Deploy on Vercel
+### **Buyer Dashboard**
+- View saved properties (favourites)
+- Browse properties with filter & search
+- Enquire via WhatsApp
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### **Realtor Dashboard**
+- Add, edit, delete property listings
+- View listing usage & subscription status
+- Upgrade subscription plans (Basic, Plus, Premium, Super)
+- Track views and enquiries
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### **Hotel Dashboard**
+- Add and manage hotel listings
+- Create, confirm, cancel, and delete guest reservations
+- Search bookings by guest or room
+- Subscription plans (Basic, Plus, Premium, Super)
+
+---
+
+## 🛠️ Tech Stack
+
+- **Next.js** – React framework with App Router
+- **Turbopack** – fast dev server
+- **Lucide React** – icons
+- **LocalStorage** – data storage (auth, favourites, listings)
+- **CSS** – custom inline styles (no Tailwind)
+- **Unsplash** – image source
+
+---
