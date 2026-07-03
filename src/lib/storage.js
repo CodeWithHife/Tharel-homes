@@ -38,7 +38,6 @@ export function loginUser(email, password) {
     user.role = "admin";
     user.onboardingDone = true;
     user.subscriptionPlan = "super";
-    // Update the user in the users array
     var idx = users.findIndex(function (u) { return u.id === user.id; });
     if (idx !== -1) {
       users[idx] = user;
@@ -137,6 +136,19 @@ export function getPropertyBySlug(slug) {
 export function getPropertyById(id) {
   var all = getAllProperties();
   return all.find(function (p) { return p.id === id; });
+}
+
+// ── NEW HELPER: Find by slug OR name-generated slug ──
+export function getPropertyBySlugOrName(slug) {
+  var all = getAllProperties();
+  // First try exact slug match
+  var found = all.find(function (p) { return p.slug === slug; });
+  if (found) return found;
+  // Then try generating slug from name
+  return all.find(function (p) {
+    var generated = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    return generated === slug;
+  });
 }
 
 export function saveProperty(property) {
@@ -375,25 +387,18 @@ export function getHotelUsage(userId) {
 
 // ── ADMIN ──────────────────────────────────────────
 
-/**
- * Seed a default admin user if no users exist,
- * or upgrade an existing user with the admin email.
- */
 export function seedAdminUser() {
   var users = getAllUsers();
   var adminEmail = "tharel2024@gmail.com";
 
-  // Check if a user with the admin email already exists
   var existingAdmin = users.find(function (u) { return u.email === adminEmail; });
 
   if (existingAdmin) {
-    // If the user exists but is not admin, upgrade them
     if (existingAdmin.role !== "admin") {
       existingAdmin.role = "admin";
       existingAdmin.onboardingDone = true;
       existingAdmin.subscriptionPlan = "super";
       localStorage.setItem("tharel_users", JSON.stringify(users));
-      // Also update current session if this user is logged in
       var current = getCurrentUser();
       if (current && current.id === existingAdmin.id) {
         localStorage.setItem("tharel_current_user", JSON.stringify(existingAdmin));
@@ -403,7 +408,6 @@ export function seedAdminUser() {
     return;
   }
 
-  // If no users exist at all, create a brand new admin
   if (users.length === 0) {
     var admin = {
       id: "admin_" + Date.now(),
@@ -411,7 +415,7 @@ export function seedAdminUser() {
       lastName: "User",
       email: adminEmail,
       phone: "08000000000",
-      password: "admin123", // CHANGE THIS IN PRODUCTION
+      password: "admin123",
       role: "admin",
       onboardingDone: true,
       onboardingAnswers: {},
@@ -425,17 +429,12 @@ export function seedAdminUser() {
   }
 }
 
-/**
- * Get platform-wide statistics for admin dashboard
- * 🔹 Excludes admin users from plan distribution and revenue
- */
 export function getAdminStats() {
   var users = getAllUsers();
   var properties = getAllProperties();
   var hotelBookings = [];
   var hotels = getHotelListings();
 
-  // Collect all hotel bookings from all hotel users (including admin hotels? but admin won't have hotels)
   users.forEach(function (u) {
     if (u.role === "hotel") {
       var bookings = getHotelBookings(u.id);
@@ -453,7 +452,6 @@ export function getAdminStats() {
   var hotelOwners = users.filter(function (u) { return u.role === "hotel"; }).length;
   var admins = users.filter(function (u) { return u.role === "admin"; }).length;
 
-  // Plan distribution – EXCLUDE admins
   var planDistribution = {
     basic: 0,
     plus: 0,
@@ -461,14 +459,13 @@ export function getAdminStats() {
     super: 0,
   };
   users.forEach(function (u) {
-    if (u.role === "admin") return; // skip admins
+    if (u.role === "admin") return;
     var plan = u.subscriptionPlan || "basic";
     if (planDistribution.hasOwnProperty(plan)) {
       planDistribution[plan]++;
     }
   });
 
-  // Revenue – EXCLUDE admins
   var revenue = 0;
   users.forEach(function (u) {
     if (u.role === "admin") return;
@@ -492,22 +489,15 @@ export function getAdminStats() {
   };
 }
 
-/**
- * Get all users (for admin management)
- */
 export function getAllUsersForAdmin() {
   return getAllUsers();
 }
 
-/**
- * Delete a user (admin only)
- */
 export function deleteUser(userId) {
   try {
     var users = getAllUsers();
     users = users.filter(function (u) { return u.id !== userId; });
     localStorage.setItem("tharel_users", JSON.stringify(users));
-    // Also remove their favourites and bookings
     localStorage.removeItem("tharel_favs_" + userId);
     localStorage.removeItem("tharel_bookings_" + userId);
     return true;
