@@ -61,3 +61,11 @@ The 10th Homes is a full‑stack Next.js application that connects property buye
 - **Unsplash** – image source
 
 ---
+
+## 📦 Installation
+
+```bash
+git clone https://github.com/CodeWithHife/Tharel-homes.git
+cd Tharel-homes
+npm install
+npm run dev
