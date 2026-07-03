@@ -68,7 +68,6 @@ export default function AdminDashboard() {
     setUsers(getAllUsersForAdmin());
     setProperties(getAllProperties());
     setHotels(getHotelListings());
-    // Collect all bookings from all hotels
     const allBookings = [];
     const allUsers = getAllUsersForAdmin();
     allUsers.forEach((u) => {
@@ -113,12 +112,9 @@ export default function AdminDashboard() {
     }
   }
 
-  // 🔹 Generate a safe slug that matches the storage generation logic
+  // Generate a safe slug (uses slug if exists, otherwise creates one from name)
   function getSafeSlug(property) {
-    if (property.slug) {
-      return property.slug;
-    }
-    // Fallback: generate from name (same as in saveProperty)
+    if (property.slug) return property.slug;
     return property.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   }
 
@@ -221,10 +217,7 @@ export default function AdminDashboard() {
         <nav className="db-nav">
           <Link href="/" className="db-nav-logo">
             <div className="db-nav-logo-icon">
-              <svg viewBox="0 0 24 24">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
             </div>
             <div className="db-nav-logo-text">The 10th Homes</div>
           </Link>
@@ -266,24 +259,15 @@ export default function AdminDashboard() {
             <div>
               <div className="db-sidebar-label">Quick Links</div>
               <Link href="/properties" style={{ textDecoration: "none" }}>
-                <button className="db-sidebar-btn">
-                  <Search size={18} /> Browse Properties
-                </button>
+                <button className="db-sidebar-btn"><Search size={18} /> Browse Properties</button>
               </Link>
               <Link href="/" style={{ textDecoration: "none" }}>
-                <button className="db-sidebar-btn">
-                  <Home size={18} /> Back to Home
-                </button>
+                <button className="db-sidebar-btn"><Home size={18} /> Back to Home</button>
               </Link>
               <button
                 className="db-sidebar-btn"
                 onClick={handleLogout}
-                style={{
-                  color: "#ef4444",
-                  borderTop: "1px solid #E2E8F0",
-                  marginTop: "8px",
-                  paddingTop: "12px",
-                }}
+                style={{ color: "#ef4444", borderTop: "1px solid #E2E8F0", marginTop: "8px", paddingTop: "12px" }}
               >
                 <LogOut size={18} /> Logout
               </button>
@@ -294,38 +278,15 @@ export default function AdminDashboard() {
             {tab === "overview" && stats && (
               <div>
                 <div className="db-welcome">
-                  <h1 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <Shield size={28} color="#D4A017" /> Welcome, Admin!
-                  </h1>
+                  <h1 style={{ display: "flex", alignItems: "center", gap: "8px" }}><Shield size={28} color="#D4A017" /> Welcome, Admin!</h1>
                   <p>Here's your platform overview.</p>
                 </div>
-
                 <div className="db-stats">
-                  <div className="db-stat-card">
-                    <div className="db-stat-icon"><Users size={18} /></div>
-                    <div className="db-stat-num">{stats.totalUsers}</div>
-                    <div className="db-stat-lbl">Total Users</div>
-                  </div>
-                  <div className="db-stat-card">
-                    <div className="db-stat-icon"><Building size={18} /></div>
-                    <div className="db-stat-num">{stats.totalProperties}</div>
-                    <div className="db-stat-lbl">Properties</div>
-                  </div>
-                  <div className="db-stat-card">
-                    <div className="db-stat-icon"><Hotel size={18} /></div>
-                    <div className="db-stat-num">{stats.totalHotels}</div>
-                    <div className="db-stat-lbl">Hotels</div>
-                  </div>
-                  <div className="db-stat-card">
-                    <div className="db-stat-icon"><Calendar size={18} /></div>
-                    <div className="db-stat-num">{stats.totalBookings}</div>
-                    <div className="db-stat-lbl">Bookings</div>
-                  </div>
-                  <div className="db-stat-card">
-                    <div className="db-stat-icon"><DollarSign size={18} /></div>
-                    <div className="db-stat-num">₦{stats.revenue.toLocaleString()}</div>
-                    <div className="db-stat-lbl">Revenue</div>
-                  </div>
+                  <div className="db-stat-card"><div className="db-stat-icon"><Users size={18} /></div><div className="db-stat-num">{stats.totalUsers}</div><div className="db-stat-lbl">Total Users</div></div>
+                  <div className="db-stat-card"><div className="db-stat-icon"><Building size={18} /></div><div className="db-stat-num">{stats.totalProperties}</div><div className="db-stat-lbl">Properties</div></div>
+                  <div className="db-stat-card"><div className="db-stat-icon"><Hotel size={18} /></div><div className="db-stat-num">{stats.totalHotels}</div><div className="db-stat-lbl">Hotels</div></div>
+                  <div className="db-stat-card"><div className="db-stat-icon"><Calendar size={18} /></div><div className="db-stat-num">{stats.totalBookings}</div><div className="db-stat-lbl">Bookings</div></div>
+                  <div className="db-stat-card"><div className="db-stat-icon"><DollarSign size={18} /></div><div className="db-stat-num">₦{stats.revenue.toLocaleString()}</div><div className="db-stat-lbl">Revenue</div></div>
                 </div>
 
                 <div style={{ marginBottom: "24px" }}>
@@ -335,12 +296,7 @@ export default function AdminDashboard() {
                   <div className="db-plan-grid">
                     {Object.entries(stats.planDistribution).map(([plan, count]) => (
                       <div key={plan} className="db-plan-card">
-                        <div
-                          className="plan-count"
-                          style={{ color: planColors[plan] || "#64748B" }}
-                        >
-                          {count}
-                        </div>
+                        <div className="plan-count" style={{ color: planColors[plan] || "#64748B" }}>{count}</div>
                         <div className="plan-name">{plan}</div>
                       </div>
                     ))}
@@ -393,7 +349,7 @@ export default function AdminDashboard() {
                     <thead><tr><th>Name</th><th>Location</th><th>Price</th><th>Type</th><th>Actions</th></tr></thead>
                     <tbody>
                       {properties.map((p) => {
-                        const slug = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                        const slug = getSafeSlug(p);
                         return (
                           <tr key={p.id}>
                             <td>{p.name}</td>
