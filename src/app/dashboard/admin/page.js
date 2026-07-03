@@ -27,10 +27,8 @@ import {
   Trash2,
   Crown,
   Search,
-  BarChart3,
   Hotel,
   Shield,
-  BookOpen,
   DollarSign,
   PieChart,
 } from "lucide-react";
@@ -115,27 +113,19 @@ export default function AdminDashboard() {
     }
   }
 
+  // 🔹 Generate a safe slug that matches the storage generation logic
+  function getSafeSlug(property) {
+    if (property.slug) {
+      return property.slug;
+    }
+    // Fallback: generate from name (same as in saveProperty)
+    return property.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  }
+
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          paddingTop: "80px",
-        }}
-      >
-        <div
-          style={{
-            width: "40px",
-            height: "40px",
-            border: "4px solid #E2E8F0",
-            borderTop: "4px solid #D4A017",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite",
-          }}
-        />
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", paddingTop: "80px" }}>
+        <div style={{ width: "40px", height: "40px", border: "4px solid #E2E8F0", borderTop: "4px solid #D4A017", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -214,14 +204,14 @@ export default function AdminDashboard() {
         .db-table .actions .view:hover { background: #bfdbfe; }
         .db-empty-state { text-align: center; padding: 60px 20px; color: #94A3B8; }
         .db-empty-state h3 { font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 4px; }
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .db-stats { grid-template-columns: 1fr 1fr; }
           .db-plan-grid { grid-template-columns: 1fr 1fr; }
           .db-table { font-size: 12px; min-width: 100%; }
           .db-table th, .db-table td { padding: 8px 10px; }
           .db-main { padding: 12px; }
         }
-        @media (max-width: 400px) {
+        @media (max-width: 480px) {
           .db-stats { grid-template-columns: 1fr; }
           .db-plan-grid { grid-template-columns: 1fr; }
         }
@@ -310,7 +300,6 @@ export default function AdminDashboard() {
                   <p>Here's your platform overview.</p>
                 </div>
 
-                {/* Main stats */}
                 <div className="db-stats">
                   <div className="db-stat-card">
                     <div className="db-stat-icon"><Users size={18} /></div>
@@ -339,7 +328,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Plan distribution */}
                 <div style={{ marginBottom: "24px" }}>
                   <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#0F172A", marginBottom: "12px" }}>
                     <PieChart size={18} style={{ display: "inline", marginRight: "6px" }} /> Subscription Plans
@@ -359,7 +347,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Role breakdown */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "12px" }}>
                   <div className="db-stat-card"><div className="db-stat-num">{stats.buyers}</div><div className="db-stat-lbl">Buyers</div></div>
                   <div className="db-stat-card"><div className="db-stat-num">{stats.realtors}</div><div className="db-stat-lbl">Realtors</div></div>
@@ -405,20 +392,25 @@ export default function AdminDashboard() {
                   <table className="db-table">
                     <thead><tr><th>Name</th><th>Location</th><th>Price</th><th>Type</th><th>Actions</th></tr></thead>
                     <tbody>
-                      {properties.map((p) => (
-                        <tr key={p.id}>
-                          <td>{p.name}</td>
-                          <td>{p.location}</td>
-                          <td>{p.priceLabel}</td>
-                          <td>{p.type}</td>
-                          <td>
-                            <div className="actions">
-                              <Link href={"/properties/" + p.slug}><button className="view">View</button></Link>
-                              <button className="delete" onClick={() => handleDeleteProperty(p.id)}>Delete</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                      {properties.map((p) => {
+                        const slug = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                        return (
+                          <tr key={p.id}>
+                            <td>{p.name}</td>
+                            <td>{p.location}</td>
+                            <td>{p.priceLabel}</td>
+                            <td>{p.type}</td>
+                            <td>
+                              <div className="actions">
+                                <Link href={"/properties/" + slug}>
+                                  <button className="view">View</button>
+                                </Link>
+                                <button className="delete" onClick={() => handleDeleteProperty(p.id)}>Delete</button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

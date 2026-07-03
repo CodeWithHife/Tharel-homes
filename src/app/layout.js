@@ -1,6 +1,6 @@
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import NavbarWrapper from "@/components/NavbarWrapper";
+import FooterWrapper from "@/components/FooterWrapper";
 import AdminSeeder from "@/components/AdminSeeder";
 
 export const metadata = {
@@ -13,9 +13,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AdminSeeder />
-        <Navbar />
+        <NavbarWrapper />
         {children}
-        <Footer />
+        <FooterWrapper />
       </body>
     </html>
   );
