@@ -55,7 +55,7 @@ export default function LoginPage() {
           min-height: 100vh; 
           display: flex; 
           font-family: Inter, sans-serif;
-          padding-top: 80px; /* <-- FIX: push below navbar */
+          padding-top: 80px;
         }
         .auth-left {
           display: none; width: 50%; position: relative; overflow: hidden;
@@ -139,6 +139,51 @@ export default function LoginPage() {
         .auth-footer { text-align: center; font-size: 13.5px; color: #64748b; margin-top: 28px; }
         .auth-footer a { color: #D4A017; font-weight: 700; text-decoration: none; }
         .auth-footer a:hover { text-decoration: underline; }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+          .auth-right { padding: 40px 20px; }
+          .auth-title { font-size: 28px; }
+          .auth-desc { font-size: 13px; margin-bottom: 24px; }
+          .auth-mobile-logo { margin-bottom: 28px; }
+          .auth-error { font-size: 12.5px; padding: 10px 14px; }
+          .form-input-wrap { padding: 12px 14px; }
+          .form-input-wrap input { font-size: 15px; } /* prevent zoom on iOS */
+          .auth-btn { height: 46px; font-size: 14px; }
+          .auth-google-btn { height: 46px; font-size: 13px; }
+        }
+
+        @media (max-width: 480px) {
+          .auth-right { padding: 28px 16px; }
+          .auth-title { font-size: 24px; }
+          .auth-desc { font-size: 12.5px; margin-bottom: 20px; }
+          .auth-mobile-logo { margin-bottom: 20px; }
+          .auth-mobile-logo-icon { width: 32px; height: 32px; }
+          .auth-mobile-logo-icon svg { width: 16px; height: 16px; }
+          .auth-error { font-size: 12px; padding: 8px 12px; }
+          .form-group { margin-bottom: 16px; }
+          .form-label { font-size: 12px; }
+          .form-label a { font-size: 11.5px; }
+          .form-input-wrap { padding: 10px 12px; border-radius: 10px; gap: 8px; }
+          .form-input-wrap input { font-size: 16px; } /* prevent zoom */
+          .toggle-pw svg { width: 16px; height: 16px; }
+          .remember-me { margin-bottom: 12px; }
+          .remember-me input { width: 16px; height: 16px; }
+          .remember-me label { font-size: 13px; }
+          .auth-btn { height: 44px; font-size: 13px; }
+          .auth-google-btn { height: 44px; font-size: 12.5px; gap: 8px; }
+          .auth-divider { margin: 16px 0; }
+          .auth-divider span { font-size: 11px; }
+          .auth-footer { font-size: 12.5px; margin-top: 20px; }
+        }
+
+        @media (max-width: 380px) {
+          .auth-right { padding: 20px 12px; }
+          .auth-title { font-size: 22px; }
+          .auth-desc { font-size: 12px; }
+          .auth-btn { height: 40px; font-size: 12px; }
+          .auth-google-btn { height: 40px; font-size: 12px; }
+        }
       `}</style>
 
       <div className="auth-page">

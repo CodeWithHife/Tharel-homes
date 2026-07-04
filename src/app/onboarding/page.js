@@ -22,12 +22,13 @@ var realtorQuestions = [
   { id: "goal", question: "What is your main goal on this platform?", options: ["List and sell properties", "Find buyers for clients", "Build my brand", "Earn commissions", "All of the above"] },
 ];
 
-// ===== HOTEL QUESTIONS (Reservation-focused) =====
+// ===== HOTEL QUESTIONS =====
 var hotelQuestions = [
   { 
     id: "hotelName", 
-    question: "What is your hotel/property name?", 
-    options: ["Enter your hotel name", "I'll add it later"] 
+    question: "What is your hotel/property name?",
+    type: "text",
+    placeholder: "e.g. Grand Oak Hotel"
   },
   { 
     id: "location", 
@@ -57,11 +58,16 @@ export default function OnboardingPage() {
   var [step, setStep] = useState(0);
   var [answers, setAnswers] = useState({});
   var [selected, setSelected] = useState("");
+  var [textValue, setTextValue] = useState("");
   var [saving, setSaving] = useState(false);
 
+  // ===== FIRST EFFECT: fetch user =====
   useEffect(function () {
     var current = getCurrentUser();
-    if (!current) { router.push("/login"); return; }
+    if (!current) { 
+      router.push("/login"); 
+      return; 
+    }
     if (current.onboardingDone) {
       if (current.role === "realtor") {
         router.push("/dashboard/realtor");
@@ -75,8 +81,28 @@ export default function OnboardingPage() {
     setUser(current);
   }, []);
 
+  // ===== SECOND EFFECT: sync selected/textValue with current step =====
+  // This effect must be called unconditionally; we guard inside.
+  useEffect(() => {
+    if (!user) return; // no user yet → skip
+    var questions = user.role === "realtor" ? realtorQuestions : user.role === "hotel" ? hotelQuestions : buyerQuestions;
+    var current = questions[step];
+    if (!current) return;
+    if (current.type === "text") {
+      setTextValue(answers[current.id] || "");
+      setSelected("");
+    } else {
+      setSelected(answers[current.id] || "");
+      setTextValue("");
+    }
+  }, [step, user, answers]); // include user in deps
+
+  // If user is null or not loaded, we still have to render something,
+  // but we can't call hooks after a return. So we keep all hooks above,
+  // then we can return early after all hooks have been declared.
   if (!user) return null;
 
+  // Now it's safe to define derived data
   var questions = user.role === "realtor" ? realtorQuestions : user.role === "hotel" ? hotelQuestions : buyerQuestions;
   var current = questions[step];
   var total = questions.length;
@@ -86,11 +112,24 @@ export default function OnboardingPage() {
     setSelected(option);
   }
 
+  function handleTextChange(e) {
+    setTextValue(e.target.value);
+  }
+
   function handleNext() {
-    if (!selected) return;
-    var newAnswers = { ...answers, [current.id]: selected };
+    var value;
+    if (current.type === "text") {
+      if (!textValue.trim()) return;
+      value = textValue.trim();
+    } else {
+      if (!selected) return;
+      value = selected;
+    }
+
+    var newAnswers = { ...answers, [current.id]: value };
     setAnswers(newAnswers);
     setSelected("");
+    setTextValue("");
     if (step < total - 1) {
       setStep(step + 1);
     } else {
@@ -110,10 +149,19 @@ export default function OnboardingPage() {
 
   function handleBack() {
     if (step > 0) { 
-      setStep(step - 1); 
-      setSelected(answers[questions[step - 1].id] || ""); 
+      setStep(step - 1);
+      var prev = questions[step - 1];
+      if (prev.type === "text") {
+        setTextValue(answers[prev.id] || "");
+        setSelected("");
+      } else {
+        setSelected(answers[prev.id] || "");
+        setTextValue("");
+      }
     }
   }
+
+  var isNextDisabled = saving || (current.type === "text" ? !textValue.trim() : !selected);
 
   return (
     <>
@@ -287,6 +335,23 @@ export default function OnboardingPage() {
         .ob-option.selected .check svg {
           stroke: #fff;
         }
+        .ob-text-input {
+          width: 100%;
+          padding: 15px 18px;
+          border-radius: 12px;
+          border: 2px solid #E2E8F0;
+          font-size: 16px;
+          outline: none;
+          transition: border-color 0.2s;
+          background: #fff;
+          margin-bottom: 32px;
+        }
+        .ob-text-input:focus {
+          border-color: #D4A017;
+        }
+        .ob-text-input::placeholder {
+          color: #94A3B8;
+        }
         .ob-actions {
           display: flex;
           gap: 12px;
@@ -305,6 +370,7 @@ export default function OnboardingPage() {
           display: flex;
           align-items: center;
           gap: 6px;
+          flex-shrink: 0;
         }
         .ob-back-btn:hover {
           border-color: #94a3b8;
@@ -345,28 +411,25 @@ export default function OnboardingPage() {
           animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .ob-complete {
-          text-align: center;
-          padding: 20px 0;
-        }
-        .ob-complete-icon {
-          width: 72px;
-          height: 72px;
-          border-radius: 50%;
-          background: rgba(212,160,23,0.1);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 16px;
-        }
-        .ob-complete-icon svg {
-          width: 36px;
-          height: 36px;
-          stroke: #D4A017;
-        }
         @media (max-width: 480px) {
-          .ob-actions { flex-direction: column-reverse; }
-          .ob-back-btn { justify-content: center; }
+          .ob-actions { 
+            flex-direction: column-reverse; 
+            gap: 8px;
+          }
+          .ob-back-btn { 
+            justify-content: center; 
+            width: 100%;
+          }
+          .ob-next-btn {
+            width: 100%;
+            flex: none;
+          }
+          .ob-text-input {
+            font-size: 16px;
+          }
+        }
+        @media (max-width: 380px) {
+          .ob-card { padding: 24px 16px; }
         }
       `}</style>
 
@@ -399,20 +462,31 @@ export default function OnboardingPage() {
 
           <h2 className="ob-question">{current.question}</h2>
 
-          <div className="ob-options">
-            {current.options.map(function (opt) {
-              return (
-                <button key={opt} className={"ob-option " + (selected === opt ? "selected" : "")} onClick={function () { handleSelect(opt); }}>
-                  <div className="check">
-                    {selected === opt && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    )}
-                  </div>
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
+          {current.type === "text" ? (
+            <input
+              className="ob-text-input"
+              type="text"
+              value={textValue}
+              onChange={handleTextChange}
+              placeholder={current.placeholder || "Enter your answer..."}
+              autoFocus
+            />
+          ) : (
+            <div className="ob-options">
+              {current.options.map(function (opt) {
+                return (
+                  <button key={opt} className={"ob-option " + (selected === opt ? "selected" : "")} onClick={function () { handleSelect(opt); }}>
+                    <div className="check">
+                      {selected === opt && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      )}
+                    </div>
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <div className="ob-actions">
             {step > 0 && (
@@ -420,7 +494,7 @@ export default function OnboardingPage() {
                 <ArrowLeft size={18} /> Back
               </button>
             )}
-            <button className="ob-next-btn" onClick={handleNext} disabled={!selected || saving}>
+            <button className="ob-next-btn" onClick={handleNext} disabled={isNextDisabled}>
               {saving ? (
                 <div className="ob-spinner" />
               ) : step === total - 1 ? (

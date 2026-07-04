@@ -58,7 +58,6 @@ function StatItem({ value, suffix, label, animate }) {
   );
 }
 
-// ===== 3 IMAGES: 1 local + 2 Unsplash =====
 const heroImages = [
   {
     src: "/images/hero/hero.png",
@@ -84,7 +83,6 @@ export default function Hero() {
   const statsRef = useRef(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Slideshow every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
@@ -371,8 +369,8 @@ export default function Hero() {
                 <Link href="/properties" className="h-btn-primary">
                   Explore Properties
                 </Link>
-                {/* 🔹 FIXED: Contact Us now goes to homepage contact section */}
-                <Link href="/#contact" className="h-btn-secondary">
+                {/* ✅ Updated: Contact Us now navigates to the contact page */}
+                <Link href="/contact" className="h-btn-secondary">
                   Contact Us
                 </Link>
               </div>
