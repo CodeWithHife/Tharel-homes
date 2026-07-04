@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as storage from "@/lib/storage";   // ✅ fallback import
+import * as storage from "@/lib/storage";
 
 export default function SignupPage() {
   var router = useRouter();
@@ -133,6 +133,7 @@ export default function SignupPage() {
         .toggle-pw svg { width: 17px; height: 17px; stroke: #94a3b8; fill: none; stroke-width: 2; }
         .toggle-pw:hover svg { stroke: #D4A017; }
         .role-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        @media(max-width:480px){ .role-selector { grid-template-columns: 1fr; gap: 8px; } }
         .role-btn { padding: 11px; border-radius: 10px; border: 2px solid #e2e8f0; background: #fff; font-size: 13.5px; font-weight: 600; color: #64748b; cursor: pointer; transition: all .2s; text-transform: capitalize; }
         .role-btn.active { border-color: #D4A017; background: rgba(212,160,23,.08); color: #D4A017; }
         .role-btn:hover:not(.active) { border-color: #cbd5e1; }
@@ -160,6 +161,54 @@ export default function SignupPage() {
         .auth-footer { text-align: center; font-size: 13.5px; color: #64748b; margin-top: 24px; }
         .auth-footer a { color: #D4A017; font-weight: 700; text-decoration: none; }
         .auth-footer a:hover { text-decoration: underline; }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+          .auth-right { padding: 40px 20px; }
+          .auth-title { font-size: 26px; }
+          .auth-desc { font-size: 13px; margin-bottom: 24px; }
+          .auth-mobile-logo { margin-bottom: 28px; }
+          .auth-error-box { font-size: 12.5px; padding: 10px 14px; }
+          .form-input-wrap { padding: 12px 14px; }
+          .form-input-wrap input { font-size: 15px; } /* prevent zoom on iOS */
+          .role-btn { padding: 10px; font-size: 13px; }
+          .auth-btn { height: 46px; font-size: 14px; }
+          .auth-google-btn { height: 46px; font-size: 13px; }
+          .form-row { gap: 10px; }
+        }
+
+        @media (max-width: 480px) {
+          .auth-right { padding: 28px 16px; }
+          .auth-title { font-size: 22px; }
+          .auth-desc { font-size: 12.5px; margin-bottom: 20px; }
+          .auth-mobile-logo { margin-bottom: 20px; }
+          .auth-mobile-logo-icon { width: 32px; height: 32px; }
+          .auth-mobile-logo-icon svg { width: 16px; height: 16px; }
+          .auth-error-box { font-size: 12px; padding: 8px 12px; }
+          .form-group { margin-bottom: 14px; }
+          .form-label { font-size: 12px; }
+          .form-input-wrap { padding: 10px 12px; border-radius: 10px; gap: 8px; }
+          .form-input-wrap input { font-size: 16px; } /* prevent zoom */
+          .toggle-pw svg { width: 16px; height: 16px; }
+          .role-selector { grid-template-columns: 1fr; gap: 6px; }
+          .role-btn { padding: 10px; font-size: 13px; }
+          .strength-bars { gap: 3px; }
+          .strength-label { font-size: 11px; }
+          .terms-check label { font-size: 12.5px; }
+          .auth-btn { height: 44px; font-size: 13px; }
+          .auth-google-btn { height: 44px; font-size: 12.5px; gap: 8px; }
+          .auth-divider { margin: 16px 0; }
+          .auth-divider span { font-size: 11px; }
+          .auth-footer { font-size: 12.5px; margin-top: 20px; }
+        }
+
+        @media (max-width: 380px) {
+          .auth-right { padding: 20px 12px; }
+          .auth-title { font-size: 20px; }
+          .auth-desc { font-size: 12px; }
+          .auth-btn { height: 40px; font-size: 12px; }
+          .auth-google-btn { height: 40px; font-size: 12px; }
+        }
       `}</style>
 
       <div className="auth-page">
