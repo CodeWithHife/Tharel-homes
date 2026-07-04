@@ -28,15 +28,16 @@ function useCountUp(target, duration = 2000, start = false) {
 function StatItem({ value, suffix, label, animate }) {
   const count = useCountUp(value, 2000, animate);
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <span
         style={{
           color: "#0F172A",
-          fontSize: "28px",
+          fontSize: "clamp(22px, 4vw, 28px)",
           fontWeight: 900,
           lineHeight: 1,
           fontFamily: "var(--font-montserrat), sans-serif",
           letterSpacing: "-0.02em",
+          textAlign: "center",
         }}
       >
         {count}
@@ -45,11 +46,12 @@ function StatItem({ value, suffix, label, animate }) {
       <span
         style={{
           color: "#94a3b8",
-          fontSize: "10px",
+          fontSize: "clamp(9px, 1.5vw, 10px)",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
-          marginTop: "7px",
+          marginTop: "6px",
           fontWeight: 600,
+          textAlign: "center",
         }}
       >
         {label}
@@ -175,20 +177,23 @@ export default function Hero() {
           transform: scale(1.03);
         }
 
-        .h-btn-primary {
+        .h-btn-primary, .h-btn-secondary {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: #0F172A;
-          color: #ffffff;
           padding: 15px 34px;
           border-radius: 50px;
           font-weight: 700;
           font-size: 14px;
           text-decoration: none;
-          letter-spacing: 0.02em;
-          box-shadow: 0 8px 28px rgba(15,23,42,0.25);
           transition: all 0.35s ease;
+          width: auto;
+        }
+
+        .h-btn-primary {
+          background: #0F172A;
+          color: #ffffff;
+          box-shadow: 0 8px 28px rgba(15,23,42,0.25);
           border: 2px solid #0F172A;
         }
         .h-btn-primary:hover {
@@ -200,18 +205,9 @@ export default function Hero() {
         }
 
         .h-btn-secondary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
           background: transparent;
           color: #0F172A;
-          padding: 15px 34px;
-          border-radius: 50px;
-          font-weight: 600;
-          font-size: 14px;
-          text-decoration: none;
           border: 2px solid rgba(15,23,42,0.2);
-          transition: all 0.35s ease;
         }
         .h-btn-secondary:hover {
           border-color: #D4AF37;
@@ -219,15 +215,58 @@ export default function Hero() {
           transform: translateY(-3px);
         }
 
+        /* ── Mobile overrides ── */
         @media (max-width: 1024px) {
           .h-image-wrap {
             aspect-ratio: 16/10;
-            max-width: 100%;
           }
         }
+
         @media (max-width: 768px) {
           .h-image-wrap {
             aspect-ratio: 16/12;
+          }
+          .h-btn-primary, .h-btn-secondary {
+            width: 100% !important;
+            font-size: 13px !important;
+            padding: 14px 20px !important;
+          }
+          .h-anim-4 {
+            width: 100% !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .h-anim-2 {
+            font-size: 32px !important;
+          }
+          .h-anim-3 {
+            font-size: 14px !important;
+            max-width: 100% !important;
+          }
+          .h-anim-1 {
+            font-size: 10px !important;
+          }
+          .h-anim-1 span {
+            width: 24px !important;
+          }
+          .h-image-wrap {
+            aspect-ratio: 16/10;
+          }
+          .h-float {
+            animation: none;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .h-anim-2 {
+            font-size: 28px !important;
+          }
+          .h-btn-primary, .h-btn-secondary {
+            font-size: 12px !important;
+            padding: 12px 16px !important;
           }
         }
       `}</style>
@@ -242,7 +281,7 @@ export default function Hero() {
           fontFamily: "var(--font-inter), sans-serif",
         }}
       >
-        {/* Decorative blobs */}
+        {/* Decorative blobs – hidden on small screens for performance */}
         <div
           style={{
             position: "absolute",
@@ -253,6 +292,7 @@ export default function Hero() {
             background: "radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 68%)",
             borderRadius: "50%",
             pointerEvents: "none",
+            display: isDesktop ? "block" : "none",
           }}
         />
         <div
@@ -265,6 +305,7 @@ export default function Hero() {
             background: "radial-gradient(circle, rgba(15,23,42,0.05) 0%, transparent 68%)",
             borderRadius: "50%",
             pointerEvents: "none",
+            display: isDesktop ? "block" : "none",
           }}
         />
 
@@ -274,7 +315,7 @@ export default function Hero() {
           style={{
             maxWidth: "1280px",
             margin: "0 auto",
-            padding: isDesktop ? "0 64px" : "0 28px",
+            padding: isDesktop ? "0 64px" : "0 20px",
           }}
         >
           <div
@@ -283,9 +324,9 @@ export default function Hero() {
               flexDirection: isDesktop ? "row" : "column",
               alignItems: "center",
               minHeight: "calc(100vh - 80px)",
-              gap: isDesktop ? "60px" : "40px",
-              paddingTop: isDesktop ? "0" : "32px",
-              paddingBottom: isDesktop ? "0" : "64px",
+              gap: isDesktop ? "60px" : "30px",
+              paddingTop: isDesktop ? "0" : "20px",
+              paddingBottom: isDesktop ? "0" : "40px",
             }}
           >
             {/* LEFT COLUMN */}
@@ -299,7 +340,7 @@ export default function Hero() {
                 gap: "0",
               }}
             >
-              <div className="h-anim-1" style={{ marginBottom: "24px" }}>
+              <div className="h-anim-1" style={{ marginBottom: "20px" }}>
                 <span
                   style={{
                     display: "inline-flex",
@@ -332,8 +373,8 @@ export default function Hero() {
                   fontWeight: 900,
                   color: "#0F172A",
                   lineHeight: 1.06,
-                  marginBottom: "22px",
-                  fontSize: isDesktop ? "clamp(44px, 4vw, 66px)" : "40px",
+                  marginBottom: "16px",
+                  fontSize: isDesktop ? "clamp(44px, 4vw, 66px)" : "clamp(36px, 6vw, 44px)",
                   letterSpacing: "-0.025em",
                 }}
               >
@@ -345,10 +386,10 @@ export default function Hero() {
                 className="h-anim-3"
                 style={{
                   color: "#64748b",
-                  fontSize: "15.5px",
+                  fontSize: isDesktop ? "15.5px" : "clamp(14px, 2.5vw, 15px)",
                   lineHeight: 1.8,
-                  marginBottom: "40px",
-                  maxWidth: "420px",
+                  marginBottom: "32px",
+                  maxWidth: isDesktop ? "420px" : "100%",
                 }}
               >
                 Discover premium homes, apartments, and investment opportunities in
@@ -363,42 +404,55 @@ export default function Hero() {
                   flexDirection: isDesktop ? "row" : "column",
                   gap: "14px",
                   width: isDesktop ? "auto" : "100%",
-                  marginBottom: "52px",
+                  marginBottom: isDesktop ? "52px" : "32px",
                 }}
               >
                 <Link href="/properties" className="h-btn-primary">
                   Explore Properties
                 </Link>
-                {/* ✅ Updated: Contact Us now navigates to the contact page */}
                 <Link href="/contact" className="h-btn-secondary">
                   Contact Us
                 </Link>
               </div>
 
-              <div ref={statsRef} className="h-anim-5">
+              {/* ─── STATS ─── */}
+              <div ref={statsRef} className="h-anim-5" style={{ width: "100%" }}>
                 <div
                   style={{
-                    display: "inline-flex",
+                    display: "flex",
+                    flexDirection: isDesktop ? "row" : "column",
                     alignItems: "center",
-                    padding: "24px 32px",
+                    justifyContent: "space-around",
+                    padding: isDesktop ? "24px 32px" : "18px 16px",
                     background: "rgba(255,255,255,0.7)",
                     backdropFilter: "blur(18px)",
                     borderRadius: "18px",
                     border: "1px solid rgba(255,255,255,0.9)",
                     boxShadow: "0 8px 32px rgba(15,23,42,0.07)",
-                    gap: "0",
+                    gap: isDesktop ? "0" : "16px",
+                    width: "100%",
+                    flexWrap: "wrap",
                   }}
                 >
                   {stats.map((stat, i) => (
-                    <div key={stat.label} style={{ display: "flex", alignItems: "center" }}>
+                    <div
+                      key={stat.label}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        flexDirection: isDesktop ? "row" : "column",
+                        width: isDesktop ? "auto" : "100%",
+                        justifyContent: "center",
+                      }}
+                    >
                       <StatItem {...stat} animate={statsVisible} />
                       {i < stats.length - 1 && (
                         <div
                           style={{
-                            width: "1px",
-                            height: "48px",
+                            width: isDesktop ? "1px" : "80%",
+                            height: isDesktop ? "48px" : "1px",
                             background: "rgba(15,23,42,0.1)",
-                            margin: "0 28px",
+                            margin: isDesktop ? "0 28px" : "12px 0",
                             flexShrink: 0,
                           }}
                         />
@@ -414,10 +468,11 @@ export default function Hero() {
               className="h-anim-img"
               style={{
                 width: isDesktop ? "48%" : "100%",
-                maxWidth: isDesktop ? "none" : "560px",
+                maxWidth: isDesktop ? "none" : "500px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: isDesktop ? "flex-end" : "center",
+                margin: isDesktop ? "0" : "0 auto",
               }}
             >
               <div
@@ -427,7 +482,6 @@ export default function Hero() {
                   position: "relative",
                 }}
               >
-                {/* Subtle glow */}
                 <div
                   style={{
                     position: "absolute",
@@ -480,3 +534,4 @@ export default function Hero() {
     </>
   );
 }
+;

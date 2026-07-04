@@ -2,13 +2,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation"; // ← import for current path
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const pathname = usePathname(); // ← current URL path
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -30,7 +30,6 @@ export default function Navbar() {
     { label: "Contact", href: "/contact" },
   ];
 
-  // Helper to check if a link is active
   const isActiveLink = (href) => {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
@@ -44,14 +43,14 @@ export default function Navbar() {
           font-size: 13px;
           font-weight: 600;
           text-decoration: none;
-          color: #64748b;
+          color: #cbd5e1;
           padding-bottom: 4px;
           transition: color 0.3s ease;
           white-space: nowrap;
           letter-spacing: 0.01em;
         }
-        .nv-link:hover { color: #0F172A; }
-        .nv-link.active { color: #0F172A; }
+        .nv-link:hover { color: #ffffff; }
+        .nv-link.active { color: #D4A017; }
         .nv-link::after {
           content: "";
           position: absolute;
@@ -66,16 +65,16 @@ export default function Navbar() {
         .nv-btn-login {
           font-size: 12.5px;
           font-weight: 600;
-          color: #0F172A;
+          color: #D4A017;
           text-decoration: none;
           padding: 8px 16px;
           border-radius: 8px;
-          border: 1.5px solid #0F172A;
+          border: 1.5px solid #D4A017;
           transition: all 0.3s ease;
           background: transparent;
           white-space: nowrap;
         }
-        .nv-btn-login:hover { background: #0F172A; color: #ffffff; }
+        .nv-btn-login:hover { background: #D4A017; color: #0F172A; }
         .nv-btn-register {
           font-size: 12.5px;
           font-weight: 700;
@@ -88,22 +87,70 @@ export default function Navbar() {
           transition: all 0.3s ease;
           white-space: nowrap;
         }
-        .nv-btn-register:hover { background: #0F172A; color: #D4A017; border-color: #0F172A; }
+        .nv-btn-register:hover { background: #0F172A; color: #D4A017; border-color: #D4A017; }
         .nv-mobile-link {
           display: block;
           font-size: 14px;
           font-weight: 600;
-          color: #64748b;
+          color: #cbd5e1;
           text-decoration: none;
           padding: 12px 0;
-          border-bottom: 1px solid #f1f5f9;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
           transition: color 0.3s ease;
         }
-        .nv-mobile-link:hover, .nv-mobile-link.active { color: #0F172A; }
+        .nv-mobile-link:hover, .nv-mobile-link.active { color: #D4A017; }
+        .nv-mobile-btn {
+          display: block;
+          width: 100%;
+          text-align: center;
+          padding: 10px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          text-decoration: none;
+        }
+        .nv-mobile-btn-login {
+          border: 1.5px solid #D4A017;
+          color: #D4A017;
+          background: transparent;
+        }
+        .nv-mobile-btn-login:hover { background: #D4A017; color: #0F172A; }
+        .nv-mobile-btn-register {
+          background: #D4A017;
+          color: #0F172A;
+          border: 1.5px solid #D4A017;
+        }
+        .nv-mobile-btn-register:hover { background: #0F172A; color: #D4A017; border-color: #D4A017; }
+        .nv-hamburger {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 4px;
+        }
+        .nv-hamburger span {
+          display: block;
+          width: 22px;
+          height: 2px;
+          background: #ffffff;
+          transition: all 0.3s ease;
+        }
+        .nv-hamburger.open span:nth-child(1) {
+          transform: rotate(45deg) translate(4px, 4px);
+        }
+        .nv-hamburger.open span:nth-child(2) {
+          opacity: 0;
+        }
+        .nv-hamburger.open span:nth-child(3) {
+          transform: rotate(-45deg) translate(4px, -4px);
+        }
         .brand-name {
           font-size: 13px;
           font-weight: 800;
-          color: #0F172A;
+          color: #ffffff;
           letter-spacing: 0.02em;
           text-transform: uppercase;
           font-family: var(--font-montserrat), sans-serif;
@@ -139,10 +186,9 @@ export default function Navbar() {
           height: "74px",
           display: "flex",
           alignItems: "center",
-          backgroundColor: scrolled ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.88)",
-          backdropFilter: "blur(24px)",
-          boxShadow: scrolled ? "0 4px 28px rgba(15,23,42,0.10)" : "0 1px 16px rgba(15,23,42,0.05)",
-          borderBottom: "1px solid rgba(15,23,42,0.06)",
+          backgroundColor: "#0F172A",
+          boxShadow: scrolled ? "0 4px 28px rgba(0,0,0,0.4)" : "0 1px 16px rgba(0,0,0,0.2)",
+          borderBottom: "1px solid rgba(212,160,23,0.2)",
           transition: "all 0.4s ease",
           fontFamily: "var(--font-inter), sans-serif",
           padding: "0 20px",
@@ -175,16 +221,14 @@ export default function Navbar() {
               width={isMobile ? 40 : 56}
               height={isMobile ? 40 : 56}
               priority
-              style={{ objectFit: "contain" }}
+              style={{ objectFit: "contain", filter: "brightness(0) invert(1)" }}
               onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")}
             />
             <div style={{ lineHeight: 1.15, maxWidth: isMobile ? "160px" : "none" }}>
               <div className="brand-name">
                 The 10th Homes & Apartments Real Estate Ltd
               </div>
-              <div className="brand-short">
-                T.H.A.R.E.L
-              </div>
+              <div className="brand-short">T.H.A.R.E.L</div>
             </div>
           </Link>
 
@@ -219,60 +263,18 @@ export default function Navbar() {
 
           {!isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-              <Link href="/login" className="nv-btn-login">
-                Login
-              </Link>
-              <Link href="/signup" className="nv-btn-register">
-                Register
-              </Link>
+              <Link href="/login" className="nv-btn-login">Login</Link>
+              <Link href="/signup" className="nv-btn-register">Register</Link>
             </div>
           )}
 
           {isMobile && (
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "4px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "4px",
-                marginLeft: "auto",
-              }}
+              className={"nv-hamburger " + (menuOpen ? "open" : "")}
               aria-label="Toggle menu"
             >
-              <span
-                style={{
-                  display: "block",
-                  width: "22px",
-                  height: "2px",
-                  background: "#0F172A",
-                  transition: "all 0.3s",
-                  transform: menuOpen ? "rotate(45deg) translate(4px, 4px)" : "none",
-                }}
-              />
-              <span
-                style={{
-                  display: "block",
-                  width: "22px",
-                  height: "2px",
-                  background: "#0F172A",
-                  transition: "all 0.3s",
-                  opacity: menuOpen ? 0 : 1,
-                }}
-              />
-              <span
-                style={{
-                  display: "block",
-                  width: "22px",
-                  height: "2px",
-                  background: "#0F172A",
-                  transition: "all 0.3s",
-                  transform: menuOpen ? "rotate(-45deg) translate(4px, -4px)" : "none",
-                }}
-              />
+              <span /><span /><span />
             </button>
           )}
         </div>
@@ -286,12 +288,12 @@ export default function Navbar() {
             left: 0,
             width: "100%",
             zIndex: 999,
-            backgroundColor: "rgba(255,255,255,0.98)",
-            backdropFilter: "blur(24px)",
+            backgroundColor: "#0F172A",
             maxHeight: menuOpen ? "600px" : "0",
             overflow: "hidden",
             transition: "max-height 0.45s ease",
-            boxShadow: "0 12px 40px rgba(15,23,42,0.1)",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+            borderBottom: "1px solid rgba(212,160,23,0.15)",
           }}
         >
           <div style={{ padding: "20px 28px 32px" }}>
@@ -312,12 +314,8 @@ export default function Navbar() {
               })}
             </ul>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "20px" }}>
-              <Link href="/login" className="nv-btn-login" style={{ textAlign: "center", display: "block" }}>
-                Login
-              </Link>
-              <Link href="/signup" className="nv-btn-register" style={{ textAlign: "center", display: "block" }}>
-                Register
-              </Link>
+              <Link href="/login" className="nv-mobile-btn nv-mobile-btn-login">Login</Link>
+              <Link href="/signup" className="nv-mobile-btn nv-mobile-btn-register">Register</Link>
             </div>
           </div>
         </div>
