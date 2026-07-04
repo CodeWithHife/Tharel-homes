@@ -2,12 +2,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation"; // ← import for current path
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState("Home");
   const [isMobile, setIsMobile] = useState(false);
+  const pathname = usePathname(); // ← current URL path
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -28,6 +29,12 @@ export default function Navbar() {
     { label: "Properties", href: "/properties" },
     { label: "Contact", href: "/contact" },
   ];
+
+  // Helper to check if a link is active
+  const isActiveLink = (href) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
   return (
     <>
@@ -194,17 +201,19 @@ export default function Navbar() {
                 justifyContent: "center",
               }}
             >
-              {navLinks.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setActiveLink(item.label)}
-                    className={"nv-link " + (activeLink === item.label ? "active" : "")}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
+              {navLinks.map((item) => {
+                const active = isActiveLink(item.href);
+                return (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      className={"nv-link " + (active ? "active" : "")}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
 
@@ -287,20 +296,20 @@ export default function Navbar() {
         >
           <div style={{ padding: "20px 28px 32px" }}>
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-              {navLinks.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    onClick={() => {
-                      setActiveLink(item.label);
-                      setMenuOpen(false);
-                    }}
-                    className={"nv-mobile-link " + (activeLink === item.label ? "active" : "")}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
+              {navLinks.map((item) => {
+                const active = isActiveLink(item.href);
+                return (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      className={"nv-mobile-link " + (active ? "active" : "")}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "20px" }}>
               <Link href="/login" className="nv-btn-login" style={{ textAlign: "center", display: "block" }}>
