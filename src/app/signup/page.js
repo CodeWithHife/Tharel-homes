@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as storage from "@/lib/storage";
+import { signupWithBackend } from "@/lib/auth";
 
 export default function SignupPage() {
   var router = useRouter();
@@ -46,28 +46,27 @@ export default function SignupPage() {
     setErrors({ ...errors, [e.target.name]: "" });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     var errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     if (!agreeTerms) { setTermsError("You must agree to the Terms of Service"); return; }
     setLoading(true);
-    setTimeout(function () {
-      var result = storage.registerUser({ 
-        firstName: form.firstName, 
-        lastName: form.lastName, 
-        email: form.email, 
-        password: form.password, 
-        role: form.role 
+
+    try {
+      await signupWithBackend({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        password: form.password,
+        role: form.role,
       });
-      if (result.error) { 
-        setErrors({ email: result.error }); 
-        setLoading(false); 
-        return; 
-      }
-      storage.loginUser(form.email, form.password);
       router.push("/onboarding");
-    }, 800);
+    } catch (err) {
+      setErrors({ email: err.message || "Unable to create your account." });
+    } finally {
+      setLoading(false);
+    }
   }
 
   var strength = 0;

@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, updateCurrentUser } from "@/lib/storage";
-import { Home, User, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
+import { getStoredAuthUser, completeOnboardingWithBackend, logoutAuth } from "@/lib/auth";
+import { ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 // ===== BUYER QUESTIONS =====
 var buyerQuestions = [
@@ -24,32 +24,11 @@ var realtorQuestions = [
 
 // ===== HOTEL QUESTIONS =====
 var hotelQuestions = [
-  { 
-    id: "hotelName", 
-    question: "What is your hotel/property name?",
-    type: "text",
-    placeholder: "e.g. Grand Oak Hotel"
-  },
-  { 
-    id: "location", 
-    question: "Where is your hotel located?", 
-    options: ["Lagos Island", "Lagos Mainland", "Abuja", "Ogun State", "Ibadan", "Other State"] 
-  },
-  { 
-    id: "roomType", 
-    question: "What type of rooms do you offer?", 
-    options: ["Standard Rooms", "Deluxe Rooms", "Suites", "Executive Rooms", "All Types"] 
-  },
-  { 
-    id: "capacity", 
-    question: "How many guests can you accommodate?", 
-    options: ["1 - 10 guests", "11 - 25 guests", "26 - 50 guests", "51 - 100 guests", "100+ guests"] 
-  },
-  { 
-    id: "reservationGoal", 
-    question: "What's your main goal for reservations?", 
-    options: ["Increase bookings", "List my hotel", "Find corporate guests", "Build reputation", "All of the above"] 
-  },
+  { id: "hotelName", question: "What is your hotel/property name?", type: "text", placeholder: "e.g. Grand Oak Hotel" },
+  { id: "location", question: "Where is your hotel located?", options: ["Lagos Island", "Lagos Mainland", "Abuja", "Ogun State", "Ibadan", "Other State"] },
+  { id: "roomType", question: "What type of rooms do you offer?", options: ["Standard Rooms", "Deluxe Rooms", "Suites", "Executive Rooms", "All Types"] },
+  { id: "capacity", question: "How many guests can you accommodate?", options: ["1 - 10 guests", "11 - 25 guests", "26 - 50 guests", "51 - 100 guests", "100+ guests"] },
+  { id: "reservationGoal", question: "What's your main goal for reservations?", options: ["Increase bookings", "List my hotel", "Find corporate guests", "Build reputation", "All of the above"] },
 ];
 
 export default function OnboardingPage() {
@@ -60,32 +39,31 @@ export default function OnboardingPage() {
   var [selected, setSelected] = useState("");
   var [textValue, setTextValue] = useState("");
   var [saving, setSaving] = useState(false);
+  var [error, setError] = useState("");
 
-  // ===== FIRST EFFECT: fetch user =====
+  // Load user from localStorage (set by auth.js after login/signup)
   useEffect(function () {
-    var current = getCurrentUser();
-    if (!current) { 
-      router.push("/login"); 
-      return; 
+    var current = getStoredAuthUser();
+    if (!current) {
+      router.push("/login");
+      return;
     }
+    const role = current.role?.toLowerCase();
     if (current.onboardingDone) {
-      if (current.role === "realtor") {
-        router.push("/dashboard/realtor");
-      } else if (current.role === "hotel") {
-        router.push("/dashboard/hotel");
-      } else {
-        router.push("/dashboard/buyer");
-      }
+      if (role === "realtor") router.push("/dashboard/realtor");
+      else if (role === "hotel") router.push("/dashboard/hotel");
+      else if (role === "admin") router.push("/dashboard/admin");
+      else router.push("/dashboard/buyer");
       return;
     }
     setUser(current);
   }, []);
 
-  // ===== SECOND EFFECT: sync selected/textValue with current step =====
-  // This effect must be called unconditionally; we guard inside.
+  // Sync inputs when step changes
   useEffect(() => {
-    if (!user) return; // no user yet → skip
-    var questions = user.role === "realtor" ? realtorQuestions : user.role === "hotel" ? hotelQuestions : buyerQuestions;
+    if (!user) return;
+    var role = user.role?.toLowerCase();
+    var questions = role === "realtor" ? realtorQuestions : role === "hotel" ? hotelQuestions : buyerQuestions;
     var current = questions[step];
     if (!current) return;
     if (current.type === "text") {
@@ -95,28 +73,20 @@ export default function OnboardingPage() {
       setSelected(answers[current.id] || "");
       setTextValue("");
     }
-  }, [step, user, answers]); // include user in deps
+  }, [step, user]);
 
-  // If user is null or not loaded, we still have to render something,
-  // but we can't call hooks after a return. So we keep all hooks above,
-  // then we can return early after all hooks have been declared.
   if (!user) return null;
 
-  // Now it's safe to define derived data
-  var questions = user.role === "realtor" ? realtorQuestions : user.role === "hotel" ? hotelQuestions : buyerQuestions;
+  var role = user.role?.toLowerCase();
+  var questions = role === "realtor" ? realtorQuestions : role === "hotel" ? hotelQuestions : buyerQuestions;
   var current = questions[step];
   var total = questions.length;
   var progress = ((step + 1) / total) * 100;
 
-  function handleSelect(option) {
-    setSelected(option);
-  }
+  function handleSelect(option) { setSelected(option); }
+  function handleTextChange(e) { setTextValue(e.target.value); }
 
-  function handleTextChange(e) {
-    setTextValue(e.target.value);
-  }
-
-  function handleNext() {
+  async function handleNext() {
     var value;
     if (current.type === "text") {
       if (!textValue.trim()) return;
@@ -130,34 +100,31 @@ export default function OnboardingPage() {
     setAnswers(newAnswers);
     setSelected("");
     setTextValue("");
+
     if (step < total - 1) {
       setStep(step + 1);
     } else {
+      // Last step — save to backend
       setSaving(true);
-      setTimeout(function () {
-        updateCurrentUser({ onboardingDone: true, onboardingAnswers: newAnswers });
-        if (user.role === "realtor") {
-          router.push("/dashboard/realtor");
-        } else if (user.role === "hotel") {
-          router.push("/dashboard/hotel");
-        } else {
-          router.push("/dashboard/buyer");
-        }
-      }, 800);
+      setError("");
+      try {
+        await completeOnboardingWithBackend(newAnswers);
+        if (role === "realtor") router.push("/dashboard/realtor");
+        else if (role === "hotel") router.push("/dashboard/hotel");
+        else router.push("/dashboard/buyer");
+      } catch (err) {
+        setError(err.message || "Could not save your answers. Please try again.");
+        setSaving(false);
+      }
     }
   }
 
   function handleBack() {
-    if (step > 0) { 
+    if (step > 0) {
       setStep(step - 1);
       var prev = questions[step - 1];
-      if (prev.type === "text") {
-        setTextValue(answers[prev.id] || "");
-        setSelected("");
-      } else {
-        setSelected(answers[prev.id] || "");
-        setTextValue("");
-      }
+      if (prev.type === "text") { setTextValue(answers[prev.id] || ""); setSelected(""); }
+      else { setSelected(answers[prev.id] || ""); setTextValue(""); }
     }
   }
 
@@ -188,249 +155,50 @@ export default function OnboardingPage() {
         .ob-card::before {
           content: '';
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
+          top: 0; left: 0; right: 0;
           height: 4px;
           background: linear-gradient(90deg, #D4A017, #b8860c);
         }
-        @media (max-width: 600px) {
-          .ob-card { padding: 32px 20px; }
-        }
-        .ob-logo {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 28px;
-        }
-        .ob-logo-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          background: #D4A017;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .ob-logo-icon svg {
-          width: 20px;
-          height: 20px;
-          stroke: #fff;
-          fill: none;
-          stroke-width: 2.5;
-        }
-        .ob-logo-name {
-          font-size: 14px;
-          font-weight: 800;
-          color: #0F172A;
-          text-transform: uppercase;
-          letter-spacing: 0.03em;
-        }
-        .ob-logo-sub {
-          font-size: 9px;
-          color: #D4A017;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-        .ob-role-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(212,160,23,0.1);
-          color: #D4A017;
-          font-size: 12px;
-          font-weight: 700;
-          padding: 5px 14px;
-          border-radius: 999px;
-          margin-bottom: 20px;
-          text-transform: capitalize;
-        }
-        .ob-progress-wrap {
-          margin-bottom: 32px;
-        }
-        .ob-progress-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 10px;
-        }
-        .ob-step-label {
-          font-size: 13px;
-          color: #64748b;
-          font-weight: 500;
-        }
-        .ob-step-count {
-          font-size: 13px;
-          color: #D4A017;
-          font-weight: 700;
-        }
-        .ob-progress-bar {
-          height: 6px;
-          background: #E2E8F0;
-          border-radius: 999px;
-          overflow: hidden;
-        }
-        .ob-progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #D4A017, #b8860c);
-          border-radius: 999px;
-          transition: width 0.5s ease;
-        }
-        .ob-question {
-          font-size: clamp(20px, 2.5vw, 24px);
-          font-weight: 800;
-          color: #0F172A;
-          margin-bottom: 24px;
-          line-height: 1.3;
-        }
-        .ob-options {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 32px;
-        }
-        .ob-option {
-          padding: 15px 18px;
-          border-radius: 12px;
-          border: 2px solid #E2E8F0;
-          background: #fff;
-          font-size: 14.5px;
-          font-weight: 500;
-          color: #334155;
-          cursor: pointer;
-          transition: all 0.25s ease;
-          text-align: left;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .ob-option:hover {
-          border-color: #D4A017;
-          background: rgba(212,160,23,0.04);
-          color: #0F172A;
-          transform: translateX(4px);
-        }
-        .ob-option.selected {
-          border-color: #D4A017;
-          background: rgba(212,160,23,0.08);
-          color: #D4A017;
-          font-weight: 700;
-        }
-        .ob-option .check {
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          border: 2px solid #E2E8F0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          transition: all 0.25s ease;
-        }
-        .ob-option.selected .check {
-          border-color: #D4A017;
-          background: #D4A017;
-        }
-        .ob-option.selected .check svg {
-          stroke: #fff;
-        }
-        .ob-text-input {
-          width: 100%;
-          padding: 15px 18px;
-          border-radius: 12px;
-          border: 2px solid #E2E8F0;
-          font-size: 16px;
-          outline: none;
-          transition: border-color 0.2s;
-          background: #fff;
-          margin-bottom: 32px;
-        }
-        .ob-text-input:focus {
-          border-color: #D4A017;
-        }
-        .ob-text-input::placeholder {
-          color: #94A3B8;
-        }
-        .ob-actions {
-          display: flex;
-          gap: 12px;
-        }
-        .ob-back-btn {
-          padding: 0 24px;
-          height: 50px;
-          border-radius: 12px;
-          border: 2px solid #E2E8F0;
-          background: #fff;
-          color: #64748b;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.25s ease;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          flex-shrink: 0;
-        }
-        .ob-back-btn:hover {
-          border-color: #94a3b8;
-          color: #0F172A;
-        }
-        .ob-next-btn {
-          flex: 1;
-          height: 50px;
-          border-radius: 12px;
-          border: none;
-          background: #D4A017;
-          color: #fff;
-          font-size: 15px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.25s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-        .ob-next-btn:hover:not(:disabled) {
-          background: #b8860c;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(212,160,23,0.3);
-        }
-        .ob-next-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          transform: none !important;
-        }
-        .ob-spinner {
-          width: 22px;
-          height: 22px;
-          border: 2.5px solid rgba(255,255,255,0.3);
-          border-top-color: #fff;
-          border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-        }
+        @media (max-width: 600px) { .ob-card { padding: 32px 20px; } }
+        .ob-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+        .ob-logo-icon { width: 40px; height: 40px; border-radius: 10px; background: #D4A017; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .ob-logo-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.5; }
+        .ob-logo-name { font-size: 14px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.03em; }
+        .ob-logo-sub { font-size: 9px; color: #D4A017; text-transform: uppercase; letter-spacing: 0.08em; }
+        .ob-role-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(212,160,23,0.1); color: #D4A017; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 999px; margin-bottom: 20px; text-transform: capitalize; }
+        .ob-progress-wrap { margin-bottom: 32px; }
+        .ob-progress-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ob-step-label { font-size: 13px; color: #64748b; font-weight: 500; }
+        .ob-step-count { font-size: 13px; color: #D4A017; font-weight: 700; }
+        .ob-progress-bar { height: 6px; background: #E2E8F0; border-radius: 999px; overflow: hidden; }
+        .ob-progress-fill { height: 100%; background: linear-gradient(90deg, #D4A017, #b8860c); border-radius: 999px; transition: width 0.5s ease; }
+        .ob-question { font-size: clamp(20px, 2.5vw, 24px); font-weight: 800; color: #0F172A; margin-bottom: 24px; line-height: 1.3; }
+        .ob-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+        .ob-option { padding: 15px 18px; border-radius: 12px; border: 2px solid #E2E8F0; background: #fff; font-size: 14.5px; font-weight: 500; color: #334155; cursor: pointer; transition: all 0.25s ease; text-align: left; display: flex; align-items: center; gap: 12px; }
+        .ob-option:hover { border-color: #D4A017; background: rgba(212,160,23,0.04); color: #0F172A; transform: translateX(4px); }
+        .ob-option.selected { border-color: #D4A017; background: rgba(212,160,23,0.08); color: #D4A017; font-weight: 700; }
+        .ob-option .check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #E2E8F0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.25s ease; }
+        .ob-option.selected .check { border-color: #D4A017; background: #D4A017; }
+        .ob-option.selected .check svg { stroke: #fff; }
+        .ob-text-input { width: 100%; padding: 15px 18px; border-radius: 12px; border: 2px solid #E2E8F0; font-size: 16px; outline: none; transition: border-color 0.2s; background: #fff; margin-bottom: 32px; }
+        .ob-text-input:focus { border-color: #D4A017; }
+        .ob-text-input::placeholder { color: #94A3B8; }
+        .ob-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 13.5px; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; }
+        .ob-actions { display: flex; gap: 12px; }
+        .ob-back-btn { padding: 0 24px; height: 50px; border-radius: 12px; border: 2px solid #E2E8F0; background: #fff; color: #64748b; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .ob-back-btn:hover { border-color: #94a3b8; color: #0F172A; }
+        .ob-next-btn { flex: 1; height: 50px; border-radius: 12px; border: none; background: #D4A017; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .ob-next-btn:hover:not(:disabled) { background: #b8860c; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(212,160,23,0.3); }
+        .ob-next-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .ob-spinner { width: 22px; height: 22px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 480px) {
-          .ob-actions { 
-            flex-direction: column-reverse; 
-            gap: 8px;
-          }
-          .ob-back-btn { 
-            justify-content: center; 
-            width: 100%;
-          }
-          .ob-next-btn {
-            width: 100%;
-            flex: none;
-          }
-          .ob-text-input {
-            font-size: 16px;
-          }
+          .ob-actions { flex-direction: column-reverse; gap: 8px; }
+          .ob-back-btn { justify-content: center; width: 100%; }
+          .ob-next-btn { width: 100%; flex: none; }
+          .ob-text-input { font-size: 16px; }
         }
-        @media (max-width: 380px) {
-          .ob-card { padding: 24px 16px; }
-        }
+        @media (max-width: 380px) { .ob-card { padding: 24px 16px; } }
       `}</style>
 
       <div className="ob-page">
@@ -461,6 +229,8 @@ export default function OnboardingPage() {
           </div>
 
           <h2 className="ob-question">{current.question}</h2>
+
+          {error && <div className="ob-error">{error}</div>}
 
           {current.type === "text" ? (
             <input

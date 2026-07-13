@@ -55,7 +55,7 @@ export function logoutUser() {
 
 export function getCurrentUser() {
   try {
-    var data = localStorage.getItem("tharel_current_user");
+    var data = localStorage.getItem("auth_user") || localStorage.getItem("tharel_current_user");
     return data ? JSON.parse(data) : null;
   } catch (e) { return null; }
 }
@@ -73,8 +73,9 @@ export function updateCurrentUser(updates) {
     if (!current) return;
     var updated = { ...current, ...updates };
     localStorage.setItem("tharel_current_user", JSON.stringify(updated));
+    localStorage.setItem("auth_user", JSON.stringify(updated));
     var users = getAllUsers();
-    var idx = users.findIndex(function (u) { return u.id === current.id; });
+    var idx = users.findIndex(function (u) { return (u.id || u._id) === (current.id || current._id); });
     if (idx >= 0) {
       users[idx] = updated;
       localStorage.setItem("tharel_users", JSON.stringify(users));

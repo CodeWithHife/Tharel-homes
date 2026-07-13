@@ -16,8 +16,28 @@ export default function ContactForm() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Save to backend database
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      await fetch(`${apiBase}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          subject: form.interest ? `Interested In: ${form.interest}` : "General Inquiry",
+          message: form.message,
+        }),
+      });
+    } catch (error) {
+      console.error("Error submitting contact form to backend:", error);
+    }
+
+    // Open WhatsApp
     const msg =
       "Hello, I'm reaching out from your website.\n\n" +
       "Name: " + form.name + "\n" +
@@ -27,6 +47,7 @@ export default function ContactForm() {
       "Message:\n" + form.message;
     const whatsappLink = "https://wa.me/2348168426592?text=" + encodeURIComponent(msg);
     window.open(whatsappLink, "_blank");
+    
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
