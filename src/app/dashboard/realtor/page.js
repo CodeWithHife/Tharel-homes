@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser, logoutUser, getAllProperties, addProperty, updateProperty, deleteProperty, updateUserProfile } from "@/lib/storage";
+import { getStoredAuthUser, logoutAuth, updateProfileWithBackend } from "@/lib/auth";
+import { getRealtorProperties, createProperty, updateProperty, deleteProperty } from "@/lib/properties";
 import { Home, User, LogOut, Plus, Edit, Trash2, Eye, MessageCircle, LayoutDashboard, Crown, Zap, CheckCircle2, X, Search, Save, Edit2 } from "lucide-react";
 
 const SUBSCRIPTION_PLANS = [
@@ -31,17 +32,19 @@ export default function RealtorDashboard() {
   const [saveMessage, setSaveMessage] = useState("");
 
   useEffect(() => {
-    const current = getCurrentUser();
+    const current = getStoredAuthUser();
     if (!current) { router.push("/login"); setLoading(false); return; }
-    if (current.role !== "realtor") { router.push("/dashboard/buyer"); setLoading(false); return; }
+    const role = current.role?.toLowerCase();
+    if (role !== "realtor") { router.push("/dashboard/buyer"); setLoading(false); return; }
     setUser(current);
     setEditForm({ firstName: current.firstName, lastName: current.lastName, phone: current.phone || "" });
-    const all = getAllProperties();
-    setProperties(all.filter((p) => p.realtorId === current.id));
-    setLoading(false);
+    getRealtorProperties()
+      .then((props) => setProperties(props || []))
+      .catch(() => setProperties([]))
+      .finally(() => setLoading(false));
   }, []);
 
-  function handleLogout() { logoutUser(); router.push("/"); }
+  function handleLogout() { logoutAuth(); router.push("/"); }
 
   function resetForm() {
     setFormData({
@@ -50,35 +53,46 @@ export default function RealtorDashboard() {
     });
   }
 
-  function handleAddProperty() {
-    const newProperty = {
-      id: Date.now(),
-      slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      ...formData,
-      price: formData.price,
-      beds: parseInt(formData.beds) || null,
-      baths: parseInt(formData.baths) || null,
-      features: formData.features ? formData.features.split(",").map((f) => f.trim()) : [],
-      gallery: [formData.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"],
-      realtorId: user.id,
-      createdAt: new Date().toISOString(),
-      featured: false,
-    };
-    addProperty(newProperty);
-    setProperties([...properties, newProperty]);
-    setShowAddModal(false);
-    resetForm();
+  async function handleAddProperty() {
+    try {
+      const newProperty = await createProperty({
+        ...formData,
+        beds: parseInt(formData.beds) || null,
+        baths: parseInt(formData.baths) || null,
+        features: formData.features ? formData.features.split(",").map((f) => f.trim()) : [],
+        gallery: [formData.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"],
+        featured: false,
+      });
+      if (newProperty) setProperties((prev) => [...prev, newProperty]);
+      setShowAddModal(false);
+      resetForm();
+    } catch (err) {
+      alert("Error creating property: " + err.message);
+    }
   }
 
-  function handleEditProperty() {
-    const updated = { ...editingProperty, ...formData, beds: parseInt(formData.beds) || null, baths: parseInt(formData.baths) || null, features: formData.features ? formData.features.split(",").map((f) => f.trim()) : [] };
-    updateProperty(updated);
-    setProperties(properties.map((p) => p.id === updated.id ? updated : p));
-    setEditingProperty(null);
-    resetForm();
+  async function handleEditProperty() {
+    try {
+      const id = editingProperty._id || editingProperty.id;
+      const payload = { ...formData, beds: parseInt(formData.beds) || null, baths: parseInt(formData.baths) || null, features: formData.features ? formData.features.split(",").map((f) => f.trim()) : [] };
+      const updated = await updateProperty(id, payload);
+      if (updated) setProperties(properties.map((p) => (p._id || p.id) === id ? updated : p));
+      setEditingProperty(null);
+      resetForm();
+    } catch (err) {
+      alert("Error updating property: " + err.message);
+    }
   }
 
-  function handleDeleteProperty(id) { if (confirm("Delete this property?")) { deleteProperty(id); setProperties(properties.filter((p) => p.id !== id)); } }
+  async function handleDeleteProperty(id) {
+    if (!confirm("Delete this property?")) return;
+    try {
+      await deleteProperty(id);
+      setProperties(properties.filter((p) => (p._id || p.id) !== id));
+    } catch (err) {
+      alert("Error deleting property: " + err.message);
+    }
+  }
 
   function openEdit(property) {
     setEditingProperty(property);
@@ -100,16 +114,16 @@ export default function RealtorDashboard() {
 
   function handleEditProfile(e) { setEditForm({ ...editForm, [e.target.name]: e.target.value }); }
 
-  function saveProfile() {
+  async function saveProfile() {
     if (!user) return;
-    const success = updateUserProfile(user.id, editForm);
-    if (success) {
-      setUser({ ...user, ...editForm });
+    try {
+      const updated = await updateProfileWithBackend(editForm);
+      setUser({ ...user, ...(updated || editForm) });
       setSaveMessage("Profile updated successfully!");
       setIsEditing(false);
       setTimeout(() => setSaveMessage(""), 3000);
-    } else {
-      setSaveMessage("Error saving profile.");
+    } catch (err) {
+      setSaveMessage("Error saving profile: " + err.message);
     }
   }
 

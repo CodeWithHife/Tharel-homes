@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { loginUser } from "@/lib/storage";
+import { loginWithBackend } from "@/lib/auth";
 
 export default function LoginPage() {
   var router = useRouter();
@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError("");
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     if (!form.email || !form.password) {
@@ -25,26 +25,35 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    setTimeout(function () {
-      var result = loginUser(form.email, form.password);
-      if (result.error) {
-        setError(result.error);
-        setLoading(false);
-        return;
+
+    try {
+      const result = await loginWithBackend({
+        email: form.email,
+        password: form.password,
+      });
+
+      const user = result.user;
+      if (!user || !user.role) {
+        throw new Error("No account information was returned.");
       }
-      var user = result.user;
+
+      const role = user.role.toLowerCase();
       if (!user.onboardingDone) {
         router.push("/onboarding");
-      } else if (user.role === "admin") {
+      } else if (role === "admin") {
         router.push("/dashboard/admin");
-      } else if (user.role === "realtor") {
+      } else if (role === "realtor") {
         router.push("/dashboard/realtor");
-      } else if (user.role === "hotel") {
+      } else if (role === "hotel") {
         router.push("/dashboard/hotel");
       } else {
         router.push("/dashboard/buyer");
       }
-    }, 800);
+    } catch (err) {
+      setError(err.message || "Unable to sign in right now.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
