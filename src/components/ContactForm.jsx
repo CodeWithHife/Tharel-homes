@@ -217,7 +217,7 @@ export default function ContactForm() {
                   <Send size={16} />
                   Send via WhatsApp
                 </button>
-              </form>
+              </form>  
             )}
           </div>
         </div>
