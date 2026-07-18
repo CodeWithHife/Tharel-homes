@@ -31,8 +31,20 @@ exports.getMyHotels = async (req, res) => {
 exports.createHotel = async (req, res) => {
   try {
     const { name, location, roomType, capacity, reservationGoal, description, image, pricePerNight, amenities } = req.body;
+
+    if (!name) return res.status(400).json({ status: 'fail', error: 'Hotel name is required' });
+
+    // Generate unique slug
+    const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    let slug = baseSlug;
+    let count = 0;
+    while (await Hotel.findOne({ slug })) {
+      count++;
+      slug = `${baseSlug}-${count}`;
+    }
+
     const hotel = await Hotel.create({
-      name, location, roomType, capacity, reservationGoal,
+      name, slug, location, roomType, capacity, reservationGoal,
       description: description || '',
       image: image || '',
       pricePerNight: pricePerNight || '',
@@ -44,6 +56,7 @@ exports.createHotel = async (req, res) => {
     res.status(400).json({ status: 'fail', error: error.message });
   }
 };
+
 
 // PUT /api/hotels/:id — update hotel (protected, owner/Admin)
 exports.updateHotel = async (req, res) => {

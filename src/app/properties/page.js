@@ -1,10 +1,14 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PropertyCard from "@/components/PropertyCard";
-import properties from "@/data/properties";
+import { getAllProperties } from "@/lib/properties";
+import { getAllHotels } from "@/lib/hotels";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 export default function PropertiesPage() {
+  const [allProperties, setAllProperties] = useState([]);
+  const [loadingProps, setLoadingProps] = useState(true);
+
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState("All");
@@ -12,7 +16,38 @@ export default function PropertiesPage() {
   const [maxPrice, setMaxPrice] = useState(700000000);
   const [sortBy, setSortBy] = useState("featured");
 
-  const allProperties = properties;
+  // ── Fetch live properties and hotels from backend ────────────────────────────
+  useEffect(() => {
+    Promise.all([
+      getAllProperties().catch(() => []),
+      getAllHotels().catch(() => [])
+    ])
+      .then(([props, hotels]) => {
+        const normalizedHotels = hotels.map(h => ({
+          _id: h._id,
+          id: h._id,
+          name: h.name,
+          slug: h.slug || h.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+          location: h.location,
+          price: h.pricePerNight,
+          priceLabel: h.pricePerNight ? `₦${Number(h.pricePerNight).toLocaleString()}/night` : "Price on request",
+          type: h.roomType || "Hotel Room",
+          beds: parseInt(h.capacity) || null,
+          baths: null,
+          size: h.reservationGoal || "",
+          image: h.image,
+          gallery: [h.image],
+          description: h.description,
+          features: h.amenities || [],
+          phone: h.userId?.phone || "08168426592",
+          isHotel: true
+        }));
+        setAllProperties([...props, ...normalizedHotels]);
+      })
+      .catch(() => setAllProperties([]))
+      .finally(() => setLoadingProps(false));
+  }, []);
+
 
   const locations = useMemo(() => {
     const states = allProperties.map((p) => {
@@ -368,7 +403,13 @@ export default function PropertiesPage() {
               </select>
             </div>
 
-            {filtered.length === 0 ? (
+            {loadingProps ? (
+              <div style={{ textAlign: "center", padding: "80px 20px" }}>
+                <div style={{ width: "40px", height: "40px", border: "4px solid #E2E8F0", borderTop: "4px solid #D4A017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <p style={{ color: "#94A3B8", marginTop: "16px", fontSize: "14px" }}>Loading properties...</p>
+              </div>
+            ) : filtered.length === 0 ? (
               <div
                 style={{
                   textAlign: "center",
@@ -392,7 +433,7 @@ export default function PropertiesPage() {
                 className="property-grid"
               >
                 {filtered.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
+                  <PropertyCard key={property._id || property.id} property={property} />
                 ))}
               </div>
             )}

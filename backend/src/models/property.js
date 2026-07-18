@@ -22,11 +22,11 @@ const propertySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-generate slug from name before saving if not set
-propertySchema.pre('validate', function (next) {
+propertySchema.pre('validate', async function () {
   if (!this.slug && this.name) {
     this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
-  next();
+  // async style — no next() needed, Mongoose awaits the returned Promise
 });
 
 module.exports = mongoose.model('Property', propertySchema);
