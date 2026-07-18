@@ -14,14 +14,16 @@ export default function PropertyCard({ property }) {
 
   const slug = property.slug || property.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
+  const propId = property._id || property.id;
+
   useEffect(() => {
     const currentUser = getCurrentUser();
     setUser(currentUser);
     if (currentUser) {
       const favs = getFavourites(currentUser.id);
-      setIsFavourite(favs.includes(property.id));
+      setIsFavourite(favs.includes(propId));
     }
-  }, [property.id]);
+  }, [propId]);
 
   const handleFavourite = () => {
     if (!user) {
@@ -30,8 +32,8 @@ export default function PropertyCard({ property }) {
     }
     setLoading(true);
     try {
-      const newFavs = toggleFavourite(user.id, property.id);
-      setIsFavourite(newFavs.includes(property.id));
+      const newFavs = toggleFavourite(user.id, propId);
+      setIsFavourite(newFavs.includes(propId));
     } catch (error) {
       console.error("Error toggling favourite:", error);
     }

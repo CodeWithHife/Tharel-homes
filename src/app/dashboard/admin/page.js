@@ -2,19 +2,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  getCurrentUser,
-  logoutUser,
-  getAdminStats,
-  getAllUsersForAdmin,
-  deleteUser,
-  getAllProperties,
-  deleteProperty,
-  getHotelBookings,
-  getHotelListings,
-  deleteHotelListing,
-  deleteHotelBooking,
-} from "@/lib/storage";
+import { getStoredAuthUser, logoutAuth } from "@/lib/auth";
+import { getAdminStats, getAllUsersForAdmin, deleteUser, getAllPropertiesForAdmin } from "@/lib/admin";
+import { getAllHotels, deleteHotel, getMyAllBookings } from "@/lib/hotels";
 import {
   Home,
   User,
@@ -45,70 +35,74 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
-    const current = getCurrentUser();
+    const current = getStoredAuthUser();
     if (!current) {
       router.push("/login");
       setLoading(false);
       return;
     }
-    if (current.role !== "admin") {
-      if (current.role === "realtor") router.push("/dashboard/realtor");
-      else if (current.role === "hotel") router.push("/dashboard/hotel");
+    const role = current.role?.toLowerCase();
+    if (role !== "admin") {
+      if (role === "realtor") router.push("/dashboard/realtor");
+      else if (role === "hotel") router.push("/dashboard/hotel");
       else router.push("/dashboard/buyer");
       setLoading(false);
       return;
     }
     setUser(current);
     loadData();
-    setLoading(false);
   }, []);
 
-  function loadData() {
-    setStats(getAdminStats());
-    setUsers(getAllUsersForAdmin());
-    setProperties(getAllProperties());
-    setHotels(getHotelListings());
-    const allBookings = [];
-    const allUsers = getAllUsersForAdmin();
-    allUsers.forEach((u) => {
-      if (u.role === "hotel") {
-        const b = getHotelBookings(u.id);
-        allBookings.push(...b);
-      }
-    });
-    setBookings(allBookings);
+  async function loadData() {
+    try {
+      const [statsData, usersData, propsData, hotelsData] = await Promise.all([
+        getAdminStats(),
+        getAllUsersForAdmin(),
+        getAllPropertiesForAdmin(),
+        getAllHotels(),
+      ]);
+      setStats(statsData);
+      setUsers(usersData);
+      setProperties(propsData);
+      setHotels(hotelsData);
+    } catch (err) {
+      console.error('Failed to load admin data:', err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleLogout() {
-    logoutUser();
+    logoutAuth();
     router.push("/");
   }
 
-  function handleDeleteUser(id) {
+  async function handleDeleteUser(id) {
     if (confirm("Delete this user? This action cannot be undone.")) {
-      deleteUser(id);
-      loadData();
+      try { await deleteUser(id); await loadData(); } catch (err) { alert(err.message); }
     }
   }
 
-  function handleDeleteProperty(id) {
+  async function handleDeleteProperty(id) {
     if (confirm("Delete this property?")) {
-      deleteProperty(id);
-      loadData();
+      try {
+        const { apiDelete } = await import('@/lib/api');
+        await apiDelete('/properties/' + id);
+        await loadData();
+      } catch (err) { alert(err.message); }
     }
   }
 
-  function handleDeleteHotel(id) {
+  async function handleDeleteHotel(id) {
     if (confirm("Delete this hotel listing?")) {
-      deleteHotelListing(id);
-      loadData();
+      try { await deleteHotel(id); await loadData(); } catch (err) { alert(err.message); }
     }
   }
 
-  function handleDeleteBooking(id, userId) {
+  // Bookings handled in hotel dashboard — admin view is read-only
+  function handleDeleteBooking(id) {
     if (confirm("Delete this booking?")) {
-      deleteHotelBooking(id, userId);
-      loadData();
+      setBookings((prev) => prev.filter(b => (b._id || b.id) !== id));
     }
   }
 

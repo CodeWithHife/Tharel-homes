@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser, logoutUser } from "@/lib/storage";
+import { getStoredAuthUser, logoutAuth } from "@/lib/auth";
+import { getMyHotels, createHotel, updateHotel, deleteHotel, getMyAllBookings, updateBookingStatus as updateBookingStatusAPI, deleteBooking as deleteBookingAPI } from "@/lib/hotels";
 import { Home, User, LogOut, LayoutDashboard, Crown, Calendar, Bed, Users, Plus, X, CheckCircle2, Search } from "lucide-react";
 
 // ===== SUBSCRIPTION PLANS =====
@@ -24,49 +25,58 @@ export default function HotelDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const current = getCurrentUser();
+    const current = getStoredAuthUser();
     if (!current) { router.push("/login"); return; }
-    if (current.role !== "hotel") { router.push("/dashboard/buyer"); return; }
+    const role = current.role?.toLowerCase();
+    if (role !== "hotel") { router.push("/dashboard/buyer"); return; }
     setUser(current);
-
-    const storedListings = JSON.parse(localStorage.getItem("hotel_listings") || "[]");
-    setHotelListings(storedListings);
-
-    const storedBookings = JSON.parse(localStorage.getItem("hotel_bookings_" + current.id) || "[]");
-    setBookings(storedBookings);
+    getMyHotels().then(setHotelListings).catch(() => {});
+    getMyAllBookings().then(setBookings).catch(() => {});
   }, []);
 
   function handleLogout() {
-    logoutUser();
+    logoutAuth();
     router.push("/");
   }
 
-  function addBooking(e) {
+  async function addBooking(e) {
     e.preventDefault();
-    if (!newBooking.guestName || !newBooking.checkIn || !newBooking.checkOut || !newBooking.room) {
-      alert("Please fill in all fields");
+    if (!newBooking.guestName || !newBooking.checkIn || !newBooking.checkOut) {
+      alert("Please fill in all required fields");
       return;
     }
-    const booking = { ...newBooking, id: Date.now(), createdAt: new Date().toISOString() };
-    const updated = [...bookings, booking];
-    setBookings(updated);
-    localStorage.setItem("hotel_bookings_" + user.id, JSON.stringify(updated));
+    // If there are no hotel listings, we cannot create a booking
+    if (hotelListings.length === 0) {
+      alert("Please add a hotel listing first before creating bookings.");
+      return;
+    }
+    try {
+      const hotelId = hotelListings[0]._id || hotelListings[0].id;
+      const booking = await createHotel && await fetch(
+        (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api') + `/hotels/${hotelId}/bookings`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (window.localStorage.getItem('auth_token') || '') }, body: JSON.stringify({ guestName: newBooking.guestName, guestEmail: newBooking.guestEmail || 'N/A@na.com', checkIn: newBooking.checkIn, checkOut: newBooking.checkOut, guests: 1, notes: newBooking.room }) }
+      ).then(r => r.json()).then(d => d.data?.booking);
+      if (booking) setBookings((prev) => [booking, ...prev]);
+    } catch (err) {
+      alert("Error creating booking: " + err.message);
+    }
     setShowBookingModal(false);
     setNewBooking({ guestName: "", checkIn: "", checkOut: "", room: "", status: "Pending" });
   }
 
-  function updateBookingStatus(id, status) {
-    const updated = bookings.map(b => b.id === id ? { ...b, status } : b);
-    setBookings(updated);
-    localStorage.setItem("hotel_bookings_" + user.id, JSON.stringify(updated));
+  async function updateBookingStatus(id, status) {
+    try {
+      await updateBookingStatusAPI(id, status);
+      setBookings((prev) => prev.map(b => (b._id || b.id) === id ? { ...b, status } : b));
+    } catch (err) { alert("Error: " + err.message); }
   }
 
-  function deleteBooking(id) {
-    if (confirm("Delete this booking?")) {
-      const updated = bookings.filter(b => b.id !== id);
-      setBookings(updated);
-      localStorage.setItem("hotel_bookings_" + user.id, JSON.stringify(updated));
-    }
+  async function deleteBooking(id) {
+    if (!confirm("Delete this booking?")) return;
+    try {
+      await deleteBookingAPI(id);
+      setBookings((prev) => prev.filter(b => (b._id || b.id) !== id));
+    } catch (err) { alert("Error: " + err.message); }
   }
 
   const activePlan = SUBSCRIPTION_PLANS[0];
