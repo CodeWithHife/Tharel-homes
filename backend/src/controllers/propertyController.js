@@ -21,9 +21,41 @@ exports.getAllProperties = async (req, res) => {
 // ── GET PROPERTY BY SLUG (public) ─────────────────────────────────────────────
 exports.getPropertyBySlug = async (req, res) => {
   try {
-    const property = await Property.findOne({ slug: req.params.slug })
+    let property = await Property.findOne({ slug: req.params.slug })
       .populate('realtorId', 'firstName lastName phone email');
+    
     if (!property) {
+      // Fallback: search the Hotel collection
+      const Hotel = require('../models/hotel');
+      const hotel = await Hotel.findOne({ slug: req.params.slug })
+        .populate('userId', 'firstName lastName phone email');
+
+      if (hotel) {
+        // Map/Normalize the hotel document to match the Property schema shape
+        property = {
+          _id: hotel._id,
+          name: hotel.name,
+          slug: hotel.slug || hotel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+          location: hotel.location,
+          price: hotel.pricePerNight,
+          priceLabel: hotel.pricePerNight ? `₦${Number(hotel.pricePerNight).toLocaleString()}/night` : 'Price on Request',
+          type: hotel.roomType || 'Hotel Room',
+          beds: parseInt(hotel.capacity) || null,
+          baths: null,
+          size: hotel.reservationGoal || '',
+          image: hotel.image,
+          gallery: [hotel.image],
+          description: hotel.description,
+          features: hotel.amenities || [],
+          phone: hotel.userId?.phone || '',
+          views: 0,
+          featured: false,
+          isHotel: true,
+          realtorId: hotel.userId // map hotel owner details to realtorId
+        };
+        return res.status(200).json({ status: 'success', data: { property } });
+      }
+
       return res.status(404).json({ status: 'fail', error: 'Property not found' });
     }
     res.status(200).json({ status: 'success', data: { property } });
@@ -31,6 +63,7 @@ exports.getPropertyBySlug = async (req, res) => {
     res.status(500).json({ status: 'error', error: error.message });
   }
 };
+
 
 // ── GET REALTOR'S OWN PROPERTIES (protected) ──────────────────────────────────
 exports.getRealtorProperties = async (req, res) => {
@@ -50,9 +83,10 @@ exports.createProperty = async (req, res) => {
       size, image, gallery, description, features, phone, featured,
     } = req.body;
 
+    if (!name) return res.status(400).json({ status: 'fail', error: 'Property name is required' });
+
     // Generate slug
     const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    // Ensure unique slug
     let slug = baseSlug;
     let count = 0;
     while (await Property.findOne({ slug })) {
@@ -77,9 +111,12 @@ exports.createProperty = async (req, res) => {
 
     res.status(201).json({ status: 'success', data: { property } });
   } catch (error) {
+    console.error('[createProperty] ERROR:', error.message);
+    console.error('[createProperty] STACK:', error.stack);
     res.status(400).json({ status: 'fail', error: error.message });
   }
 };
+
 
 // ── UPDATE PROPERTY (protected, owner only) ───────────────────────────────────
 exports.updateProperty = async (req, res) => {
@@ -132,3 +169,33 @@ exports.incrementViews = async (req, res) => {
     res.status(400).json({ status: 'fail', error: error.message });
   }
 };
+
+// ── GET CLOUDINARY SIGNATURE (protected) ──────────────────────────────────────
+exports.getCloudinarySignature = async (req, res) => {
+  try {
+    const crypto = require('crypto');
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
+    const apiSecret   = process.env.CLOUDINARY_API_SECRET;
+    const apiKey      = process.env.CLOUDINARY_API_KEY;
+    const cloudName   = process.env.CLOUDINARY_CLOUD_NAME;
+
+    if (!apiSecret || !apiKey || !cloudName || !uploadPreset) {
+      return res.status(500).json({ status: 'fail', error: 'Cloudinary is not fully configured on the server' });
+    }
+
+    // Params must be sorted alphabetically, then API secret appended (no separator)
+    // timestamp (t) < upload_preset (u) → correct order
+    const stringToSign = `timestamp=${timestamp}&upload_preset=${uploadPreset}${apiSecret}`;
+    const signature = crypto.createHash('sha1').update(stringToSign).digest('hex');
+
+    res.status(200).json({
+      status: 'success',
+      data: { signature, timestamp, apiKey, cloudName, uploadPreset }
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'error', error: error.message });
+  }
+};
+
+

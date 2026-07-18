@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getStoredAuthUser, logoutAuth } from "@/lib/auth";
 import { getMyHotels, createHotel, updateHotel, deleteHotel, getMyAllBookings, updateBookingStatus as updateBookingStatusAPI, deleteBooking as deleteBookingAPI } from "@/lib/hotels";
-import { Home, User, LogOut, LayoutDashboard, Crown, Calendar, Bed, Users, Plus, X, CheckCircle2, Search } from "lucide-react";
+import { uploadToCloudinary } from "@/lib/cloudinary";
+import { Home, User, LogOut, LayoutDashboard, Crown, Calendar, Bed, Users, Plus, X, CheckCircle2, Search, Save, Edit2 } from "lucide-react";
 
 // ===== SUBSCRIPTION PLANS =====
 const SUBSCRIPTION_PLANS = [
@@ -21,8 +22,88 @@ export default function HotelDashboard() {
   const [bookings, setBookings] = useState([]);
   const [hotelListings, setHotelListings] = useState([]);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showHotelModal, setShowHotelModal] = useState(false);
+  const [editingHotel, setEditingHotel] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [hotelForm, setHotelForm] = useState({
+    name: "", location: "", roomType: "", capacity: "",
+    pricePerNight: "", description: "", image: "", amenities: "",
+  });
   const [newBooking, setNewBooking] = useState({ guestName: "", checkIn: "", checkOut: "", room: "", status: "Pending" });
   const [searchTerm, setSearchTerm] = useState("");
+
+  function resetHotelForm() {
+    setHotelForm({
+      name: "", location: "", roomType: "", capacity: "",
+      pricePerNight: "", description: "", image: "", amenities: "",
+    });
+  }
+
+  async function handleAddHotel() {
+    if (!hotelForm.name || !hotelForm.location) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    try {
+      const created = await createHotel({
+        ...hotelForm,
+        amenities: hotelForm.amenities ? hotelForm.amenities.split(",").map(a => a.trim()).filter(Boolean) : [],
+      });
+      if (created) {
+        setHotelListings(prev => [created, ...prev]);
+        setShowHotelModal(false);
+        resetHotelForm();
+      }
+    } catch (err) {
+      alert("Error creating hotel: " + err.message);
+    }
+  }
+
+  async function handleEditHotel() {
+    if (!hotelForm.name || !hotelForm.location) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    try {
+      const id = editingHotel._id || editingHotel.id;
+      const payload = {
+        ...hotelForm,
+        amenities: hotelForm.amenities ? hotelForm.amenities.split(",").map(a => a.trim()).filter(Boolean) : [],
+      };
+      const updated = await updateHotel(id, payload);
+      if (updated) {
+        setHotelListings(prev => prev.map(h => (h._id || h.id) === id ? updated : h));
+        setEditingHotel(null);
+        resetHotelForm();
+      }
+    } catch (err) {
+      alert("Error updating hotel: " + err.message);
+    }
+  }
+
+  async function handleDeleteHotel(id) {
+    if (!confirm("Are you sure you want to delete this hotel listing?")) return;
+    try {
+      await deleteHotel(id);
+      setHotelListings(prev => prev.filter(h => (h._id || h.id) !== id));
+    } catch (err) {
+      alert("Error deleting hotel: " + err.message);
+    }
+  }
+
+  function openEditHotel(hotel) {
+    setEditingHotel(hotel);
+    setHotelForm({
+      name: hotel.name,
+      location: hotel.location,
+      roomType: hotel.roomType || "",
+      capacity: hotel.capacity || "",
+      pricePerNight: hotel.pricePerNight || "",
+      description: hotel.description || "",
+      image: hotel.image || "",
+      amenities: hotel.amenities ? hotel.amenities.join(", ") : "",
+    });
+  }
 
   useEffect(() => {
     const current = getStoredAuthUser();
@@ -348,7 +429,7 @@ export default function HotelDashboard() {
                   </div>
                 ) : (
                   bookings.slice(0, 3).map(b => (
-                    <div key={b.id} className="db-booking-card">
+                    <div key={b._id || b.id} className="db-booking-card">
                       <div className="db-booking-info">
                         <span className="db-booking-name">{b.guestName}</span>
                         <span className="db-booking-dates">📅 {b.checkIn} → {b.checkOut}</span>
@@ -406,7 +487,7 @@ export default function HotelDashboard() {
                   </div>
                 ) : (
                   filteredBookings.map(b => (
-                    <div key={b.id} className="db-booking-card">
+                    <div key={b._id || b.id} className="db-booking-card">
                       <div className="db-booking-info">
                         <span className="db-booking-name">{b.guestName}</span>
                         <span className="db-booking-dates">📅 {b.checkIn} → {b.checkOut}</span>
@@ -433,29 +514,50 @@ export default function HotelDashboard() {
             {/* ===== LISTINGS ===== */}
             {tab === "listings" && (
               <div>
-                <div className="db-welcome">
-                  <h1>My Hotel Listings</h1>
-                  <p>Hotels you've listed on the platform.</p>
+                <div className="db-section-header">
+                  <div className="db-welcome" style={{ marginBottom: 0 }}>
+                    <h1>My Hotel Listings</h1>
+                    <p>Manage and list your rooms, suites, or hotels.</p>
+                  </div>
+                  <button className="db-add-btn" onClick={() => { resetHotelForm(); setShowHotelModal(true); }}>
+                    <Plus size={16} /> Add Hotel
+                  </button>
                 </div>
                 {hotelListings.length === 0 ? (
                   <div className="db-empty">
                     <div className="db-empty-icon">🏨</div>
                     <h3>No hotels listed yet</h3>
-                    <p>Your hotel listings will appear here once you add them.</p>
+                    <p>Add your first hotel listing to start receiving reservations.</p>
+                    <button className="db-add-btn" style={{ display: "inline-flex", width: "auto", marginTop: "12px" }} onClick={() => { resetHotelForm(); setShowHotelModal(true); }}>
+                      <Plus size={16} /> Add Your First Hotel
+                    </button>
                   </div>
                 ) : (
-                  hotelListings.map(h => (
-                    <div key={h.id} style={{background:"#fff",borderRadius:"12px",padding:"14px 16px",border:"1px solid #E2E8F0",marginBottom:"12px",display:"flex",flexDirection:"column",gap:"8px"}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:"8px"}}>
-                        <div>
-                          <div style={{fontWeight:700,color:"#0F172A",fontSize:"15px"}}>{h.name}</div>
-                          <div style={{fontSize:"13px",color:"#64748B"}}>📍 {h.location}</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }}>
+                    {hotelListings.map(h => (
+                      <div key={h._id || h.id} style={{ background: "#fff", borderRadius: "16px", padding: "20px", border: "1px solid #E2E8F0", display: "flex", gap: "20px", flexWrap: "wrap" }}>
+                        <img src={h.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80"} alt={h.name} style={{ width: "120px", height: "90px", objectFit: "cover", borderRadius: "10px", background: "#E2E8F0" }} />
+                        <div style={{ flex: 1, minWidth: "200px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                              <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#0F172A", margin: 0 }}>{h.name}</h3>
+                              <span style={{ background: "#F1F5F9", padding: "4px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 600, color: "#475569" }}>{h.status || "Active"}</span>
+                            </div>
+                            <div style={{ fontSize: "13.5px", color: "#64748B", marginTop: "4px" }}>📍 {h.location}</div>
+                            <div style={{ display: "flex", gap: "12px", fontSize: "12.5px", color: "#475569", marginTop: "8px", flexWrap: "wrap" }}>
+                              {h.roomType && <span>🛏️ {h.roomType}</span>}
+                              {h.capacity && <span>👥 Capacity: {h.capacity}</span>}
+                              {h.pricePerNight && <span style={{ fontWeight: 700, color: "#D4A017" }}>₦{Number(h.pricePerNight).toLocaleString()}/night</span>}
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                            <button className="db-booking-action-btn confirm" onClick={() => openEditHotel(h)}>Edit</button>
+                            <button className="db-booking-action-btn cancel" onClick={() => handleDeleteHotel(h._id || h.id)}>Delete</button>
+                          </div>
                         </div>
-                        <span style={{background:"#F1F5F9",padding:"4px 12px",borderRadius:"999px",fontSize:"12px",color:"#475569"}}>{h.status || "Active"}</span>
                       </div>
-                      <div style={{fontSize:"13px",color:"#64748B"}}>{h.rooms} rooms</div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
             )}
@@ -560,6 +662,107 @@ export default function HotelDashboard() {
               </div>
               <button type="submit" className="form-submit">Add Reservation</button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===== ADD/EDIT HOTEL MODAL ===== */}
+      {(showHotelModal || editingHotel) && (
+        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowHotelModal(false); setEditingHotel(null); resetHotelForm(); } }}>
+          <div className="modal-content" style={{ maxWidth: "560px" }}>
+            <div className="modal-header">
+              <h2>{editingHotel ? "Edit Hotel Listing" : "Add New Hotel Listing"}</h2>
+              <button className="modal-close" onClick={() => { setShowHotelModal(false); setEditingHotel(null); resetHotelForm(); }}><X size={24} /></button>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Hotel / Room Name *</label>
+              <input className="form-input" value={hotelForm.name} onChange={e => setHotelForm({...hotelForm, name: e.target.value})} placeholder="e.g. Radisson Blu Executive Suite" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Location *</label>
+              <input className="form-input" value={hotelForm.location} onChange={e => setHotelForm({...hotelForm, location: e.target.value})} placeholder="e.g. Victoria Island, Lagos" />
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Room / Suite Type</label>
+                <input className="form-input" value={hotelForm.roomType} onChange={e => setHotelForm({...hotelForm, roomType: e.target.value})} placeholder="e.g. Penthouse Suite" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Capacity</label>
+                <input className="form-input" value={hotelForm.capacity} onChange={e => setHotelForm({...hotelForm, capacity: e.target.value})} placeholder="e.g. 2 Guests" />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Price per Night (₦) *</label>
+              <input className="form-input" type="number" value={hotelForm.pricePerNight} onChange={e => setHotelForm({...hotelForm, pricePerNight: e.target.value})} placeholder="75000" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Hotel Image *</label>
+              {hotelForm.image && (
+                <div style={{ position: "relative", marginBottom: "8px", borderRadius: "8px", overflow: "hidden", height: "120px", border: "1px solid #E2E8F0" }}>
+                  <img src={hotelForm.image} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <button type="button" onClick={() => setHotelForm({...hotelForm, image: ""})} style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(15,23,42,0.8)", border: "none", color: "#fff", borderRadius: "50%", padding: "4px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={14} /></button>
+                </div>
+              )}
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  id="hotel-file-upload"
+                  style={{ display: "none" }} 
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploadLoading(true);
+                    try {
+                      const url = await uploadToCloudinary(file);
+                      setHotelForm(prev => ({ ...prev, image: url }));
+                    } catch (err) {
+                      alert(err.message + ". Using demo fallback image.");
+                      setHotelForm(prev => ({ ...prev, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80" }));
+                    } finally {
+                      setUploadLoading(false);
+                    }
+                  }} 
+                />
+                <label 
+                  htmlFor="hotel-file-upload" 
+                  style={{ 
+                    display: "inline-flex", 
+                    alignItems: "center", 
+                    gap: "6px", 
+                    padding: "10px 16px", 
+                    borderRadius: "10px", 
+                    border: "1.5px dashed #D4A017", 
+                    color: "#D4A017", 
+                    fontWeight: 600, 
+                    fontSize: "13px", 
+                    cursor: "pointer", 
+                    background: "rgba(212,160,23,0.05)",
+                    flexShrink: 0
+                  }}
+                >
+                  {uploadLoading ? "Uploading..." : "Upload Image"}
+                </label>
+                <input 
+                  className="form-input" 
+                  value={hotelForm.image} 
+                  onChange={e => setHotelForm({...hotelForm, image: e.target.value})} 
+                  placeholder="Or paste image URL" 
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Description</label>
+              <textarea className="form-input" rows="3" value={hotelForm.description} onChange={e => setHotelForm({...hotelForm, description: e.target.value})} placeholder="Describe the hotel amenities or suite features..." />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Amenities (comma separated)</label>
+              <input className="form-input" value={hotelForm.amenities} onChange={e => setHotelForm({...hotelForm, amenities: e.target.value})} placeholder="Free Wi-Fi, Swimming Pool, Complimentary breakfast" />
+            </div>
+            <button className="form-submit" onClick={editingHotel ? handleEditHotel : handleAddHotel}>
+              {editingHotel ? "Update Hotel" : "Add Hotel"}
+            </button>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const stats = [
   { value: 200, suffix: "+", label: "Properties Listed" },
@@ -9,24 +10,44 @@ const stats = [
   { value: 10, suffix: "+", label: "Years Experience" },
 ];
 
-function useCountUp(target, duration = 2000, start = false) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!start) return;
-    let startTime = null;
-    const step = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      setCount(Math.floor(progress * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration, start]);
-  return count;
-}
+function StatItem({ value, suffix, label }) {
+  const numRef = useRef(null);
+  const reducedMotion = useReducedMotion();
 
-function StatItem({ value, suffix, label, animate }) {
-  const count = useCountUp(value, 2000, animate);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.gsap) return;
+    const gsap = window.gsap;
+
+    const ctx = gsap.context(() => {
+      if (reducedMotion) {
+        if (numRef.current) numRef.current.innerText = value;
+        return;
+      }
+
+      const obj = { val: 0 };
+      gsap.fromTo(obj,
+        { val: 0 },
+        {
+          val: value,
+          duration: 2,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: numRef.current,
+            start: "top 95%",
+            once: true,
+          },
+          onUpdate: () => {
+            if (numRef.current) {
+              numRef.current.innerText = Math.floor(obj.val);
+            }
+          },
+        }
+      );
+    });
+
+    return () => ctx.revert();
+  }, [value, reducedMotion]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <span
@@ -38,9 +59,10 @@ function StatItem({ value, suffix, label, animate }) {
           fontFamily: "var(--font-montserrat), sans-serif",
           letterSpacing: "-0.02em",
           textAlign: "center",
+          fontVariantNumeric: "tabular-nums",
         }}
       >
-        {count}
+        <span ref={numRef}>0</span>
         {suffix}
       </span>
       <span
@@ -60,102 +82,185 @@ function StatItem({ value, suffix, label, animate }) {
   );
 }
 
+const heroImages = [
+  {
+    src: "/images/hero/hero.png",
+    alt: "Premium property",
+    isLocal: true,
+  },
+  {
+    src: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80",
+    alt: "Luxury modern home with pool",
+    isLocal: false,
+  },
+  {
+    src: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
+    alt: "Contemporary glass house",
+    isLocal: false,
+  },
+];
+
 export default function Hero() {
-  const [visible, setVisible] = useState(false);
-  const [statsVisible, setStatsVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const eyebrowRef = useRef(null);
+  const headlineRef = useRef(null);
+  const subcopyRef = useRef(null);
+  const buttonsRef = useRef(null);
   const statsRef = useRef(null);
+  const imageRef = useRef(null);
+  const imageWrapRef = useRef(null);
+  const searchRef = useRef(null);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 120);
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => {
-      clearTimeout(t);
       window.removeEventListener("resize", handleResize);
     };
   }, []);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setStatsVisible(true);
-      },
-      { threshold: 0.1 }
-    );
-    if (statsRef.current) observer.observe(statsRef.current);
-    return () => observer.disconnect();
-  }, []);
+    if (typeof window === "undefined" || !window.gsap) return;
+    const gsap = window.gsap;
+
+    const ctx = gsap.context(() => {
+      if (reducedMotion) {
+        gsap.set([eyebrowRef.current, headlineRef.current, subcopyRef.current, buttonsRef.current, statsRef.current, searchRef.current], { opacity: 1, y: 0 });
+        gsap.set(imageWrapRef.current, { opacity: 1 });
+        gsap.set(imageRef.current, { scale: 1, y: 0 });
+        return;
+      }
+
+      // Page load animations for text column
+      const tl = gsap.timeline({ defaults: { ease: "power2.out", duration: 0.8 } });
+      tl.fromTo(eyebrowRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.1);
+      tl.fromTo(headlineRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.18);
+      tl.fromTo(subcopyRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.26);
+      tl.fromTo(buttonsRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.34);
+      tl.fromTo(statsRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.42);
+      tl.fromTo(searchRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.5);
+
+      // Hero image load animations
+      gsap.fromTo(imageWrapRef.current, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 1, ease: "power2.out" });
+      gsap.fromTo(imageRef.current, { scale: 1.05 }, { scale: 1, duration: 1.2, ease: "power3.out" });
+
+      // Parallax scroll effect
+      const isMobile = window.innerWidth < 768;
+      if (!isMobile && window.ScrollTrigger) {
+        gsap.to(imageRef.current, {
+          y: 40,
+          ease: "none",
+          scrollTrigger: {
+            trigger: imageWrapRef.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      }
+    });
+
+    return () => ctx.revert();
+  }, [reducedMotion]);
+
+  const currentImage = heroImages[currentImageIndex];
 
   return (
     <>
       <style>{`
-        @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeSlideRight {
-          from { opacity: 0; transform: translateX(50px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
         @keyframes floatY {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-14px); }
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-18px) scale(1.02); }
         }
         @keyframes floatCard {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-6px); }
         }
+        @keyframes imageFade {
+          0% { opacity: 0.5; transform: scale(1.02); }
+          15% { opacity: 1; transform: scale(1); }
+          85% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0.5; transform: scale(1.02); }
+        }
 
-        .h-anim-1 { opacity: 0; animation: ${visible ? "fadeSlideUp 0.8s ease 0.1s forwards" : "none"}; }
-        .h-anim-2 { opacity: 0; animation: ${visible ? "fadeSlideUp 0.8s ease 0.25s forwards" : "none"}; }
-        .h-anim-3 { opacity: 0; animation: ${visible ? "fadeSlideUp 0.8s ease 0.4s forwards" : "none"}; }
-        .h-anim-4 { opacity: 0; animation: ${visible ? "fadeSlideUp 0.8s ease 0.55s forwards" : "none"}; }
-        .h-anim-5 { opacity: 0; animation: ${visible ? "fadeSlideUp 0.8s ease 0.7s forwards" : "none"}; }
-        .h-anim-6 { opacity: 0; animation: ${visible ? "fadeSlideUp 0.8s ease 0.85s forwards" : "none"}; }
-        .h-anim-img { opacity: 0; animation: ${visible ? "fadeSlideRight 1s ease 0.35s forwards" : "none"}; }
+        .h-anim-1 { opacity: 0; }
+        .h-anim-2 { opacity: 0; }
+        .h-anim-3 { opacity: 0; }
+        .h-anim-4 { opacity: 0; }
+        .h-anim-5 { opacity: 0; }
+        .h-anim-6 { opacity: 0; }
+        .h-anim-img { opacity: 0; }
 
-        .h-float { animation: floatY 6s ease-in-out infinite; }
+        .h-float {
+          animation: floatY 6s ease-in-out infinite;
+        }
 
         .h-image-wrap {
           position: relative;
-          border-radius: 12px;
+          border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 30px 60px -20px rgba(15,23,42,0.25);
+          box-shadow: 0 20px 60px rgba(15,23,42,0.12);
+          transition: box-shadow 0.5s ease;
           aspect-ratio: 4/3;
           width: 100%;
-          background: transparent;
+          background: #E2E8F0;
         }
+
+        .h-image-wrap:hover {
+          box-shadow: 0 30px 80px rgba(15,23,42,0.18);
+        }
+
         .h-image-wrap img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           display: block;
+          transition: transform 0.5s ease;
+          animation: imageFade 4s ease-in-out infinite;
+        }
+
+        .h-image-wrap:hover img {
+          transform: scale(1.03);
         }
 
         .h-btn-primary, .h-btn-secondary {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 15px 32px;
-          border-radius: 8px;
+          padding: 15px 34px;
+          border-radius: 50px;
           font-weight: 700;
           font-size: 14px;
           text-decoration: none;
-          transition: all 0.3s ease;
+          transition: all 0.35s ease;
           width: auto;
         }
+
         .h-btn-primary {
           background: #0F172A;
           color: #ffffff;
+          box-shadow: 0 8px 28px rgba(15,23,42,0.25);
           border: 2px solid #0F172A;
         }
         .h-btn-primary:hover {
           background: #D4AF37;
           color: #0F172A;
           border-color: #D4AF37;
+          transform: translateY(-3px);
+          box-shadow: 0 16px 36px rgba(212,175,55,0.3);
         }
+
         .h-btn-secondary {
           background: transparent;
           color: #0F172A;
@@ -164,6 +269,7 @@ export default function Hero() {
         .h-btn-secondary:hover {
           border-color: #D4AF37;
           color: #D4AF37;
+          transform: translateY(-3px);
         }
 
         /* ── Floating search card ── */
@@ -227,9 +333,13 @@ export default function Hero() {
         }
         .h-search-btn:hover { background: #D4AF37; color: #0F172A; }
 
+        /* ── Mobile overrides ── */
         @media (max-width: 1024px) {
-          .h-image-wrap { aspect-ratio: 16/10; }
+          .h-image-wrap {
+            aspect-ratio: 16/10;
+          }
         }
+
         @media (max-width: 900px) {
           .h-search-card { flex-direction: column; border-radius: 16px; padding: 16px; gap: 4px; }
           .h-search-field { padding: 10px 4px; }
@@ -237,37 +347,103 @@ export default function Hero() {
           .h-search-btn { width: 100%; padding: 14px; border-radius: 10px; margin-top: 8px; }
           .h-search-outer { animation: none; }
         }
+
         @media (max-width: 768px) {
-          .h-image-wrap { aspect-ratio: 16/12; }
-          .h-btn-primary, .h-btn-secondary { width: 100% !important; font-size: 13px !important; padding: 14px 20px !important; }
-          .h-anim-4 { width: 100% !important; flex-direction: column !important; gap: 10px !important; }
+          .h-image-wrap {
+            aspect-ratio: 16/12;
+          }
+          .h-btn-primary, .h-btn-secondary {
+            width: 100% !important;
+            font-size: 13px !important;
+            padding: 14px 20px !important;
+          }
+          .h-anim-4 {
+            width: 100% !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+          }
         }
+
         @media (max-width: 480px) {
-          .h-anim-2 { font-size: 32px !important; }
-          .h-anim-3 { font-size: 14px !important; max-width: 100% !important; }
-          .h-anim-1 { font-size: 10px !important; }
-          .h-image-wrap { aspect-ratio: 16/10; }
-          .h-float { animation: none; }
+          .h-anim-2 {
+            font-size: 32px !important;
+          }
+          .h-anim-3 {
+            font-size: 14px !important;
+            max-width: 100% !important;
+          }
+          .h-anim-1 {
+            font-size: 10px !important;
+          }
+          .h-anim-1 span {
+            width: 24px !important;
+          }
+          .h-image-wrap {
+            aspect-ratio: 16/10;
+          }
+          .h-float {
+            animation: none;
+          }
         }
+
         @media (max-width: 380px) {
-          .h-anim-2 { font-size: 28px !important; }
-          .h-btn-primary, .h-btn-secondary { font-size: 12px !important; padding: 12px 16px !important; }
+          .h-anim-2 {
+            font-size: 28px !important;
+          }
+          .h-btn-primary, .h-btn-secondary {
+            font-size: 12px !important;
+            padding: 12px 16px !important;
+          }
         }
       `}</style>
 
-      {/* HERO SECTION with extra top padding to avoid navbar overlap */}
+
       <section
         style={{
           position: "relative",
           width: "100%",
           minHeight: "100vh",
           overflow: "hidden",
-          background: "#f5efe6",
+          background: "linear-gradient(125deg, #f5efe6 0%, #ede8de 28%, #dce5f3 62%, #cdd5ec 100%)",
           fontFamily: "var(--font-inter), sans-serif",
-          paddingTop: "100px", // 👈 this gives room for the fixed navbar
+          paddingTop: "100px", // space for navbar
         }}
       >
-        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: isDesktop ? "0 64px" : "0 20px" }}>
+        {/* Decorative blobs – hidden on small screens for performance */}
+        <div
+          style={{
+            position: "absolute",
+            top: "-100px",
+            right: "-100px",
+            width: "600px",
+            height: "600px",
+            background: "radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 68%)",
+            borderRadius: "50%",
+            pointerEvents: "none",
+            display: isDesktop ? "block" : "none",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-120px",
+            left: "-80px",
+            width: "500px",
+            height: "500px",
+            background: "radial-gradient(circle, rgba(15,23,42,0.05) 0%, transparent 68%)",
+            borderRadius: "50%",
+            pointerEvents: "none",
+            display: isDesktop ? "block" : "none",
+          }}
+        />
+
+        <div
+          style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
+            padding: isDesktop ? "0 64px" : "0 20px",
+          }}
+        >
           <div
             style={{
               display: "flex",
@@ -280,39 +456,92 @@ export default function Hero() {
             }}
           >
             {/* LEFT COLUMN */}
-            <div style={{ width: isDesktop ? "48%" : "100%", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center" }}>
-              <div className="h-anim-1" style={{ marginBottom: "18px" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#94a3b8" }}>
-                  <span style={{ width: "7px", height: "7px", borderRadius: "999px", background: "#D4AF37", flexShrink: 0 }} />
+            <div
+              style={{
+                width: isDesktop ? "48%" : "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                justifyContent: "center",
+                gap: "0",
+              }}
+            >
+              <div ref={eyebrowRef} className="h-anim-1" style={{ marginBottom: "20px" }}>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.3em",
+                    textTransform: "uppercase",
+                    color: "#94a3b8",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "32px",
+                      height: "2px",
+                      background: "#D4AF37",
+                      borderRadius: "999px",
+                      flexShrink: 0,
+                    }}
+                  />
                   Lifetime Realty Partner
                 </span>
               </div>
 
               <h1
+                ref={headlineRef}
                 className="h-anim-2"
                 style={{
                   fontFamily: "var(--font-montserrat), sans-serif",
                   fontWeight: 900,
                   color: "#0F172A",
-                  lineHeight: 1.08,
-                  marginBottom: "18px",
-                  fontSize: isDesktop ? "clamp(44px, 4vw, 64px)" : "clamp(36px, 6vw, 44px)",
+                  lineHeight: 1.06,
+                  marginBottom: "16px",
+                  fontSize: isDesktop ? "clamp(44px, 4vw, 66px)" : "clamp(36px, 6vw, 44px)",
                   letterSpacing: "-0.025em",
                 }}
               >
                 Enhancing Your<br />
-                Living Experience
+                <span style={{ color: "#0F172A" }}>Living Experience</span>
               </h1>
 
-              <p className="h-anim-3" style={{ color: "#64748b", fontSize: isDesktop ? "15.5px" : "clamp(14px, 2.5vw, 15px)", lineHeight: 1.8, marginBottom: "30px", maxWidth: isDesktop ? "420px" : "100%" }}>
+              <p
+                ref={subcopyRef}
+                className="h-anim-3"
+                style={{
+                  color: "#64748b",
+                  fontSize: isDesktop ? "15.5px" : "clamp(14px, 2.5vw, 15px)",
+                  lineHeight: 1.8,
+                  marginBottom: "32px",
+                  maxWidth: isDesktop ? "420px" : "100%",
+                }}
+              >
                 Discover premium homes, apartments, and investment opportunities in
                 carefully selected locations. We help families and investors find
                 properties that combine comfort, security, and lasting value.
               </p>
 
-              <div className="h-anim-4" style={{ display: "flex", flexDirection: isDesktop ? "row" : "column", gap: "14px", width: isDesktop ? "auto" : "100%", marginBottom: isDesktop ? "48px" : "32px" }}>
-                <Link href="/properties" className="h-btn-primary">Explore Properties</Link>
-                <Link href="/contact" className="h-btn-secondary">Contact Us</Link>
+              <div
+                ref={buttonsRef}
+                className="h-anim-4"
+                style={{
+                  display: "flex",
+                  flexDirection: isDesktop ? "row" : "column",
+                  gap: "14px",
+                  width: isDesktop ? "auto" : "100%",
+                  marginBottom: isDesktop ? "52px" : "32px",
+                }}
+              >
+                <Link href="/properties" className="h-btn-primary">
+                  Explore Properties
+                </Link>
+                <Link href="/contact" className="h-btn-secondary">
+                  Contact Us
+                </Link>
               </div>
 
               {/* ─── STATS ─── */}
@@ -323,21 +552,39 @@ export default function Hero() {
                     flexDirection: isDesktop ? "row" : "column",
                     alignItems: "center",
                     justifyContent: "space-around",
-                    padding: isDesktop ? "22px 30px" : "18px 16px",
-                    background: "#ffffff",
-                    borderRadius: "14px",
-                    border: "1px solid rgba(15,23,42,0.06)",
-                    boxShadow: "0 6px 24px rgba(15,23,42,0.05)",
+                    padding: isDesktop ? "24px 32px" : "18px 16px",
+                    background: "rgba(255,255,255,0.7)",
+                    backdropFilter: "blur(18px)",
+                    borderRadius: "18px",
+                    border: "1px solid rgba(255,255,255,0.9)",
+                    boxShadow: "0 8px 32px rgba(15,23,42,0.07)",
                     gap: isDesktop ? "0" : "16px",
                     width: "100%",
                     flexWrap: "wrap",
                   }}
                 >
                   {stats.map((stat, i) => (
-                    <div key={stat.label} style={{ display: "flex", alignItems: "center", flexDirection: isDesktop ? "row" : "column", width: isDesktop ? "auto" : "100%", justifyContent: "center" }}>
-                      <StatItem {...stat} animate={statsVisible} />
+                    <div
+                      key={stat.label}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        flexDirection: isDesktop ? "row" : "column",
+                        width: isDesktop ? "auto" : "100%",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <StatItem {...stat} />
                       {i < stats.length - 1 && (
-                        <div style={{ width: isDesktop ? "1px" : "80%", height: isDesktop ? "48px" : "1px", background: "rgba(15,23,42,0.08)", margin: isDesktop ? "0 28px" : "12px 0", flexShrink: 0 }} />
+                        <div
+                          style={{
+                            width: isDesktop ? "1px" : "80%",
+                            height: isDesktop ? "48px" : "1px",
+                            background: "rgba(15,23,42,0.1)",
+                            margin: isDesktop ? "0 28px" : "12px 0",
+                            flexShrink: 0,
+                          }}
+                        />
                       )}
                     </div>
                   ))}
@@ -345,26 +592,78 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN – IMAGE */}
-            <div className="h-anim-img" style={{ width: isDesktop ? "48%" : "100%", maxWidth: isDesktop ? "none" : "500px", display: "flex", alignItems: "center", justifyContent: isDesktop ? "flex-end" : "center", margin: isDesktop ? "0" : "0 auto" }}>
-              <div className="h-float" style={{ width: "100%", position: "relative" }}>
-                <div className="h-image-wrap">
-                  <Image
-                    src="/images/hero/hero.png"
-                    alt="Premium property"
-                    width={800}
-                    height={600}
-                    priority
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"; }}
-                  />
+            {/* RIGHT COLUMN – SLIDESHOW */}
+            <div
+              ref={imageWrapRef}
+              className="h-anim-img"
+              style={{
+                width: isDesktop ? "48%" : "100%",
+                maxWidth: isDesktop ? "none" : "500px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: isDesktop ? "flex-end" : "center",
+                margin: isDesktop ? "0" : "0 auto",
+              }}
+            >
+              <div
+                className="h-float"
+                style={{
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: "5%",
+                    background: "radial-gradient(ellipse, rgba(212,175,55,0.10) 0%, transparent 70%)",
+                    filter: "blur(40px)",
+                    borderRadius: "50%",
+                    zIndex: 0,
+                    pointerEvents: "none",
+                  }}
+                />
+
+                <div className="h-image-wrap" style={{ overflow: "hidden" }}>
+                  <div ref={imageRef} style={{ width: "100%", height: "110%", position: "relative", top: "-10px" }}>
+                    {currentImage.isLocal ? (
+                      <Image
+                        src={currentImage.src}
+                        alt={currentImage.alt}
+                        width={800}
+                        height={600}
+                        priority
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
+                        }}
+                      />
+                    ) : (
+                      <img
+                        key={currentImageIndex}
+                        src={currentImage.src}
+                        alt={currentImage.alt}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* ─── FLOATING SEARCH BAR ─── */}
-          <div className="h-anim-6 h-search-outer">
+          <div ref={searchRef} className="h-anim-6 h-search-outer">
             <div className="h-search-card">
               <div className="h-search-field">
                 <div className="h-search-text">
@@ -400,6 +699,7 @@ export default function Hero() {
               <button type="button" className="h-search-btn">Search</button>
             </div>
           </div>
+
         </div>
 
         <div style={{ height: isDesktop ? "60px" : "40px" }} />

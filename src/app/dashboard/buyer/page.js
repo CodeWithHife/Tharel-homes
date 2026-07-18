@@ -329,7 +329,7 @@ export default function BuyerDashboard() {
                 ) : (
                   <div className="db-fav-grid">
                     {favProperties.map((p) => (
-                      <div key={p.id} className="db-fav-card">
+                      <div key={p._id || p.id} className="db-fav-card">
                         <img
                           className="db-fav-img"
                           src={p.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80"}

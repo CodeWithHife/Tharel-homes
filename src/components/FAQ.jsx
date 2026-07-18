@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
-import { Plus, Minus } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Plus } from "lucide-react";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const faqs = [
   {
@@ -37,6 +38,123 @@ const faqs = [
   },
 ];
 
+function FAQItem({ faq, isOpen, onToggle }) {
+  const contentRef = useRef(null);
+  const iconRef = useRef(null);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.gsap) return;
+    const gsap = window.gsap;
+
+    const ctx = gsap.context(() => {
+      if (reducedMotion) {
+        gsap.set(contentRef.current, {
+          height: isOpen ? "auto" : 0,
+          opacity: isOpen ? 1 : 0,
+        });
+        gsap.set(iconRef.current, {
+          rotate: isOpen ? 45 : 0,
+        });
+        return;
+      }
+
+      if (isOpen) {
+        gsap.to(contentRef.current, {
+          height: contentRef.current.scrollHeight,
+          opacity: 1,
+          duration: 0.4,
+          ease: "power2.out",
+        });
+        gsap.to(iconRef.current, {
+          rotate: 45,
+          duration: 0.35,
+          ease: "power2.out",
+        });
+      } else {
+        gsap.to(contentRef.current, {
+          height: 0,
+          opacity: 0,
+          duration: 0.35,
+          ease: "power2.out",
+        });
+        gsap.to(iconRef.current, {
+          rotate: 0,
+          duration: 0.35,
+          ease: "power2.out",
+        });
+      }
+    });
+
+    return () => ctx.revert();
+  }, [isOpen, reducedMotion]);
+
+  return (
+    <div
+      style={{
+        background: "white",
+        borderRadius: "16px",
+        boxShadow: "0 2px 10px rgba(15,23,42,0.06)",
+        overflow: "hidden",
+        border: isOpen ? "2px solid #D4A017" : "1px solid transparent",
+        transition: "border-color 0.3s",
+      }}
+    >
+      <button
+        onClick={onToggle}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "20px 24px",
+          border: "none",
+          background: "none",
+          cursor: "pointer",
+          textAlign: "left",
+          gap: "16px",
+        }}
+      >
+        <span style={{ fontSize: "15px", fontWeight: 600, color: "#1A1A1A", flex: 1 }}>
+          {faq.question}
+        </span>
+        <div
+          ref={iconRef}
+          style={{
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: isOpen ? "#D4A017" : "#F1F5F9",
+            color: isOpen ? "white" : "#64748B",
+            flexShrink: 0,
+            transition: "background-color 0.3s, color 0.3s",
+          }}
+        >
+          <Plus size={16} />
+        </div>
+      </button>
+
+      <div
+        ref={contentRef}
+        style={{
+          overflow: "hidden",
+          height: 0,
+          opacity: 0,
+        }}
+      >
+        <div style={{ padding: "0 24px 20px", borderTop: "1px solid #F1F5F9", paddingTop: "16px" }}>
+          <p style={{ fontSize: "14px", color: "#64748B", lineHeight: 1.8 }}>
+            {faq.answer}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState(null);
 
@@ -57,55 +175,16 @@ export default function FAQ() {
         </div>
 
         <div style={{ maxWidth: "900px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
-          {faqs.map((faq, i) => {
-            const isOpen = openIndex === i;
-            return (
-              <div
-                key={i}
-                style={{
-                  background: "white",
-                  borderRadius: "16px",
-                  boxShadow: "0 2px 10px rgba(15,23,42,0.06)",
-                  overflow: "hidden",
-                  border: isOpen ? "2px solid #D4A017" : "1px solid transparent",
-                  transition: "all 0.3s",
-                }}
-              >
-                <button
-                  onClick={() => toggle(i)}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "20px 24px",
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    gap: "16px",
-                  }}
-                >
-                  <span style={{ fontSize: "15px", fontWeight: 600, color: "#1A1A1A", flex: 1 }}>
-                    {faq.question}
-                  </span>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: isOpen ? "#D4A017" : "#F1F5F9", color: isOpen ? "white" : "#64748B", flexShrink: 0, transition: "all 0.3s" }}>
-                    {isOpen ? <Minus size={16} /> : <Plus size={16} />}
-                  </div>
-                </button>
-
-                <div style={{ overflow: "hidden", maxHeight: isOpen ? "300px" : "0", transition: "max-height 0.3s ease" }}>
-                  <div style={{ padding: "0 24px 20px", borderTop: "1px solid #F1F5F9", paddingTop: "16px" }}>
-                    <p style={{ fontSize: "14px", color: "#64748B", lineHeight: 1.8 }}>
-                      {faq.answer}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {faqs.map((faq, i) => (
+            <FAQItem
+              key={i}
+              faq={faq}
+              isOpen={openIndex === i}
+              onToggle={() => toggle(i)}
+            />
+          ))}
         </div>
       </div>
     </section>
   );
-}
+}

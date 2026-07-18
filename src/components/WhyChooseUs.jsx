@@ -1,5 +1,7 @@
 "use client";
+import { useRef, useEffect } from "react";
 import { CreditCard, Clock, MessageCircle, MapPin } from "lucide-react";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const reasons = [
   {
@@ -25,12 +27,73 @@ const reasons = [
 ];
 
 export default function WhyChooseUs() {
+  const sectionRef = useRef(null);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.gsap) return;
+    const gsap = window.gsap;
+
+    const ctx = gsap.context(() => {
+      if (reducedMotion) return;
+
+      const cards = sectionRef.current.querySelectorAll(".wcu-card");
+      gsap.fromTo(cards,
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          stagger: 0.1,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 85%",
+            once: true,
+          },
+          onComplete: () => {
+            gsap.set(cards, { clearProps: "y,opacity" });
+          }
+        }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [reducedMotion]);
+
+  const handleMouseEnter = (index) => {
+    if (typeof window === "undefined" || !window.gsap || reducedMotion) return;
+    const icon = sectionRef.current.querySelector(`.wcu-icon-${index}`);
+    if (icon) {
+      window.gsap.to(icon, {
+        scale: 1.08,
+        rotate: 6,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    }
+  };
+
+  const handleMouseLeave = (index) => {
+    if (typeof window === "undefined" || !window.gsap || reducedMotion) return;
+    const icon = sectionRef.current.querySelector(`.wcu-icon-${index}`);
+    if (icon) {
+      window.gsap.to(icon, {
+        scale: 1,
+        rotate: 0,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    }
+  };
+
   return (
-    <section id="services" style={{
+    <section ref={sectionRef} id="services" style={{
       width: "100%",
       background: "linear-gradient(160deg, #0F172A 0%, #1e2d45 50%, #0F172A 100%)",
       padding: "100px 0 80px",
       position: "relative",
+      zIndex: 1,
       overflow: "hidden",
       fontFamily: "var(--font-inter), sans-serif",
     }}>
@@ -51,6 +114,7 @@ export default function WhyChooseUs() {
           {reasons.map((item, i) => (
             <div
               key={i}
+              className="wcu-card"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -62,21 +126,36 @@ export default function WhyChooseUs() {
                 border: "1px solid rgba(255,255,255,0.08)",
                 transition: "all 0.35s ease",
                 cursor: "default",
+                opacity: reducedMotion ? 1 : 0,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "rgba(212,175,55,0.12)";
                 e.currentTarget.style.borderColor = "rgba(212,175,55,0.4)";
                 e.currentTarget.style.transform = "translateY(-6px)";
                 e.currentTarget.style.boxShadow = "0 16px 40px rgba(212,175,55,0.1)";
+                handleMouseEnter(i);
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "rgba(255,255,255,0.04)";
                 e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "none";
+                handleMouseLeave(i);
               }}
             >
-              <div style={{ width: "62px", height: "62px", borderRadius: "18px", background: "rgba(212,175,55,0.08)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px" }}>
+              <div
+                className={`wcu-icon-${i}`}
+                style={{
+                  width: "62px",
+                  height: "62px",
+                  borderRadius: "18px",
+                  background: "rgba(212,175,55,0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "20px",
+                }}
+              >
                 {item.icon}
               </div>
               <h3 style={{ fontFamily: "var(--font-montserrat), sans-serif", fontWeight: 700, fontSize: "15px", color: "#ffffff", marginBottom: "10px" }}>
@@ -91,4 +170,4 @@ export default function WhyChooseUs() {
       </div>
     </section>
   );
-}
+}

@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Phone, Mail, MapPin, Send } from "lucide-react";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 export default function ContactForm() {
   const [form, setForm] = useState({
@@ -11,6 +12,40 @@ export default function ContactForm() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+
+  const sectionRef = useRef(null);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.gsap) return;
+    const gsap = window.gsap;
+
+    const ctx = gsap.context(() => {
+      if (reducedMotion) return;
+
+      const items = sectionRef.current.querySelectorAll(".contact-info-item");
+      gsap.fromTo(items,
+        { y: 20, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          stagger: 0.1,
+          duration: 0.6,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 85%",
+            once: true,
+          },
+          onComplete: () => {
+            gsap.set(items, { clearProps: "y,opacity" });
+          }
+        }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [reducedMotion]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -56,7 +91,7 @@ export default function ContactForm() {
   };
 
   return (
-    <section id="contact" style={{ width: "100%", background: "white", padding: "80px 20px" }}>
+    <section ref={sectionRef} id="contact" style={{ width: "100%", background: "white", padding: "80px 20px" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 16px" }}>
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
           <h2 style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 800, color: "#1A1A1A", marginBottom: "12px", fontFamily: "var(--font-montserrat), sans-serif" }}>
@@ -81,7 +116,7 @@ export default function ContactForm() {
               Contact Information
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div className="contact-info-item" style={{ display: "flex", alignItems: "center", gap: "16px", opacity: reducedMotion ? 1 : 0 }}>
                 <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(212,160,23,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Phone size={20} color="#D4A017" />
                 </div>
@@ -93,7 +128,7 @@ export default function ContactForm() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div className="contact-info-item" style={{ display: "flex", alignItems: "center", gap: "16px", opacity: reducedMotion ? 1 : 0 }}>
                 <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(212,160,23,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Mail size={20} color="#D4A017" />
                 </div>
@@ -105,7 +140,7 @@ export default function ContactForm() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div className="contact-info-item" style={{ display: "flex", alignItems: "center", gap: "16px", opacity: reducedMotion ? 1 : 0 }}>
                 <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(212,160,23,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <MapPin size={20} color="#D4A017" />
                 </div>
@@ -231,9 +266,37 @@ export default function ContactForm() {
 
                 <button
                   type="submit"
-                  style={{ width: "100%", padding: "14px", borderRadius: "12px", background: "#D4A017", color: "white", fontWeight: 700, fontSize: "14px", border: "none", cursor: "pointer", transition: "all 0.3s", marginTop: "16px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "#B8920F"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "#D4A017"}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    borderRadius: "12px",
+                    background: "#D4A017",
+                    color: "white",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease",
+                    marginTop: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#B8920F";
+                    if (!reducedMotion) {
+                      e.currentTarget.style.transform = "scale(1.03)";
+                      e.currentTarget.style.boxShadow = "0 10px 20px rgba(212, 160, 23, 0.25)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#D4A017";
+                    if (!reducedMotion) {
+                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }
+                  }}
                 >
                   <Send size={16} />
                   Send via WhatsApp

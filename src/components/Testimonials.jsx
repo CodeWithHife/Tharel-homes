@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+
 
 const testimonials = [
   {
@@ -25,80 +27,98 @@ const testimonials = [
 
 export default function Testimonials() {
   const [current, setCurrent] = useState(0);
-  const [fade, setFade] = useState(true); // controls opacity transition
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef(null);
+  const starsRef = useRef(null);
   const intervalRef = useRef(null);
-  const timerRef = useRef(null); // for fade delay
+  const reducedMotion = useReducedMotion();
 
   const total = testimonials.length;
 
-  // Auto-slide logic
-  const startAutoSlide = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      // Fade out, change, then fade in
-      setFade(false);
-      // After fade out, change index and fade in
-      timerRef.current = setTimeout(() => {
-        setCurrent((prev) => (prev + 1) % total);
-        setFade(true);
-      }, 400); // matches transition duration
-    }, 5000); // change every 5 seconds
+  // Unified function to transition to a new index
+  const transitionTo = (newIndex, direction = "next") => {
+    if (typeof window === "undefined" || !window.gsap) {
+      setCurrent(newIndex);
+      return;
+    }
+    const gsap = window.gsap;
+
+    if (reducedMotion) {
+      setCurrent(newIndex);
+      return;
+    }
+
+    const xOut = direction === "next" ? -40 : 40;
+    const xIn = direction === "next" ? 40 : -40;
+
+    // Animate out
+    gsap.to(cardRef.current, {
+      opacity: 0,
+      x: xOut,
+      duration: 0.35,
+      ease: "power2.in",
+      onComplete: () => {
+        setCurrent(newIndex);
+        
+        // Prepare position of new content
+        gsap.set(cardRef.current, { x: xIn, opacity: 0 });
+
+        // Animate in
+        gsap.to(cardRef.current, {
+          opacity: 1,
+          x: 0,
+          duration: 0.45,
+          ease: "power2.out",
+        });
+
+        // Stagger rating stars
+        if (starsRef.current) {
+          gsap.fromTo(
+            starsRef.current.children,
+            { scale: 0 },
+            { scale: 1, duration: 0.3, stagger: 0.05, ease: "back.out(1.7)" }
+          );
+        }
+      },
+    });
   };
 
-  // Clear intervals on unmount
+  // Auto-slide logic using useEffect and index-reset
   useEffect(() => {
-    startAutoSlide();
+    if (isHovered) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      return;
+    }
+
+    intervalRef.current = setInterval(() => {
+      const nextIndex = (current + 1) % total;
+      transitionTo(nextIndex, "next");
+    }, 6000); // 6s autoplay
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, []);
-
-  // Function to manually change testimonial (with fade)
-  const changeTestimonial = (index) => {
-    // Clear auto-slide timer to reset
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    // Fade out, change, fade in
-    setFade(false);
-    timerRef.current = setTimeout(() => {
-      setCurrent(index);
-      setFade(true);
-      // Restart auto-slide after 5 seconds of inactivity
-      timerRef.current = setTimeout(() => {
-        startAutoSlide();
-      }, 5000);
-    }, 400);
-  };
+  }, [current, isHovered, reducedMotion]);
 
   // Handlers for arrows and dots
   const prev = () => {
     const newIndex = current === 0 ? total - 1 : current - 1;
-    changeTestimonial(newIndex);
+    transitionTo(newIndex, "prev");
   };
 
   const next = () => {
     const newIndex = current === total - 1 ? 0 : current + 1;
-    changeTestimonial(newIndex);
+    transitionTo(newIndex, "next");
   };
 
   const goTo = (index) => {
-    changeTestimonial(index);
+    if (index === current) return;
+    const direction = index > current ? "next" : "prev";
+    transitionTo(index, direction);
   };
 
-  // Pause on hover, resume on leave
-  const handleMouseEnter = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (timerRef.current) clearTimeout(timerRef.current);
-  };
-
-  const handleMouseLeave = () => {
-    // Restart after a short delay
-    timerRef.current = setTimeout(() => {
-      startAutoSlide();
-    }, 3000);
-  };
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
 
   const t = testimonials[current];
 
@@ -146,20 +166,20 @@ export default function Testimonials() {
             padding: "40px 32px",
             boxShadow: "0 2px 14px rgba(15,23,42,0.07)",
             position: "relative",
+            overflow: "hidden", // Keep slides contained
           }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          {/* Fading content */}
+          {/* Fading + sliding content */}
           <div
+            ref={cardRef}
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               textAlign: "center",
               gap: "24px",
-              opacity: fade ? 1 : 0,
-              transition: "opacity 0.4s ease",
             }}
           >
             <div
@@ -180,7 +200,7 @@ export default function Testimonials() {
               {t.name.charAt(0)}
             </div>
 
-            <div style={{ display: "flex", gap: "4px", justifyContent: "center" }}>
+            <div ref={starsRef} style={{ display: "flex", gap: "4px", justifyContent: "center" }}>
               {[...Array(t.rating)].map((_, i) => (
                 <Star key={i} size={18} color="#D4A017" fill="#D4A017" />
               ))}
@@ -299,4 +319,4 @@ export default function Testimonials() {
       </div>
     </section>
   );
-}
+}

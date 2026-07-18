@@ -339,7 +339,7 @@ export default function AdminDashboard() {
                       <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Joined</th><th>Actions</th></tr></thead>
                       <tbody>
                         {users.map((u) => (
-                          <tr key={u.id}>
+                          <tr key={u._id || u.id}>
                             <td>{u.firstName} {u.lastName}</td>
                             <td>{u.email}</td>
                             <td><span style={{ textTransform: "capitalize", background: u.role === "admin" ? "#fef3c7" : "#e2e8f0", padding: "2px 10px", borderRadius: "999px", fontSize: "11px" }}>{u.role}</span></td>
@@ -374,7 +374,7 @@ export default function AdminDashboard() {
                         {properties.map((p) => {
                           const slug = getSafeSlug(p);
                           return (
-                            <tr key={p.id}>
+                            <tr key={p._id || p.id}>
                               <td>{p.name}</td>
                               <td>{p.location}</td>
                               <td>{p.priceLabel}</td>
@@ -408,7 +408,7 @@ export default function AdminDashboard() {
                       <thead><tr><th>Name</th><th>Location</th><th>Rooms</th><th>Status</th><th>Actions</th></tr></thead>
                       <tbody>
                         {hotels.map((h) => (
-                          <tr key={h.id}>
+                          <tr key={h._id || h.id}>
                             <td>{h.name}</td>
                             <td>{h.location}</td>
                             <td>{h.rooms}</td>
@@ -438,7 +438,7 @@ export default function AdminDashboard() {
                       <thead><tr><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Actions</th></tr></thead>
                       <tbody>
                         {bookings.map((b) => (
-                          <tr key={b.id}>
+                          <tr key={b._id || b.id}>
                             <td>{b.guestName}</td>
                             <td>{b.room}</td>
                             <td>{b.checkIn}</td>

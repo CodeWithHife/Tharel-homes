@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getStoredAuthUser, logoutAuth, updateProfileWithBackend } from "@/lib/auth";
 import { getRealtorProperties, createProperty, updateProperty, deleteProperty } from "@/lib/properties";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { Home, User, LogOut, Plus, Edit, Trash2, Eye, MessageCircle, LayoutDashboard, Crown, Zap, CheckCircle2, X, Search, Save, Edit2 } from "lucide-react";
 
 const SUBSCRIPTION_PLANS = [
@@ -21,6 +22,7 @@ export default function RealtorDashboard() {
   const [properties, setProperties] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "", location: "", price: "", priceLabel: "", type: "",
     beds: "", baths: "", size: "", image: "", description: "", features: "", phone: "",
@@ -411,7 +413,7 @@ export default function RealtorDashboard() {
                 ) : (
                   <div className="db-property-grid">
                     {properties.slice(0,3).map(p => (
-                      <div key={p.id} className="db-property-card">
+                      <div key={p._id || p.id} className="db-property-card">
                         <img className="db-property-img" src={p.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80"} alt={p.name} />
                         <div className="db-property-body">
                           <div className="db-property-name">{p.name}</div>
@@ -458,7 +460,7 @@ export default function RealtorDashboard() {
                 ) : (
                   <div className="db-property-grid">
                     {properties.map(p => (
-                      <div key={p.id} className="db-property-card">
+                      <div key={p._id || p.id} className="db-property-card">
                         <img className="db-property-img" src={p.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80"} alt={p.name} />
                         <div className="db-property-body">
                           <div className="db-property-name">{p.name}</div>
@@ -574,7 +576,62 @@ export default function RealtorDashboard() {
               <div className="form-group"><label className="form-label">Baths</label><input className="form-input" type="number" value={formData.baths} onChange={e => setFormData({...formData, baths: e.target.value})} placeholder="2" /></div>
             </div>
             <div className="form-group"><label className="form-label">Size</label><input className="form-input" value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 250 sqm, 1 Acre" /></div>
-            <div className="form-group"><label className="form-label">Image URL</label><input className="form-input" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} placeholder="https://images.unsplash.com/..." /></div>
+            <div className="form-group">
+              <label className="form-label">Property Image *</label>
+              {formData.image && (
+                <div style={{ position: "relative", marginBottom: "8px", borderRadius: "8px", overflow: "hidden", height: "120px", border: "1px solid #E2E8F0" }}>
+                  <img src={formData.image} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <button type="button" onClick={() => setFormData({...formData, image: ""})} style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(15,23,42,0.8)", border: "none", color: "#fff", borderRadius: "50%", padding: "4px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={14} /></button>
+                </div>
+              )}
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  id="realtor-file-upload"
+                  style={{ display: "none" }} 
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploadLoading(true);
+                    try {
+                      const url = await uploadToCloudinary(file);
+                      setFormData(prev => ({ ...prev, image: url }));
+                    } catch (err) {
+                      alert(err.message + ". Using demo fallback image.");
+                      setFormData(prev => ({ ...prev, image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80" }));
+                    } finally {
+                      setUploadLoading(false);
+                    }
+                  }} 
+                />
+                <label 
+                  htmlFor="realtor-file-upload" 
+                  style={{ 
+                    display: "inline-flex", 
+                    alignItems: "center", 
+                    gap: "6px", 
+                    padding: "10px 16px", 
+                    borderRadius: "10px", 
+                    border: "1.5px dashed #D4A017", 
+                    color: "#D4A017", 
+                    fontWeight: 600, 
+                    fontSize: "13px", 
+                    cursor: "pointer", 
+                    background: "rgba(212,160,23,0.05)",
+                    flexShrink: 0
+                  }}
+                >
+                  {uploadLoading ? "Uploading..." : "Upload Image"}
+                </label>
+                <input 
+                  className="form-input" 
+                  value={formData.image} 
+                  onChange={e => setFormData({...formData, image: e.target.value})} 
+                  placeholder="Or paste image URL" 
+                />
+              </div>
+            </div>
             <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Describe your property..." /></div>
             <div className="form-group"><label className="form-label">Features (comma separated)</label><input className="form-input" value={formData.features} onChange={e => setFormData({...formData, features: e.target.value})} placeholder="Gated estate, 24/7 security, Swimming pool" /></div>
             <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="08168426592" /></div>
