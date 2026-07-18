@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser, logoutUser, getFavourites, getAllProperties, toggleFavourite, updateUserProfile } from "@/lib/storage";
+import { getStoredAuthUser, logoutAuth, updateProfileWithBackend } from "@/lib/auth";
+import { getAllProperties } from "@/lib/properties";
 import { Home, Heart, User, LogOut, Search, Trash2, Eye, MessageCircle, ChevronRight, LayoutDashboard, Edit2, Save, X } from "lucide-react";
 
 export default function BuyerDashboard() {
@@ -19,51 +20,57 @@ export default function BuyerDashboard() {
   const [saveMessage, setSaveMessage] = useState("");
 
   useEffect(() => {
-    const current = getCurrentUser();
+    const current = getStoredAuthUser();
     if (!current) {
       router.push("/login");
       setLoading(false);
       return;
     }
-    if (current.role !== "buyer") {
-      router.push("/dashboard/realtor");
+    const role = current.role?.toLowerCase();
+    if (role !== "buyer") {
+      if (role === "realtor") router.push("/dashboard/realtor");
+      else if (role === "hotel") router.push("/dashboard/hotel");
+      else if (role === "admin") router.push("/dashboard/admin");
       setLoading(false);
       return;
     }
     setUser(current);
     setEditForm({ firstName: current.firstName, lastName: current.lastName, phone: current.phone || "" });
-    const favIds = getFavourites(current.id);
+    // Favourites kept in localStorage since it's client-side preference
+    const favIds = JSON.parse(window.localStorage.getItem("tharel_favs_" + current.id) || "[]");
     setFavourites(favIds);
-    const all = getAllProperties();
-    setFavProperties(all.filter((p) => favIds.includes(p.id)));
-    setLoading(false);
+    getAllProperties()
+      .then((all) => setFavProperties(all.filter((p) => favIds.includes(String(p._id || p.id)))))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   function handleLogout() {
-    logoutUser();
+    logoutAuth();
     router.push("/");
   }
 
   function handleRemoveFav(propertyId) {
-    const newFavs = toggleFavourite(user.id, propertyId);
+    const newFavs = favourites.filter((id) => id !== propertyId);
     setFavourites(newFavs);
-    setFavProperties((prev) => prev.filter((p) => p.id !== propertyId));
+    if (user) window.localStorage.setItem("tharel_favs_" + user.id, JSON.stringify(newFavs));
+    setFavProperties((prev) => prev.filter((p) => String(p._id || p.id) !== String(propertyId)));
   }
 
   function handleEditChange(e) {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   }
 
-  function saveProfile() {
+  async function saveProfile() {
     if (!user) return;
-    const success = updateUserProfile(user.id, editForm);
-    if (success) {
-      setUser({ ...user, ...editForm });
+    try {
+      const updated = await updateProfileWithBackend(editForm);
+      setUser({ ...user, ...(updated || editForm) });
       setSaveMessage("Profile updated successfully!");
       setIsEditing(false);
       setTimeout(() => setSaveMessage(""), 3000);
-    } else {
-      setSaveMessage("Error saving profile.");
+    } catch (err) {
+      setSaveMessage("Error saving profile: " + err.message);
     }
   }
 

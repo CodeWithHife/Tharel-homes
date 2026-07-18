@@ -3,11 +3,24 @@ import { MapPin, BedDouble, Bath, Maximize, Phone, CheckCircle2 } from "lucide-r
 import { notFound } from "next/navigation";
 import AddToFavouritesButton from "@/components/AddToFavouritesButton";
 
-export default function PropertyDetails({ params }) {
+export default async function PropertyDetails({ params }) {
   const slug = decodeURIComponent(params.slug);
 
-  // 🔹 Use the unified helper – tries both slug and name-based slug
-  const property = getPropertyBySlugOrName(slug);
+  let property = null;
+  try {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    const res = await fetch(`${apiBase}/properties/${slug}`, { next: { revalidate: 0 } });
+    if (res.ok) {
+      const json = await res.json();
+      property = json.data?.property;
+    }
+  } catch (error) {
+    console.warn("Could not fetch property from backend, falling back to static files:", error.message);
+  }
+
+  if (!property) {
+    property = getPropertyBySlugOrName(slug);
+  }
 
   if (!property) {
     console.warn(`❌ Property with slug "${slug}" not found.`);
@@ -89,7 +102,7 @@ export default function PropertyDetails({ params }) {
             <Phone size={18} />
             Call {property.phone}
           </a>
-          <AddToFavouritesButton propertyId={property.id} />
+          <AddToFavouritesButton propertyId={property._id || property.id} />
         </div>
       </div>
     </main>
