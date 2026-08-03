@@ -273,7 +273,7 @@ export default function Hero() {
         }
 
         /* ── Floating search card ── */
-        .h-search-outer { position: relative; z-index: 3; width: 100%; animation: floatCard 7s ease-in-out infinite; }
+        .h-search-outer { position: relative; z-index: 3; width: 100%; animation: floatCard 7s ease-in-out infinite; margin-top: 56px; }
         .h-search-card {
           display: flex;
           align-items: stretch;
@@ -341,6 +341,7 @@ export default function Hero() {
         }
 
         @media (max-width: 900px) {
+          .h-search-outer { margin-top: 32px; }
           .h-search-card { flex-direction: column; border-radius: 16px; padding: 16px; gap: 4px; }
           .h-search-field { padding: 10px 4px; }
           .h-search-divider { width: 100%; height: 1px; margin: 0; }
