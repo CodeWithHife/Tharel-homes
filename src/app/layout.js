@@ -7,6 +7,10 @@ import Script from "next/script";
 export const metadata = {
   title: "The 10th Homes & Apartments",
   description: "Nigeria's trusted real estate platform.",
+  icons: {
+    icon: "/images/logos/logo.png",
+    apple: "/images/logos/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -30,4 +34,4 @@ export default function RootLayout({ children }) {
       </body>
     </html>
   );
-}
+}
