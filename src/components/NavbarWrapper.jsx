@@ -12,9 +12,9 @@ export default function NavbarWrapper() {
     }
   }, []);
 
-  // Hide on all dashboard pages
-  if (pathname.startsWith("/dashboard")) {
+  // Hide on dashboard and auth pages
+  if (pathname.startsWith("/dashboard") || pathname === "/login" || pathname === "/signup") {
     return null;
   }
   return <Navbar />;
-}
+}
