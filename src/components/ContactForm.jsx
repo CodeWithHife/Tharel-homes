@@ -110,20 +110,20 @@ export default function ContactForm() {
           margin: "0 auto",
           display: "grid",
           gridTemplateColumns: "1fr",
-          gap: "32px",
+          gap: "24px",
           alignItems: "stretch",
         }} className="contact-grid">
           <div style={{
             background: "#ffffff",
             border: "1px solid #e2e8f0",
             borderRadius: "24px",
-            padding: "clamp(24px, 3vw, 32px)",
-            boxShadow: "0 18px 45px rgba(15, 23, 42, 0.06)",
+            padding: "20px",
+            boxShadow: "0 14px 32px rgba(15, 23, 42, 0.05)",
           }}>
-            <h3 style={{ fontSize: "clamp(20px, 2vw, 24px)", fontWeight: 700, color: "#0f172a", marginBottom: "24px" }}>
+            <h3 style={{ fontSize: "clamp(20px, 2vw, 24px)", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
               Contact Information
             </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {[
                 { icon: <Phone size={18} />, label: "Phone / WhatsApp", value: "08168426592", href: "tel:08168426592" },
                 { icon: <Mail size={18} />, label: "Email", value: "tharel2024@gmail.com", href: "mailto:tharel2024@gmail.com" },
@@ -147,10 +147,10 @@ export default function ContactForm() {
               ))}
             </div>
 
-            <div style={{ marginTop: "24px", borderRadius: "18px", overflow: "hidden", height: "220px", boxShadow: "0 10px 30px rgba(15,23,42,0.08)", border: "1px solid #e2e8f0" }}>
+            <div style={{ marginTop: "16px", borderRadius: "14px", overflow: "hidden", height: "180px", boxShadow: "0 10px 30px rgba(15,23,42,0.08)", border: "1px solid #e2e8f0" }}>
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d253682.45932806483!2d3.1190543!3d6.5480557!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8b2ae68280c1%3A0xdc9e87a367c3d9cb!2sLagos%2C%20Nigeria!5e0!3m2!1sen!2sng!4v1699999999999!5m2!1sen!2sng"
-                style={{ width: "100%", height: "220px", border: 0 }}
+                style={{ width: "100%", height: "180px", border: 0 }}
                 allowFullScreen
                 loading="lazy"
               />
@@ -161,10 +161,10 @@ export default function ContactForm() {
             background: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
             padding: "clamp(24px, 3vw, 36px)",
             borderRadius: "24px",
-            boxShadow: "0 18px 45px rgba(15, 23, 42, 0.06)",
+            boxShadow: "0 14px 32px rgba(15, 23, 42, 0.05)",
             border: "1px solid #e2e8f0",
           }}>
-            <h3 style={{ fontSize: "clamp(18px, 2vw, 24px)", fontWeight: 700, color: "#0f172a", marginBottom: "24px" }}>
+            <h3 style={{ fontSize: "clamp(18px, 2vw, 24px)", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
               Send Us a Message
             </h3>
 
@@ -246,7 +246,7 @@ export default function ContactForm() {
                       name="interest"
                       value={form.interest}
                       onChange={handleChange}
-                      style={{ width: "100%", padding: "12px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", transition: "border-color 0.3s, box-shadow 0.3s" }}
+                      style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", transition: "border-color 0.3s, box-shadow 0.3s" }}
                       onFocus={(e) => {
                         e.currentTarget.style.borderColor = "#d4a017";
                         e.currentTarget.style.boxShadow = "0 0 0 4px rgba(212, 160, 23, 0.14)";
@@ -276,7 +276,7 @@ export default function ContactForm() {
                     required
                     rows={5}
                     placeholder="Tell us what you're looking for..."
-                    style={{ width: "100%", padding: "12px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", resize: "vertical", transition: "border-color 0.3s, box-shadow 0.3s" }}
+                    style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", resize: "vertical", transition: "border-color 0.3s, box-shadow 0.3s" }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = "#d4a017";
                       e.currentTarget.style.boxShadow = "0 0 0 4px rgba(212, 160, 23, 0.14)";
@@ -293,7 +293,7 @@ export default function ContactForm() {
                   style={{
                     width: "100%",
                     padding: "14px",
-                    borderRadius: "12px",
+                    borderRadius: "8px",
                     background: "#d4a017",
                     color: "white",
                     fontWeight: 700,
@@ -301,7 +301,7 @@ export default function ContactForm() {
                     border: "none",
                     cursor: "pointer",
                     transition: "transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease",
-                    marginTop: "16px",
+                    marginTop: "14px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -310,14 +310,14 @@ export default function ContactForm() {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = "#b8920f";
                     if (!reducedMotion) {
-                      e.currentTarget.style.transform = "scale(1.02)";
-                      e.currentTarget.style.boxShadow = "0 10px 24px rgba(212, 160, 23, 0.24)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 8px 18px rgba(212, 160, 23, 0.2)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "#d4a017";
                     if (!reducedMotion) {
-                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.transform = "translateY(0)";
                       e.currentTarget.style.boxShadow = "none";
                     }
                   }}
