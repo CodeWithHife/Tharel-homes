@@ -23,7 +23,7 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <main style={{ padding: "140px 20px 60px", backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
+    <main style={{ padding: "140px 20px 60px", backgroundColor: "#f5efe6", minHeight: "100vh" }}>
       <style>{`
         .about-card {
           opacity: 0;

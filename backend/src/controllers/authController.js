@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
+const { createUser, findUserByEmail } = require('../config/database');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -16,7 +17,7 @@ exports.signup = async (req, res) => {
     const roleMap = { buyer: 'Buyer', realtor: 'Realtor', hotel: 'Hotel', admin: 'Admin' };
     const normalizedRole = roleMap[role?.toLowerCase()] || 'Buyer';
 
-    const newUser = await User.create({
+    const newUser = await createUser({
       firstName,
       lastName,
       email,
@@ -60,7 +61,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ status: 'fail', error: 'Please provide email and password' });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await findUserByEmail(email);
     if (!user || !(await user.correctPassword(password, user.password))) {
       return res.status(401).json({ status: 'fail', error: 'Incorrect email or password' });
     }

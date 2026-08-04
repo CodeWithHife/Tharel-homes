@@ -24,7 +24,7 @@ export default function ContactPage() {
     <main
       style={{
         padding: "140px 20px 60px",
-        backgroundColor: "#F8FAFC",
+        backgroundColor: "#f5efe6",
         minHeight: "100vh",
       }}
     >

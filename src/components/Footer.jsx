@@ -177,7 +177,7 @@ export default function Footer() {
           gap: "12px",
         }}>
           <p style={{ color: "#64748B", fontSize: "11px" }}>
-            © {new Date().getFullYear()} The 10th Homes & Apartments Ltd.
+            © 2026 Built with love.
           </p>
           <div style={{ display: "flex", gap: "16px" }}>
             <a href="#" style={{ color: "#64748B", fontSize: "11px", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#D4A017"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748B"}>

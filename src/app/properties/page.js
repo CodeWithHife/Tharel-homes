@@ -200,7 +200,7 @@ export default function PropertiesPage() {
   return (
     <main
       style={{
-        background: "#F8FAFC",
+        background: "#f5efe6",
         minHeight: "100vh",
         padding: "140px 20px 60px",
       }}

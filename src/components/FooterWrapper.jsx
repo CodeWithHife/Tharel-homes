@@ -4,8 +4,14 @@ import Footer from "./Footer";
 
 export default function FooterWrapper() {
   const pathname = usePathname();
-  // Hide on dashboard and auth pages
-  if (pathname.startsWith("/dashboard") || pathname === "/login" || pathname === "/signup") {
+  // Hide on dashboard, auth, and selected public pages
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/properties" ||
+    pathname === "/contact"
+  ) {
     return null;
   }
   return <Footer />;
