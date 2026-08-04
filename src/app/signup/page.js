@@ -92,24 +92,15 @@ export default function SignupPage() {
         .auth-page {
           min-height: 100vh;
           width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 40px 24px;
           font-family: 'Inter', sans-serif;
           background: linear-gradient(135deg, #F6F1E7 0%, #EDEEF3 55%, #E7EBF4 100%);
         }
 
         .auth-shell {
+          min-height: 100vh;
           width: 100%;
-          max-width: 1220px;
           display: grid;
           grid-template-columns: minmax(360px, 0.95fr) minmax(440px, 1.05fr);
-          border-radius: 24px;
-          overflow: hidden;
-          background: #ffffff;
-          box-shadow: 0 32px 90px rgba(18,23,43,0.12);
-          border: 1px solid rgba(18,23,43,0.06);
         }
 
         .auth-hero-panel {
@@ -118,9 +109,7 @@ export default function SignupPage() {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          background: linear-gradient(160deg, #F6F1E7 0%, #EEF0F5 55%, #E7EBF6 100%);
           color: #12172B;
-          min-height: 640px;
           overflow: hidden;
         }
 
@@ -195,34 +184,15 @@ export default function SignupPage() {
         }
         .auth-hero-copy { font-size: 14.5px; color: #5b6270; line-height: 1.8; max-width: 400px; font-weight: 400; }
 
-        .auth-feature-list { display: grid; gap: 14px; margin-top: 32px; }
-        .auth-feature-item { display: flex; align-items: center; gap: 12px; color: #383e4d; font-size: 13.5px; letter-spacing: 0.01em; font-weight: 500; }
-        .auth-feature-dot {
-          width: 5px; height: 5px; border-radius: 50%;
-          background: #D4A017; flex-shrink: 0;
-        }
-
-        .auth-hero-footer {
-          display: flex; gap: 28px; margin-top: 36px;
-          background: #ffffff;
-          border-radius: 16px;
-          padding: 20px 26px;
-          box-shadow: 0 14px 40px rgba(18,23,43,0.08);
-          width: fit-content;
-        }
-        .auth-stat-num { font-size: 21px; font-weight: 800; color: #12172B; letter-spacing: -0.01em; }
-        .auth-stat-label { font-size: 10px; color: #8b8f9a; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; font-weight: 600; }
-
         .auth-side {
           padding: 56px 56px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #ffffff;
         }
         .auth-card { width: 100%; max-width: 420px; }
 
-        .auth-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 32px; }
+        .auth-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
         .auth-home-link {
           display: inline-flex; align-items: center; gap: 8px;
           font-size: 12.5px; font-weight: 600; color: #6B7280;
@@ -238,13 +208,13 @@ export default function SignupPage() {
           font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
         }
 
-        .auth-card-title { font-size: 30px; font-weight: 800; color: #12172B; margin-bottom: 8px; letter-spacing: -0.01em; }
-        .auth-card-copy { font-size: 14px; color: #6B7280; margin-bottom: 32px; line-height: 1.6; }
+        .auth-card-title { font-size: 26px; font-weight: 800; color: #12172B; margin-bottom: 6px; letter-spacing: -0.01em; }
+        .auth-card-copy { font-size: 14px; color: #6B7280; margin-bottom: 20px; line-height: 1.6; }
 
         .auth-error-box { background: #fdf2f2; border-left: 2px solid #c0392b; color: #a4302a; font-size: 13px; padding: 12px 14px; margin-bottom: 20px; letter-spacing: 0.01em; border-radius: 8px; }
 
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 14px; }
         .form-label { display: block; font-size: 11.5px; font-weight: 700; color: #12172B; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
         .form-field-error { font-size: 12px; color: #ef4444; margin-top: 5px; }
         .form-input-wrap {
@@ -284,9 +254,9 @@ export default function SignupPage() {
         .terms-error { font-size: 12px; color: #ef4444; margin-top: 4px; }
 
         .auth-btn {
-          width: 100%; height: 52px;
+          width: 100%; height: 50px;
           border: none;
-          border-radius: 999px;
+          border-radius: 10px;
           background: #12172B;
           color: #F7F4EC;
           font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
@@ -304,16 +274,13 @@ export default function SignupPage() {
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .auth-footer { text-align: center; font-size: 13.5px; color: #6B7280; margin-top: 28px; }
+        .auth-footer { text-align: center; font-size: 13.5px; color: #6B7280; margin-top: 20px; }
         .auth-footer a { color: #D4A017; font-weight: 700; text-decoration: none; }
         .auth-footer a:hover { text-decoration: underline; }
 
         @media (max-width: 980px) {
-          .auth-page { padding: 28px 20px; }
           .auth-shell {
             grid-template-columns: 1fr;
-            max-width: 520px;
-            margin: 0 auto;
           }
           .auth-hero-panel {
             min-height: unset;
@@ -326,28 +293,22 @@ export default function SignupPage() {
           .auth-brand-row { flex-direction: column; gap: 10px; margin-top: 22px; }
           .auth-hero-title { font-size: 27px; margin: 18px 0 12px; max-width: 100%; }
           .auth-hero-copy { font-size: 13.5px; max-width: 360px; }
-          .auth-feature-list { display: none; }
-          .auth-hero-footer { margin: 26px auto 0; }
           .auth-side { padding: 40px 32px; }
         }
 
         @media (max-width: 520px) {
-          .auth-page { padding: 0; align-items: center; }
+          .auth-page { padding: 0; }
           .auth-shell {
-            border-radius: 0;
-            max-width: 100%;
             min-height: 100vh;
-            box-shadow: none;
-            border: none;
+            grid-template-columns: 1fr;
           }
-          .auth-hero-panel { padding: 36px 24px 28px; }
-          .auth-hero-panel::before { font-size: 200px; bottom: -70px; }
-          .auth-hero-title { font-size: 24px; }
-          .auth-hero-footer { flex-wrap: wrap; justify-content: center; gap: 16px; padding: 18px 20px; }
-          .auth-side { padding: 36px 24px 44px; }
+          .auth-hero-panel {
+            display: none;
+          }
+          .auth-side { padding: 24px 20px 36px; }
           .auth-card { max-width: 100%; }
-          .auth-card-title { font-size: 25px; }
-          .auth-btn { height: 50px; }
+          .auth-card-title { font-size: 22px; }
+          .auth-btn { height: 48px; }
           .form-row { grid-template-columns: 1fr; }
           .role-selector { grid-template-columns: 1fr; }
         }
@@ -369,25 +330,6 @@ export default function SignupPage() {
               </div>
               <h3 className="auth-hero-title">Create your account and step into a smarter property journey.</h3>
               <p className="auth-hero-copy">Join buyers, investors, and realtors using a trusted platform to discover premium listings and modern property experiences.</p>
-              <div className="auth-feature-list">
-                <div className="auth-feature-item"><span className="auth-feature-dot" />Verified listings and trusted agents</div>
-                <div className="auth-feature-item"><span className="auth-feature-dot" />Saved homes ready whenever you are</div>
-                <div className="auth-feature-item"><span className="auth-feature-dot" />Fast support for every step</div>
-              </div>
-            </div>
-            <div className="auth-hero-footer">
-              <div>
-                <div className="auth-stat-num">200+</div>
-                <div className="auth-stat-label">Properties</div>
-              </div>
-              <div>
-                <div className="auth-stat-num">1500+</div>
-                <div className="auth-stat-label">Clients</div>
-              </div>
-              <div>
-                <div className="auth-stat-num">10+</div>
-                <div className="auth-stat-label">Years</div>
-              </div>
             </div>
           </div>
 

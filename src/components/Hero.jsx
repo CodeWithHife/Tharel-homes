@@ -10,6 +10,43 @@ const stats = [
   { value: 10, suffix: "+", label: "Years Experience" },
 ];
 
+const audiences = [
+  {
+    role: "buyer",
+    label: "Buyers",
+    sub: "Find your next home",
+    icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-3v-6h-9v6h-3A1.5 1.5 0 0 1 3 19.5z" />
+      </svg>
+    ),
+  },
+  {
+    role: "realtor",
+    label: "Realtors",
+    sub: "List & manage properties",
+    icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      </svg>
+    ),
+  },
+  {
+    role: "hotel",
+    label: "Hotel Operators",
+    sub: "Manage bookings",
+    icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M3 18v-9a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v9" />
+        <path d="M13 18v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6" />
+        <path d="M3 18h18" />
+        <circle cx="6" cy="10.5" r="0.8" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+];
+
 function StatItem({ value, suffix, label }) {
   const numRef = useRef(null);
   const reducedMotion = useReducedMotion();
@@ -107,6 +144,7 @@ export default function Hero() {
   const eyebrowRef = useRef(null);
   const headlineRef = useRef(null);
   const subcopyRef = useRef(null);
+  const audienceRef = useRef(null);
   const buttonsRef = useRef(null);
   const statsRef = useRef(null);
   const imageRef = useRef(null);
@@ -136,7 +174,7 @@ export default function Hero() {
 
     const ctx = gsap.context(() => {
       if (reducedMotion) {
-        gsap.set([eyebrowRef.current, headlineRef.current, subcopyRef.current, buttonsRef.current, statsRef.current, searchRef.current], { opacity: 1, y: 0 });
+        gsap.set([eyebrowRef.current, headlineRef.current, subcopyRef.current, audienceRef.current, buttonsRef.current, statsRef.current, searchRef.current], { opacity: 1, y: 0 });
         gsap.set(imageWrapRef.current, { opacity: 1 });
         gsap.set(imageRef.current, { scale: 1, y: 0 });
         return;
@@ -147,9 +185,10 @@ export default function Hero() {
       tl.fromTo(eyebrowRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.1);
       tl.fromTo(headlineRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.18);
       tl.fromTo(subcopyRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.26);
-      tl.fromTo(buttonsRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.34);
-      tl.fromTo(statsRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.42);
-      tl.fromTo(searchRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.5);
+      tl.fromTo(audienceRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.32);
+      tl.fromTo(buttonsRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.4);
+      tl.fromTo(statsRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.48);
+      tl.fromTo(searchRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.56);
 
       // Hero image load animations
       gsap.fromTo(imageWrapRef.current, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 1, ease: "power2.out" });
@@ -193,10 +232,20 @@ export default function Hero() {
           85% { opacity: 1; transform: scale(1); }
           100% { opacity: 0.5; transform: scale(1.02); }
         }
+        @keyframes dotPulse {
+          0% { box-shadow: 0 0 0 0 rgba(212,175,55,0.55); }
+          70% { box-shadow: 0 0 0 8px rgba(212,175,55,0); }
+          100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+        }
+        @keyframes dotBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.35; }
+        }
 
         .h-anim-1 { opacity: 0; }
         .h-anim-2 { opacity: 0; }
         .h-anim-3 { opacity: 0; }
+        .h-anim-3b { opacity: 0; }
         .h-anim-4 { opacity: 0; }
         .h-anim-5 { opacity: 0; }
         .h-anim-6 { opacity: 0; }
@@ -271,6 +320,82 @@ export default function Hero() {
           color: #D4AF37;
           transform: translateY(-3px);
         }
+
+        /* ── Eyebrow glow dot ── */
+        .h-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.3em;
+          text-transform: uppercase;
+          color: #94a3b8;
+        }
+        .h-eyebrow-dot-wrap {
+          position: relative;
+          width: 8px;
+          height: 8px;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .h-eyebrow-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #D4AF37;
+          animation: dotBlink 1.8s ease-in-out infinite, dotPulse 1.8s ease-out infinite;
+        }
+
+        /* ── Audience strip (who this is for) ── */
+        .h-audience-label {
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #94a3b8;
+          margin-bottom: 12px;
+          display: block;
+        }
+        .h-audience-row {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .h-audience-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 16px 9px 12px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.7);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(15,23,42,0.08);
+          text-decoration: none;
+          transition: all 0.3s ease;
+        }
+        .h-audience-chip:hover {
+          border-color: #D4AF37;
+          background: #ffffff;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(15,23,42,0.08);
+        }
+        .h-audience-icon {
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
+          background: rgba(212,175,55,0.12);
+          color: #b8860c;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .h-audience-text { display: flex; flex-direction: column; line-height: 1.25; }
+        .h-audience-role { font-size: 12.5px; font-weight: 700; color: #0F172A; }
+        .h-audience-sub { font-size: 10px; color: #94a3b8; font-weight: 500; }
 
         /* ── Floating search card ── */
         .h-search-outer { position: relative; z-index: 3; width: 100%; animation: floatCard 7s ease-in-out infinite; margin-top: 56px; }
@@ -363,6 +488,8 @@ export default function Hero() {
             flex-direction: column !important;
             gap: 10px !important;
           }
+          .h-audience-row { justify-content: center; }
+          .h-audience-label { text-align: center; }
         }
 
         @media (max-width: 480px) {
@@ -373,18 +500,20 @@ export default function Hero() {
             font-size: 14px !important;
             max-width: 100% !important;
           }
-          .h-anim-1 {
+          .h-eyebrow {
             font-size: 10px !important;
+            letter-spacing: 0.22em !important;
           }
-          .h-anim-1 span {
-            width: 24px !important;
-          }
+          .h-eyebrow-dot-wrap { width: 7px; height: 7px; }
+          .h-eyebrow-dot { width: 7px; height: 7px; }
           .h-image-wrap {
             aspect-ratio: 16/10;
           }
           .h-float {
             animation: none;
           }
+          .h-audience-chip { flex: 1 1 auto; justify-content: center; }
+          .h-audience-sub { display: none; }
         }
 
         @media (max-width: 380px) {
@@ -468,27 +597,10 @@ export default function Hero() {
               }}
             >
               <div ref={eyebrowRef} className="h-anim-1" style={{ marginBottom: "20px" }}>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    letterSpacing: "0.3em",
-                    textTransform: "uppercase",
-                    color: "#94a3b8",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "32px",
-                      height: "2px",
-                      background: "#D4AF37",
-                      borderRadius: "999px",
-                      flexShrink: 0,
-                    }}
-                  />
+                <span className="h-eyebrow">
+                  <span className="h-eyebrow-dot-wrap">
+                    <span className="h-eyebrow-dot" />
+                  </span>
                   Lifetime Realty Partner
                 </span>
               </div>
@@ -517,7 +629,7 @@ export default function Hero() {
                   color: "#64748b",
                   fontSize: isDesktop ? "15.5px" : "clamp(14px, 2.5vw, 15px)",
                   lineHeight: 1.8,
-                  marginBottom: "32px",
+                  marginBottom: "28px",
                   maxWidth: isDesktop ? "420px" : "100%",
                 }}
               >
@@ -525,6 +637,22 @@ export default function Hero() {
                 carefully selected locations. We help families and investors find
                 properties that combine comfort, security, and lasting value.
               </p>
+
+              {/* ─── AUDIENCE STRIP ─── */}
+              <div ref={audienceRef} className="h-anim-3b" style={{ marginBottom: "32px", width: "100%" }}>
+                <span className="h-audience-label">One platform, three ways in</span>
+                <div className="h-audience-row">
+                  {audiences.map((a) => (
+                    <Link key={a.role} href={`/signup?role=${a.role}`} className="h-audience-chip">
+                      <span className="h-audience-icon">{a.icon}</span>
+                      <span className="h-audience-text">
+                        <span className="h-audience-role">{a.label}</span>
+                        <span className="h-audience-sub">{a.sub}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
 
               <div
                 ref={buttonsRef}
