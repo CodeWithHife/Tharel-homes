@@ -1,27 +1,29 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { loginWithBackend } from "@/lib/auth";
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sparkles, Star, Building2, CheckCircle2 } from "lucide-react";
 
 export default function LoginPage() {
-  var router = useRouter();
-  var [form, setForm] = useState({ email: "", password: "" });
-  var [showPassword, setShowPassword] = useState(false);
-  var [loading, setLoading] = useState(false);
-  var [error, setError] = useState("");
-  var [focused, setFocused] = useState("");
+  const router = useRouter();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [focused, setFocused] = useState("");
 
-  function handleChange(e) {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
-  }
+  };
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!form.email || !form.password) {
-      setError("Please fill in all fields.");
+      setError("Please fill in all required fields.");
       return;
     }
     setLoading(true);
@@ -34,7 +36,7 @@ export default function LoginPage() {
 
       const user = result.user;
       if (!user || !user.role) {
-        throw new Error("No account information was returned.");
+        throw new Error("No account information returned from server.");
       }
 
       const role = user.role.toLowerCase();
@@ -50,346 +52,604 @@ export default function LoginPage() {
         router.push("/dashboard/buyer");
       }
     } catch (err) {
-      setError(err.message || "Unable to sign in right now.");
+      setError(err.message || "Unable to sign in right now. Please check your details.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { background: #F4EFE6; font-family: 'Inter', sans-serif; }
-
-        .auth-page {
-          min-height: 100vh;
-          width: 100%;
-          font-family: 'Inter', sans-serif;
-          background: linear-gradient(135deg, #F6F1E7 0%, #EDEEF3 55%, #E7EBF4 100%);
+        /* Staggered & Ambient Animations */
+        @keyframes authFadeUp {
+          from { opacity: 0; transform: translate3d(0, 24px, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
         }
 
-        .auth-shell {
+        @keyframes authSlideRight {
+          from { opacity: 0; transform: translate3d(-30px, 0, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes authGlowPulse {
+          0%, 100% { opacity: 0.35; transform: scale(1) translate(0, 0); }
+          50% { opacity: 0.65; transform: scale(1.15) translate(-20px, 20px); }
+        }
+
+        @keyframes authBadgePulse {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px rgba(212,160,23,0.9); }
+        }
+
+        @keyframes authShimmerSweep {
+          0% { transform: translateX(-100%) skewX(-15deg); }
+          100% { transform: translateX(250%) skewX(-15deg); }
+        }
+
+        @keyframes authFloatLogo {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-4px) rotate(1deg); }
+        }
+
+        .auth-container {
           min-height: 100vh;
           width: 100%;
           display: grid;
-          grid-template-columns: minmax(360px, 0.95fr) minmax(440px, 1.05fr);
-        }
-
-        /* ===== HERO / LEFT PANEL — sits on the same page background ===== */
-        .auth-hero-panel {
-          position: relative;
-          padding: 56px 48px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          color: #12172B;
+          grid-template-columns: 1fr 1fr;
+          background: #F8FAFC;
+          font-family: 'Inter', sans-serif;
           overflow: hidden;
         }
 
-        .auth-hero-panel::before {
-          content: "10";
+        /* Left Hero Panel */
+        .auth-left-panel {
+          position: relative;
+          background: linear-gradient(145deg, #0F172A 0%, #080D1A 100%);
+          padding: 64px 56px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          color: #ffffff;
+          overflow: hidden;
+        }
+
+        .auth-left-glow {
           position: absolute;
-          font-weight: 900;
-          font-size: 520px;
-          line-height: 1;
-          color: rgba(18,23,43,0.04);
-          right: -70px;
-          bottom: -110px;
+          top: -120px;
+          right: -120px;
+          width: 550px;
+          height: 550px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(212, 160, 23, 0.22) 0%, transparent 70%);
+          filter: blur(60px);
           pointer-events: none;
-          user-select: none;
+          animation: authGlowPulse 7s ease-in-out infinite;
         }
 
-        .auth-hero-panel::after {
-          content: "";
+        .auth-left-glow-bottom {
           position: absolute;
-          inset: -40%;
-          background: linear-gradient(100deg, transparent 30%, rgba(212,160,23,0.14) 47%, transparent 62%);
-          animation: sweep 9s ease-in-out infinite;
+          bottom: -150px;
+          left: -100px;
+          width: 450px;
+          height: 450px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(30, 41, 59, 0.8) 0%, transparent 70%);
+          filter: blur(50px);
           pointer-events: none;
         }
-        @keyframes sweep {
-          0%   { transform: translateX(-25%); }
-          50%  { transform: translateX(15%); }
-          100% { transform: translateX(-25%); }
-        }
 
-        .auth-hero-panel > * { position: relative; z-index: 1; }
-
-        .auth-badge {
+        .auth-left-badge {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          width: fit-content;
-          font-size: 11px;
+          padding: 6px 16px;
+          border-radius: 999px;
+          background: rgba(212, 160, 23, 0.12);
+          border: 1px solid rgba(212, 160, 23, 0.3);
+          color: #D4A017;
+          font-size: 11.5px;
           font-weight: 700;
-          letter-spacing: 0.22em;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: #6B7280;
-        }
-        .auth-badge::before {
-          content: "";
-          width: 20px;
-          height: 2px;
-          background: #D4A017;
-          display: inline-block;
+          animation: authFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .auth-brand-row { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
-        .auth-brand-icon {
-          width: 46px; height: 46px;
+        .auth-brand-logo {
+          animation: authFloatLogo 6s ease-in-out infinite;
+        }
+
+        .auth-left-title {
+          animation: authFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+          opacity: 0;
+        }
+
+        .auth-left-copy {
+          animation: authFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+          opacity: 0;
+        }
+
+        .auth-left-feature {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 18px;
           border-radius: 14px;
-          background: #12172B;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-        }
-        .auth-brand-icon svg { width: 20px; height: 20px; stroke: #D4A017; fill: none; stroke-width: 1.8; }
-        .auth-brand-name { font-size: 15.5px; font-weight: 800; letter-spacing: 0.01em; line-height: 1.3; }
-        .auth-brand-sub { font-size: 10.5px; color: #8b8f9a; margin-top: 3px; letter-spacing: 0.16em; text-transform: uppercase; }
-
-        .auth-hero-title {
-          font-size: clamp(30px, 3vw, 44px);
-          line-height: 1.14;
-          font-weight: 800;
-          letter-spacing: -0.01em;
-          margin: 30px 0 14px;
-          max-width: 440px;
-          color: #12172B;
-        }
-        .auth-hero-copy { font-size: 14.5px; color: #5b6270; line-height: 1.8; max-width: 400px; font-weight: 400; }
-
-        .auth-feature-list { display: grid; gap: 14px; margin-top: 32px; }
-        .auth-feature-item { display: flex; align-items: center; gap: 12px; color: #383e4d; font-size: 13.5px; letter-spacing: 0.01em; font-weight: 500; }
-        .auth-feature-dot {
-          width: 5px; height: 5px; border-radius: 50%;
-          background: #D4A017; flex-shrink: 0;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(12px);
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.85);
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          opacity: 0;
+          animation: authSlideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .auth-hero-footer {
-          display: flex; gap: 28px; margin-top: 36px;
-          background: rgba(255,255,255,0.6);
-          backdrop-filter: blur(14px);
-          border: 1px solid rgba(255,255,255,0.8);
-          border-radius: 16px;
-          padding: 20px 26px;
-          box-shadow: 0 14px 40px rgba(18,23,43,0.06);
-          width: fit-content;
+        .auth-left-feature:hover {
+          background: rgba(212, 160, 23, 0.12);
+          border-color: rgba(212, 160, 23, 0.4);
+          transform: translate3d(6px, -2px, 0);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
-        .auth-stat-num { font-size: 21px; font-weight: 800; color: #12172B; letter-spacing: -0.01em; }
-        .auth-stat-label { font-size: 10px; color: #8b8f9a; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; font-weight: 600; }
 
-        /* ===== FORM SIDE — no card, sits directly on the page background ===== */
-        .auth-side {
-          padding: 56px 56px;
+        .auth-stat-card {
+          animation: authFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+          opacity: 0;
+          transition: transform 0.3s ease;
+        }
+
+        .auth-stat-card:hover {
+          transform: translateY(-3px);
+        }
+
+        /* Right Form Side */
+        .auth-right-panel {
           display: flex;
           align-items: center;
           justify-content: center;
-        }
-        .auth-card { width: 100%; max-width: 420px; }
-
-        .auth-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 32px; }
-        .auth-home-link {
-          display: inline-flex; align-items: center; gap: 8px;
-          font-size: 12.5px; font-weight: 600; color: #6B7280;
-          text-decoration: none; letter-spacing: 0.02em;
-        }
-        .auth-home-link:hover { color: #D4A017; }
-        .auth-home-link svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .auth-top-pill {
-          padding: 6px 12px;
-          border-radius: 999px;
-          background: rgba(255,255,255,0.6);
-          border: 1px solid rgba(154,129,70,0.18);
-          color: #9a8146;
-          font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+          padding: 48px 36px;
+          background: linear-gradient(160deg, #FFFFFF 0%, #F8FAFC 100%);
+          position: relative;
         }
 
-        .auth-card-title { font-size: 30px; font-weight: 800; color: #12172B; margin-bottom: 8px; letter-spacing: -0.01em; }
-        .auth-card-copy { font-size: 14px; color: #6B7280; margin-bottom: 32px; line-height: 1.6; }
-
-        .auth-error {
-          background: rgba(253,242,242,0.85); border-left: 2px solid #c0392b; color: #a4302a;
-          font-size: 13px; padding: 12px 14px; margin-bottom: 20px; letter-spacing: 0.01em; border-radius: 8px;
+        .auth-form-card {
+          width: 100%;
+          max-width: 440px;
+          animation: authFadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+          opacity: 0;
         }
 
-        .form-group { margin-bottom: 20px; }
-        .form-label {
-          display: flex; justify-content: space-between; align-items: center;
-          font-size: 11.5px; font-weight: 700; color: #12172B;
-          letter-spacing: 0.08em; text-transform: uppercase;
-          margin-bottom: 10px;
+        .auth-input-box {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 18px;
+          border-radius: 14px;
+          border: 1.5px solid #E2E8F0;
+          background: #ffffff;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
         }
-        .form-label a { font-size: 11.5px; color: #D4A017; font-weight: 600; text-decoration: none; text-transform: none; letter-spacing: 0; }
-        .form-label a:hover { text-decoration: underline; }
 
-        .form-input-wrap {
-          display: flex; align-items: center; gap: 10px;
-          padding: 13px 15px;
-          border-radius: 12px;
-          border: 1.5px solid rgba(18,23,43,0.1);
-          background: rgba(255,255,255,0.55);
-          backdrop-filter: blur(10px);
-          transition: border-color .25s, background .25s;
+        .auth-input-box:hover {
+          border-color: rgba(212, 160, 23, 0.4);
+          transform: translateY(-1px);
         }
-        .form-input-wrap.focused { border-color: #D4A017; background: rgba(255,255,255,0.9); box-shadow: 0 0 0 4px rgba(212,160,23,0.1); }
-        .form-input-wrap svg { width: 17px; height: 17px; stroke: #a39c8a; fill: none; stroke-width: 1.8; flex-shrink: 0; transition: stroke .2s; }
-        .form-input-wrap.focused svg { stroke: #D4A017; }
-        .form-input-wrap input { flex: 1; border: none; outline: none; font-size: 14.5px; color: #12172B; background: transparent; font-family: 'Inter', sans-serif; min-width: 0; }
-        .form-input-wrap input::placeholder { color: #7d7867; }
 
-        .toggle-pw { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
-        .toggle-pw svg { width: 17px; height: 17px; stroke: #a39c8a; fill: none; stroke-width: 1.8; }
-        .toggle-pw:hover svg { stroke: #D4A017; }
+        .auth-input-box.focused {
+          border-color: #D4A017;
+          box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.16);
+          transform: translateY(-2px);
+        }
 
-        .remember-me { display: flex; align-items: center; gap: 10px; margin: 22px 0 26px; }
-        .remember-me input { width: 15px; height: 15px; accent-color: #D4A017; cursor: pointer; }
-        .remember-me label { font-size: 13.5px; color: #6B7280; cursor: pointer; }
-
-        .auth-btn {
-          width: 100%; height: 52px;
+        .auth-input-box input {
+          width: 100%;
           border: none;
-          border-radius: 999px;
-          background: #12172B;
-          color: #F7F4EC;
-          font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
+          outline: none;
+          background: transparent;
+          font-size: 14.5px;
+          color: #0F172A;
+        }
+
+        .auth-submit-btn {
+          position: relative;
+          width: 100%;
+          padding: 16px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+          color: #ffffff;
+          font-weight: 700;
+          font-size: 15px;
+          border: 1px solid rgba(212, 160, 23, 0.3);
           cursor: pointer;
-          display: flex; align-items: center; justify-content: center; gap: 10px;
-          transition: background .25s, transform .2s, box-shadow .2s;
-          box-shadow: 0 14px 30px rgba(18,23,43,0.18);
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          overflow: hidden;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
         }
-        .auth-btn:hover { background: #1c2340; transform: translateY(-2px); box-shadow: 0 18px 36px rgba(18,23,43,0.24); }
-        .auth-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-        .auth-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        .auth-spinner {
-          width: 18px; height: 18px; border: 2px solid rgba(247,244,236,.35); border-top-color: #F7F4EC; border-radius: 50%; animation: spin .7s linear infinite;
+        .auth-submit-btn::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+          transform: translateX(-100%) skewX(-15deg);
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .auth-footer { text-align: center; font-size: 13.5px; color: #6B7280; margin-top: 28px; }
-        .auth-footer a { color: #D4A017; font-weight: 700; text-decoration: none; }
-        .auth-footer a:hover { text-decoration: underline; }
+        .auth-submit-btn:hover::before {
+          animation: authShimmerSweep 0.9s ease-in-out;
+        }
 
-        /* ===== RESPONSIVE — mobile shows the form only ===== */
-        @media (max-width: 980px) {
-          .auth-shell {
+        .auth-submit-btn:hover {
+          background: linear-gradient(135deg, #D4A017 0%, #B8860B 100%);
+          color: #0F172A;
+          border-color: #D4A017;
+          transform: translateY(-2.5px);
+          box-shadow: 0 12px 32px rgba(212, 160, 23, 0.42);
+        }
+
+        .auth-submit-btn:active {
+          transform: translateY(0) scale(0.98);
+        }
+
+        .auth-submit-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .auth-btn-arrow {
+          transition: transform 0.3s ease;
+        }
+
+        .auth-submit-btn:hover .auth-btn-arrow {
+          transform: translateX(4px);
+        }
+
+        /* Mobile Header */
+        .auth-mobile-header {
+          display: none;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          padding: 32px 20px 24px;
+          background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+          position: relative;
+          overflow: hidden;
+          color: #ffffff;
+        }
+
+        .auth-mobile-glow {
+          position: absolute;
+          top: -60px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 320px;
+          height: 320px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(212, 160, 23, 0.25) 0%, transparent 70%);
+          filter: blur(40px);
+          pointer-events: none;
+        }
+
+        @media (max-width: 960px) {
+          .auth-container {
             grid-template-columns: 1fr;
+            background: #0F172A;
           }
-          .auth-hero-panel {
-            display: none;
+          .auth-left-panel { display: none; }
+          .auth-mobile-header { display: flex; }
+          .auth-right-panel {
+            padding: 24px 16px 48px;
+            background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
           }
-          .auth-side {
-            min-height: 100vh;
-            padding: 40px 24px;
+          .auth-form-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 32px 24px;
+            border: 1px solid rgba(212, 160, 23, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 160, 23, 0.15);
           }
-        }
-
-        @media (max-width: 480px) {
-          .auth-side { padding: 32px 20px; }
-          .auth-card { max-width: 100%; }
-          .auth-card-title { font-size: 25px; }
-          .auth-btn { height: 50px; }
         }
       `}</style>
 
-      <div className="auth-page">
-        <div className="auth-shell">
-          <div className="auth-hero-panel">
-            <div>
-              <div className="auth-badge">Lifetime Realty Partner</div>
-              <div className="auth-brand-row">
-                <div className="auth-brand-icon">
-                  <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </div>
-                <div>
-                  <div className="auth-brand-name">The 10th Homes & Apartments</div>
-                  <div className="auth-brand-sub">Real Estate Ltd</div>
-                </div>
+      <div className="auth-container">
+        {/* Mobile Header Banner */}
+        <div className="auth-mobile-header">
+          <div className="auth-mobile-glow" />
+          <Image
+            src="/images/logos/logo.png"
+            alt="The 10th Homes"
+            width={48}
+            height={48}
+            style={{ objectFit: "contain", filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.5))", marginBottom: "10px" }}
+            onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")}
+          />
+          <h2 style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "15px", fontWeight: 800, color: "#ffffff", margin: 0 }}>
+            The 10th Homes & Apartments
+          </h2>
+          <p style={{ fontSize: "10.5px", fontWeight: 700, color: "#D4A017", letterSpacing: "0.12em", textTransform: "uppercase", margin: "2px 0 0" }}>
+            REAL ESTATE LTD
+          </p>
+        </div>
+
+        {/* Left Hero Panel */}
+        <div className="auth-left-panel">
+          <div className="auth-left-glow" />
+          <div className="auth-left-glow-bottom" />
+
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <div className="auth-left-badge">
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: "#D4A017",
+                  animation: "authBadgePulse 2s infinite ease-in-out",
+                }}
+              />
+              <Sparkles size={13} color="#D4A017" />
+              <span>Lifetime Realty Partner</span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "32px", marginBottom: "36px" }}>
+              <div className="auth-brand-logo">
+                <Image
+                  src="/images/logos/logo.png"
+                  alt="The 10th Homes"
+                  width={54}
+                  height={54}
+                  style={{ objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}
+                  onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")}
+                />
               </div>
-              <h3 className="auth-hero-title">Enhancing your living experience.</h3>
-              <p className="auth-hero-copy">Access verified homes, manage favourites, and move closer to your ideal property with a seamless experience.</p>
-              <div className="auth-feature-list">
-                <div className="auth-feature-item"><span className="auth-feature-dot" />Verified listings and trusted agents</div>
-                <div className="auth-feature-item"><span className="auth-feature-dot" />Saved homes ready whenever you are</div>
-                <div className="auth-feature-item"><span className="auth-feature-dot" />Fast support for every step</div>
+              <div>
+                <h2 style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "16px", fontWeight: 800, color: "#ffffff", margin: 0, lineHeight: 1.2 }}>
+                  The 10th Homes & Apartments
+                </h2>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "#D4A017", letterSpacing: "0.12em", textTransform: "uppercase", margin: "2px 0 0" }}>
+                  REAL ESTATE LTD
+                </p>
               </div>
             </div>
-            <div className="auth-hero-footer">
-              <div>
-                <div className="auth-stat-num">200+</div>
-                <div className="auth-stat-label">Properties</div>
+
+            <h1
+              className="auth-left-title"
+              style={{
+                fontFamily: "'Montserrat', sans-serif",
+                fontSize: "clamp(32px, 3vw, 44px)",
+                fontWeight: 900,
+                lineHeight: 1.15,
+                marginBottom: "20px",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Enhancing Your <br />
+              <span style={{ color: "#D4A017" }}>Living Experience.</span>
+            </h1>
+
+            <p className="auth-left-copy" style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "15px", lineHeight: 1.7, maxWidth: "420px", marginBottom: "36px" }}>
+              Access verified property listings, track title allocations, and manage your real estate journey seamlessly.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "420px" }}>
+              <div className="auth-left-feature" style={{ animationDelay: "0.25s" }}>
+                <ShieldCheck size={18} color="#D4A017" />
+                <span>100% Verifiable Legal Documentation & C of O</span>
               </div>
-              <div>
-                <div className="auth-stat-num">1500+</div>
-                <div className="auth-stat-label">Clients</div>
+              <div className="auth-left-feature" style={{ animationDelay: "0.35s" }}>
+                <Building2 size={18} color="#D4A017" />
+                <span>Direct Access to Prime Estates in Lagos & Abuja</span>
               </div>
-              <div>
-                <div className="auth-stat-num">10+</div>
-                <div className="auth-stat-label">Years</div>
+              <div className="auth-left-feature" style={{ animationDelay: "0.45s" }}>
+                <CheckCircle2 size={18} color="#D4A017" />
+                <span>Transparent Flexible Payment Instalments</span>
               </div>
             </div>
           </div>
 
-          <div className="auth-side">
-            <div className="auth-card">
-              <div className="auth-topbar">
-                <Link href="/" className="auth-home-link">
-                  <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-3v-6h-9v6h-3A1.5 1.5 0 0 1 3 19.5z"/></svg>
-                  Back to home
-                </Link>
-                <div className="auth-top-pill">Secure Access</div>
+          {/* Stat Footer Card */}
+          <div
+            className="auth-stat-card"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "32px",
+              padding: "20px 24px",
+              borderRadius: "18px",
+              background: "rgba(255, 255, 255, 0.04)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(16px)",
+              width: "fit-content",
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            <div>
+              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "20px", fontWeight: 800, color: "#ffffff", margin: 0 }}>200+</p>
+              <p style={{ fontSize: "11px", color: "#D4A017", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, margin: 0 }}>Properties</p>
+            </div>
+            <div style={{ width: "1px", height: "30px", background: "rgba(255, 255, 255, 0.12)" }} />
+            <div>
+              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "20px", fontWeight: 800, color: "#ffffff", margin: 0 }}>2,500+</p>
+              <p style={{ fontSize: "11px", color: "#D4A017", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, margin: 0 }}>Happy Buyers</p>
+            </div>
+            <div style={{ width: "1px", height: "30px", background: "rgba(255, 255, 255, 0.12)" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Star size={16} color="#D4A017" fill="#D4A017" />
+              <span style={{ fontSize: "14px", fontWeight: 800, color: "#ffffff" }}>4.98</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Form Panel */}
+        <div className="auth-right-panel">
+          <div className="auth-form-card">
+            {/* Top Navigation */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "36px" }}>
+              <Link
+                href="/"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "13.5px",
+                  fontWeight: 700,
+                  color: "#64748B",
+                  textDecoration: "none",
+                  transition: "all 0.25s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "#D4A017";
+                  e.currentTarget.style.transform = "translateX(-3px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "#64748B";
+                  e.currentTarget.style.transform = "translateX(0)";
+                }}
+              >
+                <ArrowLeft size={16} />
+                <span>Back to Home</span>
+              </Link>
+
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  color: "#D4A017",
+                  background: "rgba(212, 160, 23, 0.1)",
+                  padding: "6px 14px",
+                  borderRadius: "999px",
+                  border: "1px solid rgba(212, 160, 23, 0.25)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Secure Portal
+              </span>
+            </div>
+
+            <h2
+              style={{
+                fontFamily: "'Montserrat', sans-serif",
+                fontSize: "28px",
+                fontWeight: 900,
+                color: "#0F172A",
+                marginBottom: "8px",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Welcome Back
+            </h2>
+
+            <p style={{ color: "#64748B", fontSize: "14.5px", marginBottom: "32px" }}>
+              Sign in to manage your saved listings, account, and property applications.
+            </p>
+
+            {error && (
+              <div
+                style={{
+                  padding: "14px 18px",
+                  borderRadius: "12px",
+                  background: "#FEF2F2",
+                  border: "1px solid #FCA5A5",
+                  color: "#991B1B",
+                  fontSize: "13.5px",
+                  fontWeight: 600,
+                  marginBottom: "24px",
+                  animation: "authFadeUp 0.3s ease",
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                  EMAIL ADDRESS
+                </label>
+                <div className={`auth-input-box ${focused === "email" ? "focused" : ""}`}>
+                  <Mail size={18} color={focused === "email" ? "#D4A017" : "#94A3B8"} />
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    onFocus={() => setFocused("email")}
+                    onBlur={() => setFocused("")}
+                    placeholder="e.g. name@email.com"
+                    required
+                  />
+                </div>
               </div>
 
-              <h2 className="auth-card-title">Welcome back</h2>
-              <p className="auth-card-copy">Sign in to continue your property journey.</p>
-
-              {error && <div className="auth-error">{error}</div>}
-
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label className="form-label">Email Address</label>
-                  <div className={"form-input-wrap " + (focused === "email" ? "focused" : "")}>
-                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    <input type="email" name="email" value={form.email} onChange={handleChange} onFocus={function(){setFocused("email")}} onBlur={function(){setFocused("")}} placeholder="john@email.com" />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">
-                    Password
-                    <Link href="/forgot-password">Forgot password?</Link>
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#334155" }}>
+                    PASSWORD
                   </label>
-                  <div className={"form-input-wrap " + (focused === "password" ? "focused" : "")}>
-                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange} onFocus={function(){setFocused("password")}} onBlur={function(){setFocused("")}} placeholder="Enter your password" />
-                    <button type="button" className="toggle-pw" onClick={function(){setShowPassword(!showPassword)}}>
-                      {showPassword
-                        ? <svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        : <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      }
-                    </button>
-                  </div>
+                  <Link
+                    href="/forgot-password"
+                    style={{ fontSize: "12.5px", fontWeight: 700, color: "#D4A017", textDecoration: "none", transition: "opacity 0.2s" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
 
-                <div className="remember-me">
-                  <input type="checkbox" id="remember" />
-                  <label htmlFor="remember">Remember me</label>
+                <div className={`auth-input-box ${focused === "password" ? "focused" : ""}`}>
+                  <Lock size={18} color={focused === "password" ? "#D4A017" : "#94A3B8"} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    onFocus={() => setFocused("password")}
+                    onBlur={() => setFocused("")}
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex", padding: 0 }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
+              </div>
 
-                <button type="submit" className="auth-btn" disabled={loading}>
-                  {loading ? <div className="auth-spinner" /> : <>Sign In <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></>}
-                </button>
-              </form>
+              <button type="submit" className="auth-submit-btn" disabled={loading} style={{ marginTop: "12px" }}>
+                {loading ? (
+                  <span>Signing In...</span>
+                ) : (
+                  <>
+                    <span>Sign In to Account</span>
+                    <ArrowRight size={18} className="auth-btn-arrow" />
+                  </>
+                )}
+              </button>
+            </form>
 
-              <p className="auth-footer">
-                Don't have an account? <Link href="/signup">Create one</Link>
-              </p>
-            </div>
+            <p style={{ textAlign: "center", fontSize: "14px", color: "#64748B", marginTop: "32px" }}>
+              Don't have an account yet?{" "}
+              <Link href="/signup" style={{ fontWeight: 800, color: "#D4A017", textDecoration: "none" }}>
+                Create Account
+              </Link>
+            </p>
           </div>
         </div>
       </div>
     </>
   );
 }
+

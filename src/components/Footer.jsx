@@ -312,15 +312,15 @@ export default function Footer() {
           </p>
 
           <div style={{ display: "flex", gap: "20px" }}>
-            <a href="#" style={{ color: "#64748B", fontSize: "12px", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#D4A017"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748B"}>
+            <Link href="/privacy" style={{ color: "#64748B", fontSize: "12px", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#D4A017"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748B"}>
               Privacy Policy
-            </a>
-            <a href="#" style={{ color: "#64748B", fontSize: "12px", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#D4A017"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748B"}>
+            </Link>
+            <Link href="/terms" style={{ color: "#64748B", fontSize: "12px", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#D4A017"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748B"}>
               Terms of Service
-            </a>
-            <a href="#" style={{ color: "#64748B", fontSize: "12px", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#D4A017"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748B"}>
+            </Link>
+            <Link href="/services" style={{ color: "#64748B", fontSize: "12px", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#D4A017"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748B"}>
               Title Verification
-            </a>
+            </Link>
           </div>
         </div>
       </div>

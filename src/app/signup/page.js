@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signupWithBackend } from "@/lib/auth";
+import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sparkles, Building2, CheckCircle2, UserCheck, KeyRound } from "lucide-react";
 
 export default function SignupPage() {
-  var router = useRouter();
-  var [form, setForm] = useState({
+  const router = useRouter();
+  const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
@@ -14,16 +16,16 @@ export default function SignupPage() {
     confirmPassword: "",
     role: "buyer",
   });
-  var [showPassword, setShowPassword] = useState(false);
-  var [showConfirm, setShowConfirm] = useState(false);
-  var [loading, setLoading] = useState(false);
-  var [errors, setErrors] = useState({});
-  var [focused, setFocused] = useState("");
-  var [agreeTerms, setAgreeTerms] = useState(false);
-  var [termsError, setTermsError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [focused, setFocused] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [termsError, setTermsError] = useState("");
 
-  function validate() {
-    var e = {};
+  const validate = () => {
+    const e = {};
     if (!form.firstName.trim() || form.firstName.trim().length < 2)
       e.firstName = "First name must be at least 2 characters.";
     if (!form.lastName.trim() || form.lastName.trim().length < 2)
@@ -34,25 +36,25 @@ export default function SignupPage() {
       e.password = "Password must be at least 8 characters.";
     if (form.password !== form.confirmPassword)
       e.confirmPassword = "Passwords do not match.";
-    if (!agreeTerms) setTermsError("You must agree to the Terms of Service");
+    if (!agreeTerms) setTermsError("You must agree to the Terms of Service.");
     else setTermsError("");
     return e;
-  }
+  };
 
-  function handleChange(e) {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
-  }
+  };
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    var errs = validate();
+    const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
     if (!agreeTerms) {
-      setTermsError("You must agree to the Terms of Service");
+      setTermsError("You must agree to the Terms of Service.");
       return;
     }
     setLoading(true);
@@ -71,385 +73,770 @@ export default function SignupPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  var strength = 0;
+  let strength = 0;
   if (form.password.length >= 8) strength++;
   if (/[A-Z]/.test(form.password)) strength++;
   if (/[0-9]/.test(form.password)) strength++;
   if (/[^A-Za-z0-9]/.test(form.password)) strength++;
-  var strengthColors = ["#e2e8f0", "#ef4444", "#f59e0b", "#3b82f6", "#22c55e"];
-  var strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
+  const strengthColors = ["#E2E8F0", "#EF4444", "#F59E0B", "#3B82F6", "#22C55E"];
+  const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { background: #F4EFE6; font-family: 'Inter', sans-serif; }
-
-        .auth-page {
-          min-height: 100vh;
-          width: 100%;
-          font-family: 'Inter', sans-serif;
-          background: linear-gradient(135deg, #F6F1E7 0%, #EDEEF3 55%, #E7EBF4 100%);
+        /* Staggered & Ambient Animations */
+        @keyframes authFadeUp {
+          from { opacity: 0; transform: translate3d(0, 24px, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
         }
 
-        .auth-shell {
+        @keyframes authSlideRight {
+          from { opacity: 0; transform: translate3d(-30px, 0, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes authGlowPulse {
+          0%, 100% { opacity: 0.35; transform: scale(1) translate(0, 0); }
+          50% { opacity: 0.65; transform: scale(1.15) translate(-20px, 20px); }
+        }
+
+        @keyframes authBadgePulse {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px rgba(212,160,23,0.9); }
+        }
+
+        @keyframes authShimmerSweep {
+          0% { transform: translateX(-100%) skewX(-15deg); }
+          100% { transform: translateX(250%) skewX(-15deg); }
+        }
+
+        @keyframes authFloatLogo {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-4px) rotate(1deg); }
+        }
+
+        .auth-container {
           min-height: 100vh;
           width: 100%;
           display: grid;
-          grid-template-columns: minmax(360px, 0.95fr) minmax(440px, 1.05fr);
-        }
-
-        .auth-hero-panel {
-          position: relative;
-          padding: 56px 48px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          color: #12172B;
+          grid-template-columns: 1fr 1fr;
+          background: #F8FAFC;
+          font-family: 'Inter', sans-serif;
           overflow: hidden;
         }
 
-        .auth-hero-panel::before {
-          content: "10";
+        /* Left Hero Panel */
+        .auth-left-panel {
+          position: relative;
+          background: linear-gradient(145deg, #0F172A 0%, #080D1A 100%);
+          padding: 64px 56px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          color: #ffffff;
+          overflow: hidden;
+        }
+
+        .auth-left-glow {
           position: absolute;
-          font-weight: 900;
-          font-size: 520px;
-          line-height: 1;
-          color: rgba(18,23,43,0.04);
-          right: -70px;
-          bottom: -110px;
+          top: -120px;
+          right: -120px;
+          width: 550px;
+          height: 550px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(212, 160, 23, 0.22) 0%, transparent 70%);
+          filter: blur(60px);
           pointer-events: none;
-          user-select: none;
+          animation: authGlowPulse 7s ease-in-out infinite;
         }
 
-        .auth-hero-panel::after {
-          content: "";
+        .auth-left-glow-bottom {
           position: absolute;
-          inset: -40%;
-          background: linear-gradient(100deg, transparent 30%, rgba(212,160,23,0.14) 47%, transparent 62%);
-          animation: sweep 9s ease-in-out infinite;
+          bottom: -150px;
+          left: -100px;
+          width: 450px;
+          height: 450px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(30, 41, 59, 0.8) 0%, transparent 70%);
+          filter: blur(50px);
           pointer-events: none;
         }
-        @keyframes sweep {
-          0%   { transform: translateX(-25%); }
-          50%  { transform: translateX(15%); }
-          100% { transform: translateX(-25%); }
-        }
 
-        .auth-hero-panel > * { position: relative; z-index: 1; }
-
-        .auth-badge {
+        .auth-left-badge {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          width: fit-content;
-          font-size: 11px;
+          padding: 6px 16px;
+          border-radius: 999px;
+          background: rgba(212, 160, 23, 0.12);
+          border: 1px solid rgba(212, 160, 23, 0.3);
+          color: #D4A017;
+          font-size: 11.5px;
           font-weight: 700;
-          letter-spacing: 0.22em;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: #6B7280;
-        }
-        .auth-badge::before {
-          content: "";
-          width: 20px;
-          height: 2px;
-          background: #D4A017;
-          display: inline-block;
+          animation: authFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .auth-brand-row { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
-        .auth-brand-icon {
-          width: 46px; height: 46px;
+        .auth-brand-logo {
+          animation: authFloatLogo 6s ease-in-out infinite;
+        }
+
+        .auth-left-title {
+          animation: authFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+          opacity: 0;
+        }
+
+        .auth-left-copy {
+          animation: authFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+          opacity: 0;
+        }
+
+        .auth-left-feature {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 18px;
           border-radius: 14px;
-          background: #12172B;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(12px);
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.85);
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          opacity: 0;
+          animation: authSlideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        .auth-brand-icon svg { width: 20px; height: 20px; stroke: #D4A017; fill: none; stroke-width: 1.8; }
-        .auth-brand-name { font-size: 15.5px; font-weight: 800; letter-spacing: 0.01em; line-height: 1.3; }
-        .auth-brand-sub { font-size: 10.5px; color: #8b8f9a; margin-top: 3px; letter-spacing: 0.16em; text-transform: uppercase; }
 
-        .auth-hero-title {
-          font-size: clamp(30px, 3vw, 44px);
-          line-height: 1.14;
-          font-weight: 800;
-          letter-spacing: -0.01em;
-          margin: 30px 0 14px;
-          max-width: 440px;
-          color: #12172B;
+        .auth-left-feature:hover {
+          background: rgba(212, 160, 23, 0.12);
+          border-color: rgba(212, 160, 23, 0.4);
+          transform: translate3d(6px, -2px, 0);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
-        .auth-hero-copy { font-size: 14.5px; color: #5b6270; line-height: 1.8; max-width: 400px; font-weight: 400; }
 
-        .auth-side {
-          padding: 56px 56px;
+        .auth-testimonial-card {
+          animation: authFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+          opacity: 0;
+          transition: transform 0.3s ease;
+        }
+
+        .auth-testimonial-card:hover {
+          transform: translateY(-3px);
+        }
+
+        /* Right Form Side */
+        .auth-right-panel {
           display: flex;
           align-items: center;
           justify-content: center;
-        }
-        .auth-card { width: 100%; max-width: 420px; }
-
-        .auth-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
-        .auth-home-link {
-          display: inline-flex; align-items: center; gap: 8px;
-          font-size: 12.5px; font-weight: 600; color: #6B7280;
-          text-decoration: none; letter-spacing: 0.02em;
-        }
-        .auth-home-link:hover { color: #D4A017; }
-        .auth-home-link svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .auth-top-pill {
-          padding: 6px 12px;
-          border-radius: 999px;
-          background: #F4EFE6;
-          color: #9a8146;
-          font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+          padding: 48px 36px;
+          background: linear-gradient(160deg, #FFFFFF 0%, #F8FAFC 100%);
+          position: relative;
         }
 
-        .auth-card-title { font-size: 26px; font-weight: 800; color: #12172B; margin-bottom: 6px; letter-spacing: -0.01em; }
-        .auth-card-copy { font-size: 14px; color: #6B7280; margin-bottom: 20px; line-height: 1.6; }
-
-        .auth-error-box { background: #fdf2f2; border-left: 2px solid #c0392b; color: #a4302a; font-size: 13px; padding: 12px 14px; margin-bottom: 20px; letter-spacing: 0.01em; border-radius: 8px; }
-
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-group { margin-bottom: 14px; }
-        .form-label { display: block; font-size: 11.5px; font-weight: 700; color: #12172B; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
-        .form-field-error { font-size: 12px; color: #ef4444; margin-top: 5px; }
-        .form-input-wrap {
-          display: flex; align-items: center; gap: 10px;
-          padding: 13px 15px;
-          border-radius: 12px;
-          border: 1.5px solid #e7e2d6;
-          background: #FBFAF6;
-          transition: border-color .25s, background .25s;
+        .auth-form-card {
+          width: 100%;
+          max-width: 460px;
+          animation: authFadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+          opacity: 0;
         }
-        .form-input-wrap.focused { border-color: #D4A017; background: #ffffff; box-shadow: 0 0 0 4px rgba(212,160,23,0.1); }
-        .form-input-wrap.has-error { border-color: #ef4444; }
-        .form-input-wrap svg { width: 17px; height: 17px; stroke: #a39c8a; fill: none; stroke-width: 1.8; flex-shrink: 0; transition: stroke .2s; }
-        .form-input-wrap.focused svg { stroke: #D4A017; }
-        .form-input-wrap input { flex: 1; border: none; outline: none; font-size: 14.5px; color: #12172B; background: transparent; font-family: 'Inter', sans-serif; min-width: 0; }
-        .form-input-wrap input::placeholder { color: #b3ac9a; }
 
-        .toggle-pw { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
-        .toggle-pw svg { width: 17px; height: 17px; stroke: #a39c8a; fill: none; stroke-width: 1.8; }
-        .toggle-pw:hover svg { stroke: #D4A017; }
+        .auth-input-box {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 13px 16px;
+          border-radius: 14px;
+          border: 1.5px solid #E2E8F0;
+          background: #ffffff;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+        }
 
-        .role-selector { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-        .role-btn { padding: 11px; border-radius: 10px; border: 1.5px solid #e7e2d6; background: #fff; font-size: 13.5px; font-weight: 600; color: #6B7280; cursor: pointer; transition: all .2s ease; text-transform: capitalize; }
-        .role-btn.active { border-color: #D4A017; background: rgba(212,160,23,0.1); color: #D4A017; }
-        .role-btn:hover:not(.active) { border-color: #d9d3c6; }
+        .auth-input-box:hover {
+          border-color: rgba(212, 160, 23, 0.4);
+          transform: translateY(-1px);
+        }
 
-        .strength-bars { display: flex; gap: 4px; margin-top: 8px; }
-        .strength-bar { flex: 1; height: 5px; border-radius: 999px; background: #e7e2d6; transition: background .3s; }
-        .strength-label { font-size: 12px; color: #6B7280; margin-top: 5px; }
-        .strength-label span { font-weight: 600; color: #12172B; }
+        .auth-input-box.focused {
+          border-color: #D4A017;
+          box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.16);
+          transform: translateY(-2px);
+        }
 
-        .terms-check { display: flex; align-items: flex-start; gap: 10px; margin-top: 6px; margin-bottom: 16px; }
-        .terms-check input { width: 18px; height: 18px; accent-color: #D4A017; margin-top: 2px; cursor: pointer; flex-shrink: 0; }
-        .terms-check label { font-size: 13px; color: #6B7280; cursor: pointer; line-height: 1.5; }
-        .terms-check a { color: #D4A017; font-weight: 700; text-decoration: none; }
-        .terms-check a:hover { text-decoration: underline; }
-        .terms-error { font-size: 12px; color: #ef4444; margin-top: 4px; }
+        .auth-input-box.has-error {
+          border-color: #EF4444;
+        }
 
-        .auth-btn {
-          width: 100%; height: 50px;
+        .auth-input-box input {
+          width: 100%;
           border: none;
-          border-radius: 10px;
-          background: #12172B;
-          color: #F7F4EC;
-          font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
+          outline: none;
+          background: transparent;
+          font-size: 14px;
+          color: #0F172A;
+        }
+
+        .role-chip {
+          flex: 1;
+          padding: 12px;
+          border-radius: 12px;
+          border: 1.5px solid #E2E8F0;
+          background: #ffffff;
+          color: #64748B;
+          font-size: 13.5px;
+          font-weight: 700;
           cursor: pointer;
-          display: flex; align-items: center; justify-content: center; gap: 10px;
-          transition: background .25s, transform .2s, box-shadow .2s;
-          box-shadow: 0 14px 30px rgba(18,23,43,0.2);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
         }
-        .auth-btn:hover { background: #1c2340; transform: translateY(-2px); box-shadow: 0 18px 36px rgba(18,23,43,0.26); }
-        .auth-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-        .auth-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        .auth-spinner {
-          width: 18px; height: 18px; border: 2px solid rgba(247,244,236,.35); border-top-color: #F7F4EC; border-radius: 50%; animation: spin .7s linear infinite;
+        .role-chip:hover {
+          border-color: rgba(212, 160, 23, 0.5);
+          color: #0F172A;
+          transform: translateY(-2px);
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .auth-footer { text-align: center; font-size: 13.5px; color: #6B7280; margin-top: 20px; }
-        .auth-footer a { color: #D4A017; font-weight: 700; text-decoration: none; }
-        .auth-footer a:hover { text-decoration: underline; }
+        .role-chip.active {
+          border-color: #D4A017;
+          background: #0F172A;
+          color: #D4A017;
+          box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+          transform: translateY(-2px);
+        }
 
-        @media (max-width: 980px) {
-          .auth-shell {
+        .auth-submit-btn {
+          position: relative;
+          width: 100%;
+          padding: 16px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+          color: #ffffff;
+          font-weight: 700;
+          font-size: 15px;
+          border: 1px solid rgba(212, 160, 23, 0.3);
+          cursor: pointer;
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          overflow: hidden;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .auth-submit-btn::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+          transform: translateX(-100%) skewX(-15deg);
+        }
+
+        .auth-submit-btn:hover::before {
+          animation: authShimmerSweep 0.9s ease-in-out;
+        }
+
+        .auth-submit-btn:hover {
+          background: linear-gradient(135deg, #D4A017 0%, #B8860B 100%);
+          color: #0F172A;
+          border-color: #D4A017;
+          transform: translateY(-2.5px);
+          box-shadow: 0 12px 32px rgba(212, 160, 23, 0.42);
+        }
+
+        .auth-submit-btn:active {
+          transform: translateY(0) scale(0.98);
+        }
+
+        .auth-submit-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .auth-btn-arrow {
+          transition: transform 0.3s ease;
+        }
+
+        .auth-submit-btn:hover .auth-btn-arrow {
+          transform: translateX(4px);
+        }
+
+        /* Mobile Header */
+        .auth-mobile-header {
+          display: none;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          padding: 32px 20px 24px;
+          background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+          position: relative;
+          overflow: hidden;
+          color: #ffffff;
+        }
+
+        .auth-mobile-glow {
+          position: absolute;
+          top: -60px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 320px;
+          height: 320px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(212, 160, 23, 0.25) 0%, transparent 70%);
+          filter: blur(40px);
+          pointer-events: none;
+        }
+
+        @media (max-width: 960px) {
+          .auth-container {
             grid-template-columns: 1fr;
+            background: #0F172A;
           }
-          .auth-hero-panel {
-            min-height: unset;
-            padding: 40px 32px;
-            align-items: center;
-            text-align: center;
+          .auth-left-panel { display: none; }
+          .auth-mobile-header { display: flex; }
+          .auth-right-panel {
+            padding: 24px 16px 48px;
+            background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
           }
-          .auth-hero-panel::before { font-size: 280px; right: 50%; transform: translateX(50%); bottom: -90px; }
-          .auth-badge { justify-content: center; }
-          .auth-brand-row { flex-direction: column; gap: 10px; margin-top: 22px; }
-          .auth-hero-title { font-size: 27px; margin: 18px 0 12px; max-width: 100%; }
-          .auth-hero-copy { font-size: 13.5px; max-width: 360px; }
-          .auth-side { padding: 40px 32px; }
-        }
-
-        @media (max-width: 520px) {
-          .auth-page { padding: 0; }
-          .auth-shell {
-            min-height: 100vh;
-            grid-template-columns: 1fr;
+          .auth-form-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 32px 24px;
+            border: 1px solid rgba(212, 160, 23, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 160, 23, 0.15);
           }
-          .auth-hero-panel {
-            display: none;
-          }
-          .auth-side { padding: 24px 20px 36px; }
-          .auth-card { max-width: 100%; }
-          .auth-card-title { font-size: 22px; }
-          .auth-btn { height: 48px; }
-          .form-row { grid-template-columns: 1fr; }
-          .role-selector { grid-template-columns: 1fr; }
         }
       `}</style>
 
-      <div className="auth-page">
-        <div className="auth-shell">
-          <div className="auth-hero-panel">
-            <div>
-              <div className="auth-badge">Lifetime Realty Partner</div>
-              <div className="auth-brand-row">
-                <div className="auth-brand-icon">
-                  <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </div>
-                <div>
-                  <div className="auth-brand-name">The 10th Homes & Apartments</div>
-                  <div className="auth-brand-sub">Real Estate Ltd</div>
-                </div>
+      <div className="auth-container">
+        {/* Mobile Header Banner */}
+        <div className="auth-mobile-header">
+          <div className="auth-mobile-glow" />
+          <Image
+            src="/images/logos/logo.png"
+            alt="The 10th Homes"
+            width={48}
+            height={48}
+            style={{ objectFit: "contain", filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.5))", marginBottom: "10px" }}
+            onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")}
+          />
+          <h2 style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "15px", fontWeight: 800, color: "#ffffff", margin: 0 }}>
+            The 10th Homes & Apartments
+          </h2>
+          <p style={{ fontSize: "10.5px", fontWeight: 700, color: "#D4A017", letterSpacing: "0.12em", textTransform: "uppercase", margin: "2px 0 0" }}>
+            REAL ESTATE LTD
+          </p>
+        </div>
+
+        {/* Left Hero Panel */}
+        <div className="auth-left-panel">
+          <div className="auth-left-glow" />
+          <div className="auth-left-glow-bottom" />
+
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <div className="auth-left-badge">
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: "#D4A017",
+                  animation: "authBadgePulse 2s infinite ease-in-out",
+                }}
+              />
+              <Sparkles size={13} color="#D4A017" />
+              <span>Join The 10th Network</span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "32px", marginBottom: "36px" }}>
+              <div className="auth-brand-logo">
+                <Image
+                  src="/images/logos/logo.png"
+                  alt="The 10th Homes"
+                  width={54}
+                  height={54}
+                  style={{ objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}
+                  onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")}
+                />
               </div>
-              <h3 className="auth-hero-title">Create your account and step into a smarter property journey.</h3>
-              <p className="auth-hero-copy">Join buyers, investors, and realtors using a trusted platform to discover premium listings and modern property experiences.</p>
+              <div>
+                <h2 style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "16px", fontWeight: 800, color: "#ffffff", margin: 0, lineHeight: 1.2 }}>
+                  The 10th Homes & Apartments
+                </h2>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "#D4A017", letterSpacing: "0.12em", textTransform: "uppercase", margin: "2px 0 0" }}>
+                  REAL ESTATE LTD
+                </p>
+              </div>
+            </div>
+
+            <h1
+              className="auth-left-title"
+              style={{
+                fontFamily: "'Montserrat', sans-serif",
+                fontSize: "clamp(32px, 3vw, 44px)",
+                fontWeight: 900,
+                lineHeight: 1.15,
+                marginBottom: "20px",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Start Your <br />
+              <span style={{ color: "#D4A017" }}>Property Journey.</span>
+            </h1>
+
+            <p className="auth-left-copy" style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "15px", lineHeight: 1.7, maxWidth: "420px", marginBottom: "36px" }}>
+              Join thousands of discerning property buyers, realtors, and hotel managers accessing Nigeria's premier estate platform.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "420px" }}>
+              <div className="auth-left-feature" style={{ animationDelay: "0.25s" }}>
+                <ShieldCheck size={18} color="#D4A017" />
+                <span>Instant Property Verification & Legal Transparency</span>
+              </div>
+              <div className="auth-left-feature" style={{ animationDelay: "0.35s" }}>
+                <Building2 size={18} color="#D4A017" />
+                <span>Seamless Account Dashboard & Real-Time Tracking</span>
+              </div>
+              <div className="auth-left-feature" style={{ animationDelay: "0.45s" }}>
+                <CheckCircle2 size={18} color="#D4A017" />
+                <span>Dedicated 24/7 Client Advisory Support</span>
+              </div>
             </div>
           </div>
 
-          <div className="auth-side">
-            <div className="auth-card">
-              <div className="auth-topbar">
-                <Link href="/" className="auth-home-link">
-                  <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-3v-6h-9v6h-3A1.5 1.5 0 0 1 3 19.5z"/></svg>
-                  Back to home
-                </Link>
-                <div className="auth-top-pill">Create account</div>
+          <div
+            className="auth-testimonial-card"
+            style={{
+              padding: "20px 24px",
+              borderRadius: "18px",
+              background: "rgba(255, 255, 255, 0.04)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(16px)",
+              maxWidth: "420px",
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            <p style={{ fontSize: "13.5px", color: "rgba(255,255,255,0.85)", fontStyle: "italic", margin: 0, lineHeight: 1.6 }}>
+              "The registration process was seamless. Within minutes, I had access to verified title documents for my Lekki investment."
+            </p>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "#D4A017", margin: "10px 0 0" }}>
+              — Chief O. Adebayo, Verified Buyer
+            </p>
+          </div>
+        </div>
+
+        {/* Right Form Panel */}
+        <div className="auth-right-panel">
+          <div className="auth-form-card">
+            {/* Top Navigation */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
+              <Link
+                href="/"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "13.5px",
+                  fontWeight: 700,
+                  color: "#64748B",
+                  textDecoration: "none",
+                  transition: "all 0.25s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "#D4A017";
+                  e.currentTarget.style.transform = "translateX(-3px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "#64748B";
+                  e.currentTarget.style.transform = "translateX(0)";
+                }}
+              >
+                <ArrowLeft size={16} />
+                <span>Back to Home</span>
+              </Link>
+
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  color: "#D4A017",
+                  background: "rgba(212, 160, 23, 0.1)",
+                  padding: "6px 14px",
+                  borderRadius: "999px",
+                  border: "1px solid rgba(212, 160, 23, 0.25)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Create Account
+              </span>
+            </div>
+
+            <h2
+              style={{
+                fontFamily: "'Montserrat', sans-serif",
+                fontSize: "28px",
+                fontWeight: 900,
+                color: "#0F172A",
+                marginBottom: "6px",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Create Account
+            </h2>
+
+            <p style={{ color: "#64748B", fontSize: "14.5px", marginBottom: "24px" }}>
+              Join Tharel Homes to unlock premium listings and personalized dashboards.
+            </p>
+
+            {errors.email && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  background: "#FEF2F2",
+                  border: "1px solid #FCA5A5",
+                  color: "#991B1B",
+                  fontSize: "13.5px",
+                  fontWeight: 600,
+                  marginBottom: "20px",
+                  animation: "authFadeUp 0.3s ease",
+                }}
+              >
+                {errors.email}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              {/* Role Selection Chips */}
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  I AM A
+                </label>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className={`role-chip ${form.role === "buyer" ? "active" : ""}`}
+                    onClick={() => setForm({ ...form, role: "buyer" })}
+                  >
+                    <UserCheck size={16} />
+                    <span>Buyer</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`role-chip ${form.role === "realtor" ? "active" : ""}`}
+                    onClick={() => setForm({ ...form, role: "realtor" })}
+                  >
+                    <Building2 size={16} />
+                    <span>Realtor</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`role-chip ${form.role === "hotel" ? "active" : ""}`}
+                    onClick={() => setForm({ ...form, role: "hotel" })}
+                  >
+                    <KeyRound size={16} />
+                    <span>Hotel</span>
+                  </button>
+                </div>
               </div>
 
-              <h2 className="auth-card-title">Create your account</h2>
-              <p className="auth-card-copy">Join Tharel Homes and start exploring premium properties.</p>
-
-              {errors.email && <div className="auth-error-box">{errors.email}</div>}
-
-              <form onSubmit={handleSubmit}>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">First Name</label>
-                    <div className={"form-input-wrap " + (focused === "firstName" ? "focused" : "") + (errors.firstName ? " has-error" : "")}>
-                      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      <input type="text" name="firstName" value={form.firstName} onChange={handleChange} onFocus={function(){setFocused("firstName")}} onBlur={function(){setFocused("")}} placeholder="John" />
-                    </div>
-                    {errors.firstName && <p className="form-field-error">{errors.firstName}</p>}
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Last Name</label>
-                    <div className={"form-input-wrap " + (focused === "lastName" ? "focused" : "") + (errors.lastName ? " has-error" : "")}>
-                      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      <input type="text" name="lastName" value={form.lastName} onChange={handleChange} onFocus={function(){setFocused("lastName")}} onBlur={function(){setFocused("")}} placeholder="Adebayo" />
-                    </div>
-                    {errors.lastName && <p className="form-field-error">{errors.lastName}</p>}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Email Address</label>
-                  <div className={"form-input-wrap " + (focused === "email" ? "focused" : "") + (errors.email ? " has-error" : "")}>
-                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    <input type="email" name="email" value={form.email} onChange={handleChange} onFocus={function(){setFocused("email")}} onBlur={function(){setFocused("")}} placeholder="john@email.com" />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">I am a</label>
-                  <div className="role-selector">
-                    <button type="button" className={"role-btn " + (form.role === "buyer" ? "active" : "")} onClick={function(){setForm({...form, role: "buyer"})}}>Buyer</button>
-                    <button type="button" className={"role-btn " + (form.role === "realtor" ? "active" : "")} onClick={function(){setForm({...form, role: "realtor"})}}>Realtor</button>
-                    <button type="button" className={"role-btn " + (form.role === "hotel" ? "active" : "")} onClick={function(){setForm({...form, role: "hotel"})}}>Hotel</button>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Password</label>
-                  <div className={"form-input-wrap " + (focused === "password" ? "focused" : "") + (errors.password ? " has-error" : "")}>
-                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange} onFocus={function(){setFocused("password")}} onBlur={function(){setFocused("")}} placeholder="Min 8 characters" />
-                    <button type="button" className="toggle-pw" onClick={function(){setShowPassword(!showPassword)}}>
-                      {showPassword
-                        ? <svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        : <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      }
-                    </button>
-                  </div>
-                  {form.password.length > 0 && (
-                    <div>
-                      <div className="strength-bars">
-                        {[1,2,3,4].map(function(n){
-                          return <div key={n} className="strength-bar" style={{background: strength >= n ? strengthColors[strength] : "#e7e2d6"}} />;
-                        })}
-                      </div>
-                      <p className="strength-label">Strength: <span>{strengthLabels[strength]}</span></p>
-                    </div>
-                  )}
-                  {errors.password && <p className="form-field-error">{errors.password}</p>}
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Confirm Password</label>
-                  <div className={"form-input-wrap " + (focused === "confirmPassword" ? "focused" : "") + (errors.confirmPassword ? " has-error" : "")}>
-                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <input type={showConfirm ? "text" : "password"} name="confirmPassword" value={form.confirmPassword} onChange={handleChange} onFocus={function(){setFocused("confirmPassword")}} onBlur={function(){setFocused("")}} placeholder="Repeat your password" />
-                    <button type="button" className="toggle-pw" onClick={function(){setShowConfirm(!showConfirm)}}>
-                      {showConfirm
-                        ? <svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        : <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      }
-                    </button>
-                  </div>
-                  {errors.confirmPassword && <p className="form-field-error">{errors.confirmPassword}</p>}
-                </div>
-
-                <div className="terms-check">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    checked={agreeTerms}
-                    onChange={function(e){setAgreeTerms(e.target.checked); setTermsError("");}}
-                  />
-                  <label htmlFor="terms">
-                    I agree to the{" "}
-                    <Link href="/terms">Terms of Service</Link>{" "}
-                    and{" "}
-                    <Link href="/privacy">Privacy Policy</Link>
+              {/* First & Last Name */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                    FIRST NAME
                   </label>
+                  <div className={`auth-input-box ${focused === "firstName" ? "focused" : ""} ${errors.firstName ? "has-error" : ""}`}>
+                    <User size={16} color={focused === "firstName" ? "#D4A017" : "#94A3B8"} />
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={form.firstName}
+                      onChange={handleChange}
+                      onFocus={() => setFocused("firstName")}
+                      onBlur={() => setFocused("")}
+                      placeholder="e.g. John"
+                      required
+                    />
+                  </div>
+                  {errors.firstName && <p style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px" }}>{errors.firstName}</p>}
                 </div>
-                {termsError && <p className="terms-error">{termsError}</p>}
 
-                <button type="submit" className="auth-btn" disabled={loading}>
-                  {loading ? <div className="auth-spinner" /> : <>Create Account <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></>}
-                </button>
-              </form>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                    LAST NAME
+                  </label>
+                  <div className={`auth-input-box ${focused === "lastName" ? "focused" : ""} ${errors.lastName ? "has-error" : ""}`}>
+                    <User size={16} color={focused === "lastName" ? "#D4A017" : "#94A3B8"} />
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={form.lastName}
+                      onChange={handleChange}
+                      onFocus={() => setFocused("lastName")}
+                      onBlur={() => setFocused("")}
+                      placeholder="e.g. Adebayo"
+                      required
+                    />
+                  </div>
+                  {errors.lastName && <p style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px" }}>{errors.lastName}</p>}
+                </div>
+              </div>
 
-              <p className="auth-footer">
-                Already have an account? <Link href="/login">Sign in</Link>
-              </p>
-            </div>
+              {/* Email Address */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                  EMAIL ADDRESS
+                </label>
+                <div className={`auth-input-box ${focused === "email" ? "focused" : ""} ${errors.email ? "has-error" : ""}`}>
+                  <Mail size={16} color={focused === "email" ? "#D4A017" : "#94A3B8"} />
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    onFocus={() => setFocused("email")}
+                    onBlur={() => setFocused("")}
+                    placeholder="e.g. john@email.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                  PASSWORD
+                </label>
+                <div className={`auth-input-box ${focused === "password" ? "focused" : ""} ${errors.password ? "has-error" : ""}`}>
+                  <Lock size={16} color={focused === "password" ? "#D4A017" : "#94A3B8"} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    onFocus={() => setFocused("password")}
+                    onBlur={() => setFocused("")}
+                    placeholder="Min 8 characters"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex", padding: 0 }}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                {form.password.length > 0 && (
+                  <div style={{ marginTop: "8px" }}>
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      {[1, 2, 3, 4].map((n) => (
+                        <div
+                          key={n}
+                          style={{
+                            flex: 1,
+                            height: "4px",
+                            borderRadius: "999px",
+                            background: strength >= n ? strengthColors[strength] : "#E2E8F0",
+                            transition: "background 0.3s",
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: "12px", color: "#64748B", marginTop: "4px" }}>
+                      Password Strength: <span style={{ fontWeight: 700, color: "#0F172A" }}>{strengthLabels[strength]}</span>
+                    </p>
+                  </div>
+                )}
+                {errors.password && <p style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px" }}>{errors.password}</p>}
+              </div>
+
+              {/* Confirm Password */}
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                  CONFIRM PASSWORD
+                </label>
+                <div className={`auth-input-box ${focused === "confirmPassword" ? "focused" : ""} ${errors.confirmPassword ? "has-error" : ""}`}>
+                  <Lock size={16} color={focused === "confirmPassword" ? "#D4A017" : "#94A3B8"} />
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    name="confirmPassword"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    onFocus={() => setFocused("confirmPassword")}
+                    onBlur={() => setFocused("")}
+                    placeholder="Repeat your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex", padding: 0 }}
+                  >
+                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px" }}>{errors.confirmPassword}</p>}
+              </div>
+
+              {/* Terms Checkbox */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "20px" }}>
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={agreeTerms}
+                  onChange={(e) => {
+                    setAgreeTerms(e.target.checked);
+                    setTermsError("");
+                  }}
+                  style={{ width: "16px", height: "16px", accentColor: "#D4A017", marginTop: "3px", cursor: "pointer" }}
+                />
+                <label htmlFor="terms" style={{ fontSize: "13px", color: "#64748B", cursor: "pointer", lineHeight: 1.5 }}>
+                  I agree to the{" "}
+                  <Link href="/terms" style={{ fontWeight: 700, color: "#D4A017", textDecoration: "none" }}>
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" style={{ fontWeight: 700, color: "#D4A017", textDecoration: "none" }}>
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+              {termsError && <p style={{ fontSize: "12px", color: "#EF4444", marginTop: "-12px", marginBottom: "16px" }}>{termsError}</p>}
+
+              <button type="submit" className="auth-submit-btn" disabled={loading}>
+                {loading ? (
+                  <span>Creating Account...</span>
+                ) : (
+                  <>
+                    <span>Complete Registration</span>
+                    <ArrowRight size={18} className="auth-btn-arrow" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <p style={{ textAlign: "center", fontSize: "14px", color: "#64748B", marginTop: "28px" }}>
+              Already have an account?{" "}
+              <Link href="/login" style={{ fontWeight: 800, color: "#D4A017", textDecoration: "none" }}>
+                Sign In
+              </Link>
+            </p>
           </div>
         </div>
       </div>
