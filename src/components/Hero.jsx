@@ -1,8 +1,34 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import {
+  Home,
+  Building,
+  Building2,
+  Key,
+  MapPin,
+  Hotel,
+  Warehouse,
+  Store,
+  DoorOpen,
+  Handshake,
+  FileText,
+  Compass,
+  ShieldCheck,
+  Landmark,
+  Tag,
+  Briefcase,
+  Layers,
+  Sparkles,
+  Map,
+  Boxes,
+  Globe,
+  Castle,
+  Bed,
+  Sofa,
+  Bath,
+} from "lucide-react";
 
 const stats = [
   { value: 200, suffix: "+", label: "Properties Listed" },
@@ -52,17 +78,18 @@ function StatItem({ value, suffix, label }) {
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.gsap) return;
-    const gsap = window.gsap;
+    const initCounter = () => {
+      if (typeof window === "undefined" || !window.gsap) return;
+      const gsap = window.gsap;
 
-    const ctx = gsap.context(() => {
       if (reducedMotion) {
         if (numRef.current) numRef.current.innerText = value;
         return;
       }
 
       const obj = { val: 0 };
-      gsap.fromTo(obj,
+      gsap.fromTo(
+        obj,
         { val: 0 },
         {
           val: value,
@@ -80,20 +107,21 @@ function StatItem({ value, suffix, label }) {
           },
         }
       );
-    });
+    };
 
-    return () => ctx.revert();
+    const timer = setTimeout(initCounter, 100);
+    return () => clearTimeout(timer);
   }, [value, reducedMotion]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <span
         style={{
-          color: "#0F172A",
-          fontSize: "clamp(22px, 4vw, 28px)",
-          fontWeight: 900,
+          color: "#1A1C23",
+          fontSize: "clamp(24px, 4vw, 32px)",
+          fontWeight: 800,
           lineHeight: 1,
-          fontFamily: "var(--font-montserrat), sans-serif",
+          fontFamily: "'Playfair Display', serif",
           letterSpacing: "-0.02em",
           textAlign: "center",
           fontVariantNumeric: "tabular-nums",
@@ -104,8 +132,8 @@ function StatItem({ value, suffix, label }) {
       </span>
       <span
         style={{
-          color: "#94a3b8",
-          fontSize: "clamp(9px, 1.5vw, 10px)",
+          color: "#6B7280",
+          fontSize: "clamp(9px, 1.5vw, 11px)",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           marginTop: "6px",
@@ -119,719 +147,706 @@ function StatItem({ value, suffix, label }) {
   );
 }
 
-const heroImages = [
-  {
-    src: "/images/hero/hero.png",
-    alt: "Premium property",
-    isLocal: true,
-  },
-  {
-    src: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80",
-    alt: "Luxury modern home with pool",
-    isLocal: false,
-  },
-  {
-    src: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
-    alt: "Contemporary glass house",
-    isLocal: false,
-  },
-];
-
 export default function Hero() {
   const [isDesktop, setIsDesktop] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const eyebrowRef = useRef(null);
-  const headlineRef = useRef(null);
-  const subcopyRef = useRef(null);
-  const audienceRef = useRef(null);
-  const buttonsRef = useRef(null);
-  const statsRef = useRef(null);
-  const imageRef = useRef(null);
-  const imageWrapRef = useRef(null);
-  const searchRef = useRef(null);
   const reducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
     handleResize();
     window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.gsap) return;
-    const gsap = window.gsap;
+    let ctx = null;
 
-    const ctx = gsap.context(() => {
-      if (reducedMotion) {
-        gsap.set([eyebrowRef.current, headlineRef.current, subcopyRef.current, audienceRef.current, buttonsRef.current, statsRef.current, searchRef.current], { opacity: 1, y: 0 });
-        gsap.set(imageWrapRef.current, { opacity: 1 });
-        gsap.set(imageRef.current, { scale: 1, y: 0 });
+    const startAnimations = () => {
+      if (typeof window === "undefined" || !window.gsap) {
+        setTimeout(startAnimations, 100);
         return;
       }
+      const gsap = window.gsap;
 
-      // Page load animations for text column
-      const tl = gsap.timeline({ defaults: { ease: "power2.out", duration: 0.8 } });
-      tl.fromTo(eyebrowRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.1);
-      tl.fromTo(headlineRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.18);
-      tl.fromTo(subcopyRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.26);
-      tl.fromTo(audienceRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.32);
-      tl.fromTo(buttonsRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.4);
-      tl.fromTo(statsRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.48);
-      tl.fromTo(searchRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, 0.56);
+      ctx = gsap.context(() => {
+        if (reducedMotion) return;
 
-      // Hero image load animations
-      gsap.fromTo(imageWrapRef.current, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 1, ease: "power2.out" });
-      gsap.fromTo(imageRef.current, { scale: 1.05 }, { scale: 1, duration: 1.2, ease: "power3.out" });
+        // Entrance Timeline
+        const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      // Parallax scroll effect
-      const isMobile = window.innerWidth < 768;
-      if (!isMobile && window.ScrollTrigger) {
-        gsap.to(imageRef.current, {
-          y: 40,
-          ease: "none",
-          scrollTrigger: {
-            trigger: imageWrapRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true,
-          },
+        tl.from(".hero-content .badge", { duration: 0.6, opacity: 0, y: 20 })
+          .from(".hero-content h1", { duration: 0.9, opacity: 0, y: 50, scale: 0.98 }, "-=0.3")
+          .from(".hero-content .h-subcopy", { duration: 0.7, opacity: 0, y: 30 }, "-=0.4")
+          .from(".hero-content .h-audience-wrapper", { duration: 0.7, opacity: 0, y: 30 }, "-=0.4")
+          .from(".hero-content .h-buttons-row", { duration: 0.7, opacity: 0, y: 30 }, "-=0.3")
+          .from(".hero-content .h-stats-card", { duration: 0.8, opacity: 0, y: 40, scale: 0.96 }, "-=0.4")
+          .from(
+            ".artwork-icons .icon-float",
+            {
+              duration: 1.2,
+              opacity: 0,
+              scale: 0.2,
+              stagger: 0.05,
+              ease: "back.out(2)",
+            },
+            "-=0.6"
+          );
+
+        // Continuous Silk Background Flow
+        gsap.to(".silk-blob-1", {
+          duration: 25,
+          x: "+=200",
+          y: "+=100",
+          scale: 1.1,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
         });
-      }
-    });
 
-    return () => ctx.revert();
+        gsap.to(".silk-blob-2", {
+          duration: 30,
+          x: "-=250",
+          y: "+=150",
+          scale: 1.15,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+
+        gsap.to(".silk-blob-3", {
+          duration: 20,
+          x: "+=150",
+          y: "-=100",
+          scale: 1.05,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+
+        gsap.to(".silk-blob-4", {
+          duration: 22,
+          x: "-=180",
+          y: "-=120",
+          scale: 1.1,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+
+        gsap.to(".silk-blob-5", {
+          duration: 28,
+          x: "+=120",
+          y: "+=80",
+          scale: 1.2,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+
+        // Icons Floating Animation - Dynamic & Vibrant
+        const icons = document.querySelectorAll(".artwork-icons .icon-float");
+        icons.forEach((icon, i) => {
+          const delay = i * 0.08;
+          const duration = 4.5 + (i % 5) * 1.2;
+          const yOffset = -25 - (i % 6) * 10;
+          const xOffset = 20 + (i % 5) * 8;
+
+          gsap.to(icon, {
+            duration: duration,
+            y: yOffset,
+            x: i % 2 === 0 ? xOffset : -xOffset,
+            scale: 1 + (i % 4) * 0.08,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            delay: delay + 0.2,
+          });
+        });
+
+        // Gentle Rotations
+        gsap.to(".icon-1, .icon-5, .icon-10, .icon-15, .icon-21", {
+          duration: 8,
+          rotation: 18,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          delay: 0.4,
+        });
+
+        gsap.to(".icon-3, .icon-7, .icon-12, .icon-18, .icon-22", {
+          duration: 6,
+          rotation: -15,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          delay: 0.8,
+        });
+
+        gsap.to(".icon-11, .icon-17, .icon-20", {
+          duration: 9,
+          rotation: 20,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          delay: 0.2,
+        });
+      });
+    };
+
+    startAnimations();
+
+    // Parallax Effect on Mouse Move
+    const handleMouseMove = (e) => {
+      if (typeof window === "undefined" || !window.gsap) return;
+      const x = (e.clientX / window.innerWidth - 0.5) * 35;
+      const y = (e.clientY / window.innerHeight - 0.5) * 35;
+
+      window.gsap.to(".artwork-icons .icon-float", {
+        duration: 1.8,
+        x: (i, el) => {
+          const speed = parseFloat(el.dataset.speed) || 1.2 + (i % 4) * 0.2;
+          return x * 0.6 * speed;
+        },
+        y: (i, el) => {
+          const speed = parseFloat(el.dataset.speed) || 1.2 + (i % 4) * 0.2;
+          return y * 0.6 * speed;
+        },
+        ease: "power2.out",
+        stagger: 0.02,
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      if (ctx) ctx.revert();
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, [reducedMotion]);
-
-  const currentImage = heroImages[currentImageIndex];
 
   return (
     <>
-      <style>{`
-        @keyframes floatY {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-18px) scale(1.02); }
-        }
-        @keyframes floatCard {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-6px); }
-        }
-        @keyframes imageFade {
-          0% { opacity: 0.5; transform: scale(1.02); }
-          15% { opacity: 1; transform: scale(1); }
-          85% { opacity: 1; transform: scale(1); }
-          100% { opacity: 0.5; transform: scale(1.02); }
-        }
-        @keyframes dotPulse {
-          0% { box-shadow: 0 0 0 0 rgba(212,175,55,0.55); }
-          70% { box-shadow: 0 0 0 8px rgba(212,175,55,0); }
-          100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
-        }
-        @keyframes dotBlink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.35; }
+      <style jsx global>{`
+        :root {
+          --gold: #D4AF37;
+          --gold-light: #E8D5A3;
+          --gold-soft: rgba(212, 175, 55, 0.15);
+          --dark: #1A1C23;
+          --gray: #6B7280;
+          --white: #FFFFFF;
+          --off-white: #FCFAF5;
+          --blush: #F0E3D9;
+          --sage: #D6D8C9;
         }
 
-        .h-anim-1 { opacity: 0; }
-        .h-anim-2 { opacity: 0; }
-        .h-anim-3 { opacity: 0; }
-        .h-anim-3b { opacity: 0; }
-        .h-anim-4 { opacity: 0; }
-        .h-anim-5 { opacity: 0; }
-        .h-anim-6 { opacity: 0; }
-        .h-anim-img { opacity: 0; }
-
-        .h-float {
-          animation: floatY 6s ease-in-out infinite;
-        }
-
-        .h-image-wrap {
-          position: relative;
-          border-radius: 20px;
-          overflow: hidden;
-          box-shadow: 0 20px 60px rgba(15,23,42,0.12);
-          transition: box-shadow 0.5s ease;
-          aspect-ratio: 4/3;
-          width: 100%;
-          background: #E2E8F0;
-        }
-
-        .h-image-wrap:hover {
-          box-shadow: 0 30px 80px rgba(15,23,42,0.18);
-        }
-
-        .h-image-wrap img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-          transition: transform 0.5s ease;
-          animation: imageFade 4s ease-in-out infinite;
-        }
-
-        .h-image-wrap:hover img {
-          transform: scale(1.03);
-        }
-
-        .h-btn-primary, .h-btn-secondary {
-          display: inline-flex;
+        .hero-silk {
+          min-height: 100vh;
+          display: flex;
           align-items: center;
           justify-content: center;
-          padding: 15px 34px;
-          border-radius: 50px;
-          font-weight: 700;
-          font-size: 14px;
-          text-decoration: none;
-          transition: all 0.35s ease;
-          width: auto;
+          text-align: center;
+          padding: 140px 0 90px;
+          position: relative;
+          overflow: hidden;
+          background: var(--off-white);
         }
 
-        .h-btn-primary {
-          background: #0F172A;
-          color: #ffffff;
-          box-shadow: 0 8px 28px rgba(15,23,42,0.25);
-          border: 2px solid #0F172A;
-        }
-        .h-btn-primary:hover {
-          background: #D4AF37;
-          color: #0F172A;
-          border-color: #D4AF37;
-          transform: translateY(-3px);
-          box-shadow: 0 16px 36px rgba(212,175,55,0.3);
+        /* ===== SILK BACKGROUND ===== */
+        .silk-container {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          overflow: hidden;
+          pointer-events: none;
         }
 
-        .h-btn-secondary {
-          background: transparent;
-          color: #0F172A;
-          border: 2px solid rgba(15,23,42,0.2);
+        .silk-blob {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          will-change: transform;
+          mix-blend-mode: soft-light;
+          opacity: 0.6;
         }
-        .h-btn-secondary:hover {
-          border-color: #D4AF37;
+
+        .silk-blob-1 {
+          width: 700px;
+          height: 700px;
+          background: var(--gold);
+          top: -15%;
+          left: -10%;
+          opacity: 0.20;
+        }
+
+        .silk-blob-2 {
+          width: 900px;
+          height: 900px;
+          background: var(--blush);
+          bottom: -20%;
+          right: -10%;
+          opacity: 0.25;
+        }
+
+        .silk-blob-3 {
+          width: 650px;
+          height: 650px;
+          background: var(--sage);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0.20;
+        }
+
+        .silk-blob-4 {
+          width: 550px;
+          height: 550px;
+          background: var(--gold-light);
+          top: 10%;
+          right: 20%;
+          opacity: 0.25;
+        }
+
+        .silk-blob-5 {
+          width: 450px;
+          height: 450px;
+          background: var(--dark);
+          bottom: 10%;
+          left: 20%;
+          opacity: 0.08;
+        }
+
+        .silk-noise {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+          opacity: 0.45;
+          mix-blend-mode: overlay;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+          background-repeat: repeat;
+          background-size: 256px 256px;
+        }
+
+        /* ===== ARTWORK ICONS (LUCIDE REACT VECTOR SVGs) ===== */
+        .artwork-icons {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+          overflow: hidden;
+        }
+
+        .artwork-icons .icon-float {
+          position: absolute;
+          will-change: transform;
+          pointer-events: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0.35;
+        }
+
+        .artwork-icons .icon-float.gold {
           color: #D4AF37;
-          transform: translateY(-3px);
+          filter: drop-shadow(0 3px 10px rgba(212, 175, 55, 0.22)) blur(0.3px);
         }
 
-        /* ── Eyebrow glow dot ── */
-        .h-eyebrow {
+        .artwork-icons .icon-float.dark {
+          color: #1A1C23;
+          filter: drop-shadow(0 3px 10px rgba(26, 28, 35, 0.16)) blur(0.3px);
+        }
+
+        .artwork-icons .icon-float.gold-light {
+          color: #E8D5A3;
+          filter: drop-shadow(0 3px 10px rgba(212, 175, 55, 0.18)) blur(0.3px);
+        }
+
+        /* Sizes - refined, smaller & softer */
+        .artwork-icons .icon-float.sm svg { width: 18px; height: 18px; stroke-width: 1.5; }
+        .artwork-icons .icon-float.md svg { width: 26px; height: 26px; stroke-width: 1.5; }
+        .artwork-icons .icon-float.lg svg { width: 36px; height: 36px; stroke-width: 1.5; }
+        .artwork-icons .icon-float.xl svg { width: 48px; height: 48px; stroke-width: 1.5; }
+
+        /* Icon positions across the screen */
+        .icon-1 { top: 6%; left: 5%; }
+        .icon-2 { top: 10%; right: 8%; }
+        .icon-3 { top: 32%; left: 3%; }
+        .icon-4 { top: 52%; right: 4%; }
+        .icon-5 { bottom: 18%; left: 6%; }
+        .icon-6 { bottom: 8%; right: 10%; }
+        .icon-7 { top: 22%; right: 25%; }
+        .icon-8 { top: 62%; left: 16%; }
+        .icon-9 { bottom: 30%; right: 30%; }
+        .icon-10 { top: 8%; left: 42%; }
+        .icon-11 { top: 42%; left: 58%; }
+        .icon-12 { bottom: 40%; left: 4%; }
+        .icon-13 { top: 72%; right: 7%; }
+        .icon-14 { top: 4%; right: 38%; }
+        .icon-15 { bottom: 12%; left: 32%; }
+        .icon-16 { top: 48%; left: 10%; }
+        .icon-17 { top: 28%; right: 16%; }
+        .icon-18 { bottom: 55%; right: 3%; }
+        .icon-19 { top: 68%; left: 42%; }
+        .icon-20 { top: 16%; left: 20%; }
+        .icon-21 { top: 82%; left: 22%; }
+        .icon-22 { top: 85%; right: 25%; }
+
+        /* ===== CENTERED HERO CONTENT ===== */
+        .hero-content {
+          position: relative;
+          z-index: 2;
+          max-width: 860px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .hero-content .badge {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          font-size: 11px;
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(212, 175, 55, 0.3);
+          padding: 8px 24px;
+          border-radius: 50px;
+          color: var(--dark);
+          font-size: 0.75rem;
           font-weight: 700;
-          letter-spacing: 0.3em;
           text-transform: uppercase;
-          color: #94a3b8;
+          letter-spacing: 1.8px;
+          margin-bottom: 26px;
+          box-shadow: 0 6px 24px rgba(212, 175, 55, 0.12);
         }
+
         .h-eyebrow-dot-wrap {
           position: relative;
-          width: 8px;
-          height: 8px;
+          width: 9px;
+          height: 9px;
           flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: center;
         }
+
         .h-eyebrow-dot {
-          width: 8px;
-          height: 8px;
+          width: 9px;
+          height: 9px;
           border-radius: 50%;
-          background: #D4AF37;
-          animation: dotBlink 1.8s ease-in-out infinite, dotPulse 1.8s ease-out infinite;
+          background: var(--gold);
+          box-shadow: 0 0 12px var(--gold);
         }
 
-        /* ── Audience strip (who this is for) ── */
+        .hero-content h1 {
+          font-family: 'Playfair Display', serif;
+          font-size: clamp(3rem, 6vw, 4.8rem);
+          font-weight: 800;
+          line-height: 1.1;
+          margin-bottom: 22px;
+          letter-spacing: -1px;
+          color: var(--dark);
+        }
+
+        .hero-content h1 .highlight {
+          font-style: italic;
+          background: linear-gradient(145deg, var(--gold), #b8962a);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .hero-content .h-subcopy {
+          font-size: 1.15rem;
+          color: var(--gray);
+          max-width: 650px;
+          margin: 0 auto 36px;
+          font-weight: 400;
+          line-height: 1.7;
+          letter-spacing: 0.2px;
+        }
+
+        /* ===== AUDIENCE STRIP ===== */
+        .h-audience-wrapper {
+          margin-bottom: 36px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
         .h-audience-label {
-          font-size: 10.5px;
+          font-size: 0.7rem;
           font-weight: 700;
-          letter-spacing: 0.2em;
+          letter-spacing: 0.22em;
           text-transform: uppercase;
-          color: #94a3b8;
-          margin-bottom: 12px;
-          display: block;
+          color: var(--gray);
+          margin-bottom: 14px;
         }
         .h-audience-row {
           display: flex;
-          gap: 10px;
+          gap: 14px;
           flex-wrap: wrap;
+          justify-content: center;
         }
         .h-audience-chip {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 9px 16px 9px 12px;
+          gap: 12px;
+          padding: 10px 20px 10px 14px;
           border-radius: 999px;
-          background: rgba(255,255,255,0.7);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(15,23,42,0.08);
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(212, 175, 55, 0.25);
           text-decoration: none;
           transition: all 0.3s ease;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
         }
         .h-audience-chip:hover {
-          border-color: #D4AF37;
+          border-color: var(--gold);
           background: #ffffff;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(15,23,42,0.08);
+          transform: translateY(-3px);
+          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
         }
         .h-audience-icon {
-          width: 26px;
-          height: 26px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
-          background: rgba(212,175,55,0.12);
-          color: #b8860c;
+          background: var(--gold-soft);
+          color: var(--gold);
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
         }
-        .h-audience-text { display: flex; flex-direction: column; line-height: 1.25; }
-        .h-audience-role { font-size: 12.5px; font-weight: 700; color: #0F172A; }
-        .h-audience-sub { font-size: 10px; color: #94a3b8; font-weight: 500; }
-
-        /* ── Floating search card ── */
-        .h-search-outer { position: relative; z-index: 3; width: 100%; animation: floatCard 7s ease-in-out infinite; margin-top: 56px; }
-        .h-search-card {
+        .h-audience-text {
           display: flex;
-          align-items: stretch;
-          background: #f9f5ee;
-          border: 1px solid rgba(15,23,42,0.06);
-          border-radius: 18px;
-          box-shadow: 0 20px 50px rgba(15,23,42,0.1);
-          padding: 12px 16px;
-          gap: 8px;
+          flex-direction: column;
+          line-height: 1.25;
+          text-align: left;
         }
-        .h-search-field {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          flex: 1;
-          padding: 10px 16px;
-          min-width: 0;
-        }
-        .h-search-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-        .h-search-label {
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: #94a3b8;
-          margin-bottom: 2px;
-        }
-        .h-search-input {
-          border: none;
-          outline: none;
-          background: transparent;
+        .h-audience-role {
           font-size: 13.5px;
-          font-weight: 600;
-          color: #0F172A;
-          font-family: var(--font-inter), sans-serif;
-          padding: 0;
-          width: 100%;
+          font-weight: 700;
+          color: var(--dark);
         }
-        .h-search-input::placeholder { color: #94a3b8; font-weight: 400; }
-        .h-search-icon { flex-shrink: 0; color: #94a3b8; }
-        .h-search-divider { width: 1px; background: rgba(15,23,42,0.1); margin: 8px 0; flex-shrink: 0; }
-        .h-search-btn {
+        .h-audience-sub {
+          font-size: 10.5px;
+          color: var(--gray);
+          font-weight: 500;
+        }
+
+        /* ===== BUTTONS ROW ===== */
+        .h-buttons-row {
+          display: flex;
+          gap: 18px;
+          margin-bottom: 44px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .h-btn-primary,
+        .h-btn-secondary {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 0 32px;
-          border-radius: 12px;
+          padding: 16px 38px;
+          border-radius: 50px;
           font-weight: 700;
-          font-size: 13.5px;
-          border: none;
-          cursor: pointer;
-          background: #0F172A;
-          color: #ffffff;
-          transition: all 0.25s ease;
-          flex-shrink: 0;
+          font-size: 0.92rem;
+          text-decoration: none;
+          transition: all 0.35s ease;
         }
-        .h-search-btn:hover { background: #D4AF37; color: #0F172A; }
+        .h-btn-primary {
+          background: linear-gradient(145deg, var(--gold), #b8962a);
+          color: var(--white);
+          border: 2px solid transparent;
+          box-shadow: 0 8px 28px rgba(212, 175, 55, 0.30);
+        }
+        .h-btn-primary:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 16px 40px rgba(212, 175, 55, 0.45);
+          color: var(--white);
+        }
+        .h-btn-secondary {
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(16px);
+          color: var(--dark);
+          border: 2px solid rgba(26, 28, 35, 0.18);
+        }
+        .h-btn-secondary:hover {
+          border-color: var(--gold);
+          color: var(--gold);
+          transform: translateY(-3px);
+          background: #ffffff;
+          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.20);
+        }
 
-        /* ── Mobile overrides ── */
+        /* ===== STATS CARD ===== */
+        .h-stats-card {
+          width: 100%;
+          max-width: 780px;
+          margin: 0 auto;
+          background: rgba(255, 255, 255, 0.75);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-radius: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.90);
+          box-shadow: 0 16px 50px rgba(26, 28, 35, 0.06);
+          padding: 28px 36px;
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) {
-          .h-image-wrap {
-            aspect-ratio: 16/10;
-          }
-        }
-
-        @media (max-width: 900px) {
-          .h-search-outer { margin-top: 32px; }
-          .h-search-card { flex-direction: column; border-radius: 16px; padding: 16px; gap: 4px; }
-          .h-search-field { padding: 10px 4px; }
-          .h-search-divider { width: 100%; height: 1px; margin: 0; }
-          .h-search-btn { width: 100%; padding: 14px; border-radius: 10px; margin-top: 8px; }
-          .h-search-outer { animation: none; }
+          .silk-blob-1 { width: 550px; height: 550px; }
+          .silk-blob-2 { width: 650px; height: 650px; }
         }
 
         @media (max-width: 768px) {
-          .h-image-wrap {
-            aspect-ratio: 16/12;
+          .hero-silk {
+            padding: 120px 0 70px;
           }
-          .h-btn-primary, .h-btn-secondary {
-            width: 100% !important;
-            font-size: 13px !important;
-            padding: 14px 20px !important;
+          .h-stats-card {
+            flex-direction: column;
+            gap: 20px;
+            padding: 24px 20px;
           }
-          .h-anim-4 {
-            width: 100% !important;
-            flex-direction: column !important;
-            gap: 10px !important;
-          }
-          .h-audience-row { justify-content: center; }
-          .h-audience-label { text-align: center; }
+          .artwork-icons .icon-float.lg svg { width: 26px; height: 26px; }
+          .artwork-icons .icon-float.xl svg { width: 34px; height: 34px; }
+          .silk-blob-1 { width: 350px; height: 350px; filter: blur(60px); }
+          .silk-blob-2 { width: 450px; height: 450px; filter: blur(60px); }
+          .silk-blob-3 { width: 350px; height: 350px; filter: blur(60px); }
+          .silk-blob-4 { width: 300px; height: 300px; filter: blur(60px); }
         }
 
         @media (max-width: 480px) {
-          .h-anim-2 {
-            font-size: 32px !important;
-          }
-          .h-anim-3 {
-            font-size: 14px !important;
-            max-width: 100% !important;
-          }
-          .h-eyebrow {
-            font-size: 10px !important;
-            letter-spacing: 0.22em !important;
-          }
-          .h-eyebrow-dot-wrap { width: 7px; height: 7px; }
-          .h-eyebrow-dot { width: 7px; height: 7px; }
-          .h-image-wrap {
-            aspect-ratio: 16/10;
-          }
-          .h-float {
-            animation: none;
-          }
-          .h-audience-chip { flex: 1 1 auto; justify-content: center; }
-          .h-audience-sub { display: none; }
-        }
-
-        @media (max-width: 380px) {
-          .h-anim-2 {
-            font-size: 28px !important;
-          }
-          .h-btn-primary, .h-btn-secondary {
-            font-size: 12px !important;
-            padding: 12px 16px !important;
+          .hero-content .badge {
+            font-size: 0.68rem;
+            padding: 6px 18px;
           }
         }
       `}</style>
 
-
-      <section
-        style={{
-          position: "relative",
-          width: "100%",
-          minHeight: "100vh",
-          overflow: "hidden",
-          background: "linear-gradient(125deg, #f5efe6 0%, #ede8de 28%, #dce5f3 62%, #cdd5ec 100%)",
-          fontFamily: "var(--font-inter), sans-serif",
-          paddingTop: "100px", // space for navbar
-        }}
-      >
-        {/* Decorative blobs – hidden on small screens for performance */}
-        <div
-          style={{
-            position: "absolute",
-            top: "-100px",
-            right: "-100px",
-            width: "600px",
-            height: "600px",
-            background: "radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 68%)",
-            borderRadius: "50%",
-            pointerEvents: "none",
-            display: isDesktop ? "block" : "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-120px",
-            left: "-80px",
-            width: "500px",
-            height: "500px",
-            background: "radial-gradient(circle, rgba(15,23,42,0.05) 0%, transparent 68%)",
-            borderRadius: "50%",
-            pointerEvents: "none",
-            display: isDesktop ? "block" : "none",
-          }}
-        />
-
-        <div
-          style={{
-            maxWidth: "1280px",
-            margin: "0 auto",
-            padding: isDesktop ? "0 64px" : "0 20px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isDesktop ? "row" : "column",
-              alignItems: "center",
-              minHeight: isDesktop ? "calc(100vh - 280px)" : "auto",
-              gap: isDesktop ? "60px" : "30px",
-              paddingTop: isDesktop ? "10px" : "20px",
-              paddingBottom: isDesktop ? "0" : "20px",
-            }}
-          >
-            {/* LEFT COLUMN */}
-            <div
-              style={{
-                width: isDesktop ? "48%" : "100%",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                justifyContent: "center",
-                gap: "0",
-              }}
-            >
-              <div ref={eyebrowRef} className="h-anim-1" style={{ marginBottom: "20px" }}>
-                <span className="h-eyebrow">
-                  <span className="h-eyebrow-dot-wrap">
-                    <span className="h-eyebrow-dot" />
-                  </span>
-                  Lifetime Realty Partner
-                </span>
-              </div>
-
-              <h1
-                ref={headlineRef}
-                className="h-anim-2"
-                style={{
-                  fontFamily: "var(--font-montserrat), sans-serif",
-                  fontWeight: 900,
-                  color: "#0F172A",
-                  lineHeight: 1.06,
-                  marginBottom: "16px",
-                  fontSize: isDesktop ? "clamp(44px, 4vw, 66px)" : "clamp(36px, 6vw, 44px)",
-                  letterSpacing: "-0.025em",
-                }}
-              >
-                Enhancing Your<br />
-                <span style={{ color: "#0F172A" }}>Living Experience</span>
-              </h1>
-
-              <p
-                ref={subcopyRef}
-                className="h-anim-3"
-                style={{
-                  color: "#64748b",
-                  fontSize: isDesktop ? "15.5px" : "clamp(14px, 2.5vw, 15px)",
-                  lineHeight: 1.8,
-                  marginBottom: "28px",
-                  maxWidth: isDesktop ? "420px" : "100%",
-                }}
-              >
-                Discover premium homes, apartments, and investment opportunities in
-                carefully selected locations. We help families and investors find
-                properties that combine comfort, security, and lasting value.
-              </p>
-
-              {/* ─── AUDIENCE STRIP ─── */}
-              <div ref={audienceRef} className="h-anim-3b" style={{ marginBottom: "32px", width: "100%" }}>
-                <span className="h-audience-label">One platform, three ways in</span>
-                <div className="h-audience-row">
-                  {audiences.map((a) => (
-                    <Link key={a.role} href={`/signup?role=${a.role}`} className="h-audience-chip">
-                      <span className="h-audience-icon">{a.icon}</span>
-                      <span className="h-audience-text">
-                        <span className="h-audience-role">{a.label}</span>
-                        <span className="h-audience-sub">{a.sub}</span>
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                ref={buttonsRef}
-                className="h-anim-4"
-                style={{
-                  display: "flex",
-                  flexDirection: isDesktop ? "row" : "column",
-                  gap: "14px",
-                  width: isDesktop ? "auto" : "100%",
-                  marginBottom: isDesktop ? "52px" : "32px",
-                }}
-              >
-                <Link href="/properties" className="h-btn-primary">
-                  Explore Properties
-                </Link>
-                <Link href="/contact" className="h-btn-secondary">
-                  Contact Us
-                </Link>
-              </div>
-
-              {/* ─── STATS ─── */}
-              <div ref={statsRef} className="h-anim-5" style={{ width: "100%" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: isDesktop ? "row" : "column",
-                    alignItems: "center",
-                    justifyContent: "space-around",
-                    padding: isDesktop ? "24px 32px" : "18px 16px",
-                    background: "rgba(255,255,255,0.7)",
-                    backdropFilter: "blur(18px)",
-                    borderRadius: "18px",
-                    border: "1px solid rgba(255,255,255,0.9)",
-                    boxShadow: "0 8px 32px rgba(15,23,42,0.07)",
-                    gap: isDesktop ? "0" : "16px",
-                    width: "100%",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  {stats.map((stat, i) => (
-                    <div
-                      key={stat.label}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        flexDirection: isDesktop ? "row" : "column",
-                        width: isDesktop ? "auto" : "100%",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <StatItem {...stat} />
-                      {i < stats.length - 1 && (
-                        <div
-                          style={{
-                            width: isDesktop ? "1px" : "80%",
-                            height: isDesktop ? "48px" : "1px",
-                            background: "rgba(15,23,42,0.1)",
-                            margin: isDesktop ? "0 28px" : "12px 0",
-                            flexShrink: 0,
-                          }}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT COLUMN – SLIDESHOW */}
-            <div
-              ref={imageWrapRef}
-              className="h-anim-img"
-              style={{
-                width: isDesktop ? "48%" : "100%",
-                maxWidth: isDesktop ? "none" : "500px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: isDesktop ? "flex-end" : "center",
-                margin: isDesktop ? "0" : "0 auto",
-              }}
-            >
-              <div
-                className="h-float"
-                style={{
-                  width: "100%",
-                  position: "relative",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: "5%",
-                    background: "radial-gradient(ellipse, rgba(212,175,55,0.10) 0%, transparent 70%)",
-                    filter: "blur(40px)",
-                    borderRadius: "50%",
-                    zIndex: 0,
-                    pointerEvents: "none",
-                  }}
-                />
-
-                <div className="h-image-wrap" style={{ overflow: "hidden" }}>
-                  <div ref={imageRef} style={{ width: "100%", height: "110%", position: "relative", top: "-10px" }}>
-                    {currentImage.isLocal ? (
-                      <Image
-                        src={currentImage.src}
-                        alt={currentImage.alt}
-                        width={800}
-                        height={600}
-                        priority
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                        onError={(e) => {
-                          e.currentTarget.src =
-                            "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80";
-                        }}
-                      />
-                    ) : (
-                      <img
-                        key={currentImageIndex}
-                        src={currentImage.src}
-                        alt={currentImage.alt}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          display: "block",
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ─── FLOATING SEARCH BAR ─── */}
-          <div ref={searchRef} className="h-anim-6 h-search-outer">
-            <div className="h-search-card">
-              <div className="h-search-field">
-                <div className="h-search-text">
-                  <span className="h-search-label">Location</span>
-                  <input type="text" className="h-search-input" placeholder="Enter a city or area" />
-                </div>
-                <svg className="h-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s7-6.2 7-12A7 7 0 0 0 5 10c0 5.8 7 12 7 12z" />
-                  <circle cx="12" cy="10" r="2.5" />
-                </svg>
-              </div>
-              <div className="h-search-divider" />
-              <div className="h-search-field">
-                <div className="h-search-text">
-                  <span className="h-search-label">Type</span>
-                  <input type="text" className="h-search-input" placeholder="e.g. Apartment, Duplex" />
-                </div>
-                <svg className="h-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 11.5 12 4l9 7.5" />
-                  <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
-                </svg>
-              </div>
-              <div className="h-search-divider" />
-              <div className="h-search-field">
-                <div className="h-search-text">
-                  <span className="h-search-label">Price Range</span>
-                  <input type="text" className="h-search-input" placeholder="Any price" />
-                </div>
-                <svg className="h-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-              </div>
-              <button type="button" className="h-search-btn">Search</button>
-            </div>
-          </div>
-
+      <section className="hero-silk" id="hero">
+        {/* SILK BACKGROUND */}
+        <div className="silk-container">
+          <div className="silk-blob silk-blob-1"></div>
+          <div className="silk-blob silk-blob-2"></div>
+          <div className="silk-blob silk-blob-3"></div>
+          <div className="silk-blob silk-blob-4"></div>
+          <div className="silk-blob silk-blob-5"></div>
+          <div className="silk-noise"></div>
         </div>
 
-        <div style={{ height: isDesktop ? "60px" : "40px" }} />
+        {/* 100% RELIABLE LUCIDE REACT REAL ESTATE VECTOR ICONS */}
+        <div className="artwork-icons">
+          {/* Homes & Residential */}
+          <div className="icon-float icon-1 gold xl"><Home /></div>
+          <div className="icon-float icon-2 dark lg"><Building2 /></div>
+          <div className="icon-float icon-3 gold-light lg"><Landmark /></div>
+
+          {/* Buildings & Highrises */}
+          <div className="icon-float icon-4 dark xl"><Building /></div>
+          <div className="icon-float icon-5 gold xl"><Castle /></div>
+          <div className="icon-float icon-6 dark lg"><Warehouse /></div>
+
+          {/* Keys & Access */}
+          <div className="icon-float icon-7 gold lg"><Key /></div>
+          <div className="icon-float icon-8 dark xl"><DoorOpen /></div>
+          <div className="icon-float icon-9 gold-light md"><Key /></div>
+
+          {/* Deals & Contracts */}
+          <div className="icon-float icon-10 dark xl"><Handshake /></div>
+          <div className="icon-float icon-11 gold xl"><FileText /></div>
+
+          {/* Locations & Maps */}
+          <div className="icon-float icon-12 gold lg"><MapPin /></div>
+          <div className="icon-float icon-13 dark xl"><Compass /></div>
+          <div className="icon-float icon-14 gold-light md"><MapPin /></div>
+
+          {/* Hospitality & Interiors */}
+          <div className="icon-float icon-15 dark xl"><Hotel /></div>
+          <div className="icon-float icon-16 gold lg"><Bed /></div>
+          <div className="icon-float icon-17 dark xl"><Sofa /></div>
+          <div className="icon-float icon-18 gold xl"><Bath /></div>
+
+          {/* Commercial & Property Assets */}
+          <div className="icon-float icon-19 dark lg"><Store /></div>
+          <div className="icon-float icon-20 gold lg"><ShieldCheck /></div>
+          <div className="icon-float icon-21 dark xl"><Tag /></div>
+          <div className="icon-float icon-22 gold xl"><Layers /></div>
+        </div>
+
+        {/* CENTERED HERO CONTENT */}
+        <div className="container">
+          <div className="hero-content">
+            {/* EYEBROW BADGE */}
+            <div className="badge">
+              <span className="h-eyebrow-dot-wrap">
+                <span className="h-eyebrow-dot"></span>
+              </span>
+              The 10th Homes & Apartments
+            </div>
+
+            {/* HEADLINE */}
+            <h1>
+              Where Luxury Meets <br />
+              <span className="highlight">Living & Hospitality</span>
+            </h1>
+
+            {/* SUBCOPY */}
+            <p className="h-subcopy">
+              Nigeria&apos;s premier real estate platform connecting discerning buyers, top realtors, and luxury hospitality spaces seamlessly.
+            </p>
+
+            {/* AUDIENCE CHIPS */}
+            <div className="h-audience-wrapper">
+              <span className="h-audience-label">One platform, three ways in</span>
+              <div className="h-audience-row">
+                {audiences.map((a) => (
+                  <Link key={a.role} href={`/signup?role=${a.role}`} className="h-audience-chip">
+                    <span className="h-audience-icon">{a.icon}</span>
+                    <span className="h-audience-text">
+                      <span className="h-audience-role">{a.label}</span>
+                      <span className="h-audience-sub">{a.sub}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div className="h-buttons-row">
+              <Link href="/about" className="h-btn-primary">
+                Explore Properties
+              </Link>
+              <Link href="/contact" className="h-btn-secondary">
+                Contact Us
+              </Link>
+            </div>
+
+            {/* STATS CARD */}
+            <div className="h-stats-card">
+              {stats.map((stat, i) => (
+                <div key={stat.label} style={{ display: "flex", alignItems: "center" }}>
+                  <StatItem {...stat} />
+                  {i < stats.length - 1 && isDesktop && (
+                    <div
+                      style={{
+                        width: "1px",
+                        height: "44px",
+                        background: "rgba(26, 28, 35, 0.12)",
+                        margin: "0 28px",
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
     </>
   );
