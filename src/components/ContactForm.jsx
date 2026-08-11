@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Phone, Mail, MapPin, Send } from "lucide-react";
+import { Phone, Mail, MapPin, Send, MessageSquare, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 export default function ContactForm() {
@@ -12,40 +12,21 @@ export default function ContactForm() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   const sectionRef = useRef(null);
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.gsap) return;
-    const gsap = window.gsap;
-
-    const ctx = gsap.context(() => {
-      if (reducedMotion) return;
-
-      const items = sectionRef.current.querySelectorAll(".contact-info-item");
-      gsap.fromTo(items,
-        { y: 20, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          stagger: 0.1,
-          duration: 0.6,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 85%",
-            once: true,
-          },
-          onComplete: () => {
-            gsap.set(items, { clearProps: "y,opacity" });
-          }
-        }
-      );
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, [reducedMotion]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsVisible(true);
+      },
+      { threshold: 0.12 }
+    );
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -53,8 +34,7 @@ export default function ContactForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Save to backend database
+
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
       await fetch(`${apiBase}/contact`, {
@@ -69,10 +49,9 @@ export default function ContactForm() {
         }),
       });
     } catch (error) {
-      console.error("Error submitting contact form to backend:", error);
+      console.error("Error submitting contact form:", error);
     }
 
-    // Open WhatsApp
     const msg =
       "Hello, I'm reaching out from your website.\n\n" +
       "Name: " + form.name + "\n" +
@@ -82,146 +61,416 @@ export default function ContactForm() {
       "Message:\n" + form.message;
     const whatsappLink = "https://wa.me/2348168426592?text=" + encodeURIComponent(msg);
     window.open(whatsappLink, "_blank");
-    
+
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
       setForm({ name: "", email: "", phone: "", interest: "", message: "" });
-    }, 4000);
+    }, 5000);
   };
 
   return (
-    <section ref={sectionRef} id="contact" style={{ width: "100%", background: "linear-gradient(135deg, #fffdf8 0%, #f8fafc 100%)", padding: "80px 20px" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 16px" }}>
-        <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 14px", borderRadius: "999px", background: "rgba(212, 160, 23, 0.12)", color: "#b8860c", fontWeight: 700, fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "16px" }}>
-            Let’s Talk
+    <section
+      ref={sectionRef}
+      id="contact"
+      style={{
+        width: "100%",
+        background: "linear-gradient(160deg, #F8FAFC 0%, #F1F5F9 50%, #E2E8F0 100%)",
+        padding: "100px 0 90px",
+        position: "relative",
+        overflow: "hidden",
+        fontFamily: "'Inter', sans-serif",
+      }}
+    >
+      <style>{`
+        @keyframes contactGlowPulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.55; transform: scale(1.1); }
+        }
+
+        @keyframes contactShimmer {
+          0% { transform: translateX(-100%) skewX(-15deg); }
+          100% { transform: translateX(250%) skewX(-15deg); }
+        }
+
+        .contact-header {
+          opacity: 0;
+          transform: translate3d(0, 24px, 0);
+          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .contact-header.visible {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+
+        .contact-card-box {
+          background: #ffffff;
+          border-radius: 24px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06);
+          padding: clamp(24px, 3vw, 36px);
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          opacity: 0;
+          transform: translate3d(0, 30px, 0);
+        }
+
+        .contact-card-box.visible {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+
+        .contact-card-box:hover {
+          border-color: rgba(212, 160, 23, 0.3);
+          box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.12), 0 0 20px rgba(212, 160, 23, 0.1);
+        }
+
+        .contact-info-item {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 16px;
+          border-radius: 16px;
+          background: #F8FAFC;
+          border: 1px solid rgba(15, 23, 42, 0.05);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .contact-info-item:hover {
+          background: rgba(212, 160, 23, 0.08);
+          border-color: rgba(212, 160, 23, 0.3);
+          transform: translate3d(0, -3px, 0);
+        }
+
+        .contact-info-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+          background: rgba(212, 160, 23, 0.12);
+          border: 1px solid rgba(212, 160, 23, 0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #D4A017;
+          flex-shrink: 0;
+          transition: all 0.3s ease;
+        }
+
+        .contact-info-item:hover .contact-info-icon {
+          background: #D4A017;
+          color: #0F172A;
+          transform: scale(1.08) rotate(-4deg);
+          box-shadow: 0 6px 16px rgba(212, 160, 23, 0.3);
+        }
+
+        .contact-input-field {
+          width: 100%;
+          padding: 14px 18px;
+          border-radius: 12px;
+          border: 1.5px solid #E2E8F0;
+          background: #ffffff;
+          font-size: 14px;
+          outline: none;
+          color: #0F172A;
+          transition: all 0.3s ease;
+        }
+
+        .contact-input-field:focus {
+          border-color: #D4A017;
+          box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.16);
+          background: #ffffff;
+        }
+
+        .contact-submit-btn {
+          position: relative;
+          width: 100%;
+          padding: 16px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+          color: #ffffff;
+          font-weight: 700;
+          font-size: 15px;
+          border: 1px solid rgba(212, 160, 23, 0.3);
+          cursor: pointer;
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          overflow: hidden;
+          box-shadow: 0 6px 20px rgba(15, 23, 42, 0.15);
+        }
+
+        .contact-submit-btn::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+          transform: translateX(-100%) skewX(-15deg);
+        }
+
+        .contact-submit-btn:hover::before {
+          animation: contactShimmer 0.9s ease-in-out;
+        }
+
+        .contact-submit-btn:hover {
+          background: linear-gradient(135deg, #D4A017 0%, #B8860B 100%);
+          color: #0F172A;
+          border-color: #D4A017;
+          transform: translate3d(0, -3px, 0);
+          box-shadow: 0 10px 28px rgba(212, 160, 23, 0.35);
+        }
+
+        .contact-submit-btn:active {
+          transform: translate3d(0, 0, 0) scale(0.98);
+        }
+      `}</style>
+
+      {/* Ambient Orbs */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-60px",
+          left: "5%",
+          width: "420px",
+          height: "420px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(212, 160, 23, 0.12) 0%, transparent 70%)",
+          filter: "blur(50px)",
+          pointerEvents: "none",
+          animation: "contactGlowPulse 9s ease-in-out infinite",
+        }}
+      />
+
+      <div style={{ maxWidth: "1240px", margin: "0 auto", padding: "0 24px", position: "relative", zIndex: 2 }}>
+        {/* Header */}
+        <div className={`contact-header ${isVisible ? "visible" : ""}`} style={{ textAlign: "center", marginBottom: "56px" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 16px",
+              borderRadius: "999px",
+              background: "rgba(212, 160, 23, 0.1)",
+              border: "1px solid rgba(212, 160, 23, 0.25)",
+              color: "#B8860B",
+              fontWeight: 700,
+              fontSize: "12px",
+              textTransform: "uppercase",
+              letterSpacing: "0.14em",
+              marginBottom: "16px",
+            }}
+          >
+            <Sparkles size={14} color="#D4A017" />
+            <span>Start Your Real Estate Journey</span>
           </div>
-          <h2 style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 800, color: "#0f172a", marginBottom: "12px", fontFamily: "var(--font-montserrat), sans-serif" }}>
-            Get In Touch
+
+          <h2
+            style={{
+              fontFamily: "'Montserrat', sans-serif",
+              fontWeight: 900,
+              color: "#0F172A",
+              fontSize: "clamp(30px, 3.5vw, 46px)",
+              letterSpacing: "-0.02em",
+              marginBottom: "16px",
+              lineHeight: 1.15,
+            }}
+          >
+            Get In Touch With <span style={{ color: "#D4A017" }}>Our Experts</span>
           </h2>
-          <p style={{ color: "#64748b", fontSize: "clamp(14px, 1.5vw, 16px)", maxWidth: "640px", margin: "0 auto", lineHeight: 1.7 }}>
-            Ready to find your dream property? Reach out to us and our team will get back to you as soon as possible.
+
+          <p
+            style={{
+              color: "#64748B",
+              fontSize: "16px",
+              lineHeight: 1.7,
+              maxWidth: "600px",
+              margin: "0 auto",
+            }}
+          >
+            Ready to inspect, invest, or inquire? Reach out to our dedicated concierge team and receive prompt guidance within minutes.
           </p>
         </div>
 
-        <div style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gap: "24px",
-          alignItems: "stretch",
-        }} className="contact-grid">
-          <div style={{
-            background: "#ffffff",
-            border: "1px solid #e2e8f0",
-            borderRadius: "24px",
-            padding: "20px",
-            boxShadow: "0 14px 32px rgba(15, 23, 42, 0.05)",
-          }}>
-            <h3 style={{ fontSize: "clamp(20px, 2vw, 24px)", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
+        {/* 2-Column Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: "32px",
+            alignItems: "stretch",
+          }}
+        >
+          {/* Column 1: Info & Map */}
+          <div className={`contact-card-box ${isVisible ? "visible" : ""}`} style={{ transitionDelay: "0.1s" }}>
+            <h3
+              style={{
+                fontFamily: "'Montserrat', sans-serif",
+                fontSize: "22px",
+                fontWeight: 800,
+                color: "#0F172A",
+                marginBottom: "20px",
+              }}
+            >
               Contact Information
             </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "24px" }}>
               {[
-                { icon: <Phone size={18} />, label: "Phone / WhatsApp", value: "08168426592", href: "tel:08168426592" },
-                { icon: <Mail size={18} />, label: "Email", value: "tharel2024@gmail.com", href: "mailto:tharel2024@gmail.com" },
-                { icon: <MapPin size={18} />, label: "Location", value: "Lagos & Abeokuta, Nigeria" },
+                {
+                  icon: <Phone size={20} />,
+                  label: "Phone / WhatsApp",
+                  value: "+234 816 842 6592",
+                  href: "https://wa.me/2348168426592",
+                },
+                {
+                  icon: <Mail size={20} />,
+                  label: "Email Address",
+                  value: "tharel2024@gmail.com",
+                  href: "mailto:tharel2024@gmail.com",
+                },
+                {
+                  icon: <MapPin size={20} />,
+                  label: "Head Offices",
+                  value: "Lagos & Abeokuta, Nigeria",
+                },
               ].map((item, index) => (
-                <div key={index} className="contact-info-item" style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderRadius: "14px", background: "#f8fafc", opacity: reducedMotion ? 1 : 0 }}>
-                  <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(212,160,23,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "#d4a017", flexShrink: 0 }}>
-                    {item.icon}
-                  </div>
+                <div key={index} className="contact-info-item">
+                  <div className="contact-info-icon">{item.icon}</div>
                   <div>
-                    <p style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        color: "#94A3B8",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        marginBottom: "2px",
+                      }}
+                    >
                       {item.label}
                     </p>
                     {item.href ? (
-                      <a href={item.href} style={{ fontSize: "15px", fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>{item.value}</a>
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: "15px",
+                          fontWeight: 700,
+                          color: "#0F172A",
+                          textDecoration: "none",
+                          transition: "color 0.2s",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#D4A017")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "#0F172A")}
+                      >
+                        {item.value}
+                      </a>
                     ) : (
-                      <p style={{ fontSize: "15px", fontWeight: 600, color: "#0f172a", margin: 0 }}>{item.value}</p>
+                      <p style={{ fontSize: "15px", fontWeight: 700, color: "#0F172A", margin: 0 }}>
+                        {item.value}
+                      </p>
                     )}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ marginTop: "16px", borderRadius: "14px", overflow: "hidden", height: "180px", boxShadow: "0 10px 30px rgba(15,23,42,0.08)", border: "1px solid #e2e8f0" }}>
+            {/* Embedded Google Map */}
+            <div
+              style={{
+                borderRadius: "18px",
+                overflow: "hidden",
+                height: "200px",
+                boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+                border: "1px solid rgba(15, 23, 42, 0.08)",
+              }}
+            >
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d253682.45932806483!2d3.1190543!3d6.5480557!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8b2ae68280c1%3A0xdc9e87a367c3d9cb!2sLagos%2C%20Nigeria!5e0!3m2!1sen!2sng!4v1699999999999!5m2!1sen!2sng"
-                style={{ width: "100%", height: "180px", border: 0 }}
+                style={{ width: "100%", height: "200px", border: 0 }}
                 allowFullScreen
                 loading="lazy"
+                title="Office Location Map"
               />
             </div>
           </div>
 
-          <div style={{
-            background: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
-            padding: "clamp(24px, 3vw, 36px)",
-            borderRadius: "24px",
-            boxShadow: "0 14px 32px rgba(15, 23, 42, 0.05)",
-            border: "1px solid #e2e8f0",
-          }}>
-            <h3 style={{ fontSize: "clamp(18px, 2vw, 24px)", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
-              Send Us a Message
+          {/* Column 2: Form */}
+          <div className={`contact-card-box ${isVisible ? "visible" : ""}`} style={{ transitionDelay: "0.2s" }}>
+            <h3
+              style={{
+                fontFamily: "'Montserrat', sans-serif",
+                fontSize: "22px",
+                fontWeight: 800,
+                color: "#0F172A",
+                marginBottom: "20px",
+              }}
+            >
+              Send Us a Direct Message
             </h3>
 
             {submitted ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "56px 0", gap: "16px" }}>
-                <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "rgba(212,160,23,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Send size={28} color="#D4A017" />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "56px 20px",
+                  textAlign: "center",
+                  gap: "16px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "72px",
+                    height: "72px",
+                    borderRadius: "50%",
+                    background: "rgba(212, 160, 23, 0.15)",
+                    border: "2px solid #D4A017",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 0 20px rgba(212, 160, 23, 0.4)",
+                  }}
+                >
+                  <CheckCircle2 size={36} color="#D4A017" />
                 </div>
-                <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a" }}>Message Sent!</p>
-                <p style={{ color: "#64748b", fontSize: "14px", textAlign: "center", lineHeight: 1.6 }}>
-                  Opening WhatsApp to connect you with our team.
+                <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#0F172A" }}>
+                  Message Sent Successfully!
+                </h4>
+                <p style={{ color: "#64748B", fontSize: "14.5px", lineHeight: 1.6, maxWidth: "340px" }}>
+                  Opening WhatsApp to connect you directly with our team...
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }} className="form-row">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", marginBottom: "16px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "8px" }}>Full Name *</label>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                      Full Name *
+                    </label>
                     <input
                       type="text"
                       name="name"
                       value={form.name}
                       onChange={handleChange}
                       required
-                      placeholder="John Doe"
-                      style={{ width: "100%", padding: "12px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", transition: "border-color 0.3s, box-shadow 0.3s" }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "#d4a017";
-                        e.currentTarget.style.boxShadow = "0 0 0 4px rgba(212, 160, 23, 0.14)";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "#e2e8f0";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
+                      placeholder="e.g. Adebayo Alabi"
+                      className="contact-input-field"
                     />
                   </div>
+
                   <div>
-                    <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "8px" }}>Email Address</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="john@email.com"
-                      style={{ width: "100%", padding: "12px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", transition: "border-color 0.3s, box-shadow 0.3s" }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "#d4a017";
-                        e.currentTarget.style.boxShadow = "0 0 0 4px rgba(212, 160, 23, 0.14)";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "#e2e8f0";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "8px" }}>Phone Number *</label>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                      Phone Number *
+                    </label>
                     <input
                       type="tel"
                       name="phone"
@@ -229,119 +478,72 @@ export default function ContactForm() {
                       onChange={handleChange}
                       required
                       placeholder="080XXXXXXXX"
-                      style={{ width: "100%", padding: "12px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", transition: "border-color 0.3s, box-shadow 0.3s" }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "#d4a017";
-                        e.currentTarget.style.boxShadow = "0 0 0 4px rgba(212, 160, 23, 0.14)";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "#e2e8f0";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
+                      className="contact-input-field"
                     />
                   </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", marginBottom: "16px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "8px" }}>Interested In</label>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      placeholder="name@email.com"
+                      className="contact-input-field"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                      Interested In
+                    </label>
                     <select
                       name="interest"
                       value={form.interest}
                       onChange={handleChange}
-                      style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", transition: "border-color 0.3s, box-shadow 0.3s" }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "#d4a017";
-                        e.currentTarget.style.boxShadow = "0 0 0 4px rgba(212, 160, 23, 0.14)";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "#e2e8f0";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
+                      className="contact-input-field"
                     >
-                      <option value="">Select type...</option>
-                      <option value="Land">Land</option>
-                      <option value="Duplex">Duplex</option>
-                      <option value="Apartment">Apartment</option>
-                      <option value="Commercial">Commercial</option>
-                      <option value="Farmland">Farmland</option>
+                      <option value="">Select Property Type...</option>
+                      <option value="Residential Land">Residential Land</option>
+                      <option value="Luxury Duplex">Luxury Duplex</option>
+                      <option value="Apartment">Apartment / Short-let</option>
+                      <option value="Commercial Land">Commercial Land</option>
+                      <option value="Farmland">Farmland Investment</option>
                       <option value="General Inquiry">General Inquiry</option>
                     </select>
                   </div>
                 </div>
 
-                <div style={{ marginTop: "16px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "8px" }}>Message *</label>
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                    Your Message *
+                  </label>
                   <textarea
                     name="message"
                     value={form.message}
                     onChange={handleChange}
                     required
-                    rows={5}
-                    placeholder="Tell us what you're looking for..."
-                    style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", fontSize: "14px", outline: "none", resize: "vertical", transition: "border-color 0.3s, box-shadow 0.3s" }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = "#d4a017";
-                      e.currentTarget.style.boxShadow = "0 0 0 4px rgba(212, 160, 23, 0.14)";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = "#e2e8f0";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
+                    rows={4}
+                    placeholder="Tell us your budget, preferred location, or specific requirements..."
+                    className="contact-input-field"
+                    style={{ resize: "vertical" }}
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  style={{
-                    width: "100%",
-                    padding: "14px",
-                    borderRadius: "8px",
-                    background: "#d4a017",
-                    color: "white",
-                    fontWeight: 700,
-                    fontSize: "14px",
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease",
-                    marginTop: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#b8920f";
-                    if (!reducedMotion) {
-                      e.currentTarget.style.transform = "translateY(-1px)";
-                      e.currentTarget.style.boxShadow = "0 8px 18px rgba(212, 160, 23, 0.2)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#d4a017";
-                    if (!reducedMotion) {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }
-                  }}
-                >
-                  <Send size={16} />
-                  Send via WhatsApp
+                <button type="submit" className="contact-submit-btn">
+                  <Send size={18} />
+                  <span>Send via WhatsApp</span>
                 </button>
               </form>
             )}
           </div>
         </div>
-
-        <style>{`
-          @media (min-width: 640px) {
-            .contact-grid {
-              grid-template-columns: 1fr 1fr !important;
-              gap: 32px !important;
-            }
-            .form-row {
-              grid-template-columns: 1fr 1fr !important;
-            }
-          }
-        `}</style>
       </div>
     </section>
   );
-}
+}
