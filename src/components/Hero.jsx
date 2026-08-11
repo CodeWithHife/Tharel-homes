@@ -121,7 +121,7 @@ function StatItem({ value, suffix, label }) {
           fontSize: "clamp(24px, 4vw, 32px)",
           fontWeight: 800,
           lineHeight: 1,
-          fontFamily: "'Playfair Display', serif",
+          fontFamily: "'Montserrat', sans-serif",
           letterSpacing: "-0.02em",
           textAlign: "center",
           fontVariantNumeric: "tabular-nums",
@@ -543,13 +543,14 @@ export default function Hero() {
           font-family: 'Playfair Display', serif;
           font-size: clamp(3rem, 6vw, 4.8rem);
           font-weight: 800;
-          line-height: 1.1;
+          line-height: 1.12;
           margin-bottom: 22px;
-          letter-spacing: -1px;
+          letter-spacing: -0.5px;
           color: var(--dark);
         }
 
         .hero-content h1 .highlight {
+          font-family: 'Playfair Display', serif;
           font-style: italic;
           background: linear-gradient(145deg, var(--gold), #b8962a);
           -webkit-background-clip: text;
@@ -792,8 +793,8 @@ export default function Hero() {
 
             {/* HEADLINE */}
             <h1>
-              Where Luxury Meets <br />
-              <span className="highlight">Living & Hospitality</span>
+              Enhancing Your <br />
+              <span className="highlight">Living Experience</span>
             </h1>
 
             {/* SUBCOPY */}

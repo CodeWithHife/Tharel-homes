@@ -154,7 +154,7 @@ export default function Navbar() {
           color: #0F172A;
           letter-spacing: 0.02em;
           text-transform: uppercase;
-          font-family: var(--font-montserrat), sans-serif;
+          font-family: 'Montserrat', sans-serif;
           white-space: nowrap;
         }
         @media (max-width: 480px) {
@@ -169,14 +169,14 @@ export default function Navbar() {
           left: 0,
           width: "100%",
           zIndex: 1000,
-          height: "74px",
+          height: "84px",
           display: "flex",
           alignItems: "center",
           background: "#f5efe6",
           boxShadow: scrolled ? "0 2px 16px rgba(15,23,42,0.06)" : "none",
           borderBottom: "1px solid rgba(15,23,42,0.05)",
           transition: "all 0.3s ease",
-          fontFamily: "var(--font-inter), sans-serif",
+          fontFamily: "'Inter', sans-serif",
           padding: "0 20px",
         }}
       >
@@ -191,14 +191,14 @@ export default function Navbar() {
             gap: "16px",
           }}
         >
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", flexShrink: 0 }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", flexShrink: 0 }}>
             <Image
               src="/images/logos/logo.png"
               alt="The 10th Homes"
-              width={isMobile ? 40 : 52}
-              height={isMobile ? 40 : 52}
+              width={isMobile ? 52 : 68}
+              height={isMobile ? 52 : 68}
               priority
-              style={{ objectFit: "contain" }}
+              style={{ objectFit: "contain", filter: "drop-shadow(0 2px 8px rgba(15,23,42,0.12))" }}
               onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")}
             />
             <div style={{ lineHeight: 1.15, maxWidth: isMobile ? "160px" : "none" }}>
@@ -245,7 +245,7 @@ export default function Navbar() {
         <div
           style={{
             position: "fixed",
-            top: "74px",
+            top: "84px",
             left: 0,
             width: "100%",
             zIndex: 999,
