@@ -531,6 +531,20 @@ export default function Hero() {
           justify-content: center;
         }
 
+        .h-eyebrow-dot-wrap::after {
+          content: "";
+          position: absolute;
+          inset: -4px;
+          border-radius: 50%;
+          background: rgba(212, 175, 55, 0.5);
+          animation: eyebrowPulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes eyebrowPulse {
+          0% { transform: scale(0.8); opacity: 0.9; }
+          100% { transform: scale(2.4); opacity: 0; }
+        }
+
         .h-eyebrow-dot {
           width: 9px;
           height: 9px;
@@ -552,31 +566,36 @@ export default function Hero() {
         .hero-content h1 .highlight {
           font-family: 'Playfair Display', serif;
           font-style: italic;
-          background: linear-gradient(145deg, var(--gold), #b8962a);
+          background: linear-gradient(120deg, #d4af37 0%, #fff0a8 25%, #b8962a 50%, #d4af37 75%, #fff0a8 100%);
+          background-size: 200% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+          animation: goldShine 6s linear infinite;
+        }
+
+        @keyframes goldShine {
+          0% { background-position: 0% center; }
+          100% { background-position: 200% center; }
         }
 
         .hero-content .h-subcopy {
-          font-size: 1.15rem;
-          color: var(--gray);
-          max-width: 650px;
-          margin: 0 auto 36px;
-          font-weight: 400;
-          line-height: 1.7;
-          letter-spacing: 0.2px;
+          font-size: clamp(1rem, 2vw, 1.2rem);
+          color: #4B5563;
+          line-height: 1.6;
+          margin-bottom: 36px;
+          max-width: 680px;
         }
 
         /* ===== AUDIENCE STRIP ===== */
         .h-audience-wrapper {
-          margin-bottom: 36px;
           display: flex;
           flex-direction: column;
           align-items: center;
+          margin-bottom: 36px;
         }
         .h-audience-label {
-          font-size: 0.7rem;
+          font-size: 0.72rem;
           font-weight: 700;
           letter-spacing: 0.22em;
           text-transform: uppercase;
@@ -593,21 +612,26 @@ export default function Hero() {
           display: inline-flex;
           align-items: center;
           gap: 12px;
-          padding: 10px 20px 10px 14px;
+          padding: 10px 22px 10px 14px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.85);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(212, 175, 55, 0.25);
           text-decoration: none;
-          transition: all 0.3s ease;
+          transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
         }
         .h-audience-chip:hover {
           border-color: var(--gold);
           background: #ffffff;
-          transform: translateY(-3px);
-          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
+          transform: translateY(-4px) scale(1.02);
+          box-shadow: 0 14px 35px rgba(212, 175, 55, 0.28);
+        }
+        .h-audience-chip:hover .h-audience-icon {
+          transform: scale(1.15) rotate(8deg);
+          background: var(--gold);
+          color: #ffffff;
         }
         .h-audience-icon {
           width: 32px;
@@ -619,6 +643,7 @@ export default function Hero() {
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          transition: all 0.3s ease;
         }
         .h-audience-text {
           display: flex;
@@ -647,16 +672,36 @@ export default function Hero() {
         }
         .h-btn-primary,
         .h-btn-secondary {
+          position: relative;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 16px 38px;
+          gap: 10px;
+          padding: 16px 40px;
           border-radius: 50px;
           font-weight: 700;
-          font-size: 0.92rem;
+          font-size: 0.94rem;
           text-decoration: none;
-          transition: all 0.35s ease;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+
+        /* Sheen shimmer sweep */
+        .h-btn-primary::after,
+        .h-btn-secondary::after {
+          content: "";
+          position: absolute;
+          top: 0; left: -100%;
+          width: 75%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+          transform: skewX(-25deg);
+          transition: left 0.75s ease;
+        }
+        .h-btn-primary:hover::after,
+        .h-btn-secondary:hover::after {
+          left: 140%;
+        }
+
         .h-btn-primary {
           background: linear-gradient(145deg, var(--gold), #b8962a);
           color: var(--white);
@@ -664,9 +709,12 @@ export default function Hero() {
           box-shadow: 0 8px 28px rgba(212, 175, 55, 0.30);
         }
         .h-btn-primary:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 16px 40px rgba(212, 175, 55, 0.45);
+          transform: translateY(-4px) scale(1.03);
+          box-shadow: 0 18px 45px rgba(212, 175, 55, 0.48), 0 0 25px rgba(212, 175, 55, 0.25);
           color: var(--white);
+        }
+        .h-btn-primary:active {
+          transform: translateY(-1px) scale(0.98);
         }
         .h-btn-secondary {
           background: rgba(255, 255, 255, 0.85);
@@ -677,9 +725,20 @@ export default function Hero() {
         .h-btn-secondary:hover {
           border-color: var(--gold);
           color: var(--gold);
-          transform: translateY(-3px);
+          transform: translateY(-4px) scale(1.03);
           background: #ffffff;
-          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.20);
+          box-shadow: 0 14px 35px rgba(212, 175, 55, 0.22);
+        }
+        .h-btn-secondary:active {
+          transform: translateY(-1px) scale(0.98);
+        }
+
+        .btn-arrow {
+          display: inline-block;
+          transition: transform 0.3s ease;
+        }
+        .h-btn-primary:hover .btn-arrow {
+          transform: translateX(5px);
         }
 
         /* ===== STATS CARD ===== */
@@ -821,7 +880,8 @@ export default function Hero() {
             {/* ACTION BUTTONS */}
             <div className="h-buttons-row">
               <Link href="/about" className="h-btn-primary">
-                Explore Properties
+                <span>Explore Properties</span>
+                <span className="btn-arrow">→</span>
               </Link>
               <Link href="/contact" className="h-btn-secondary">
                 Contact Us
