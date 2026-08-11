@@ -1,13 +1,36 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Building2, Sparkles, User } from "lucide-react";
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const [isPWA, setIsPWA] = useState(false);
 
-  // Hide bottom nav on dashboard pages if needed
-  if (pathname.startsWith("/dashboard")) return null;
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const checkPWA = () => {
+        const isStandalone =
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true ||
+          document.referrer.includes("android-app://");
+        setIsPWA(isStandalone);
+      };
+
+      checkPWA();
+
+      const mediaQuery = window.matchMedia("(display-mode: standalone)");
+      const handler = (e) => setIsPWA(e.matches);
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener("change", handler);
+        return () => mediaQuery.removeEventListener("change", handler);
+      }
+    }
+  }, []);
+
+  // Hide bottom nav if not in PWA mode or on dashboard pages
+  if (!isPWA || pathname.startsWith("/dashboard")) return null;
 
   const isActive = (href) => {
     if (href === "/") return pathname === "/";
@@ -74,11 +97,10 @@ export default function BottomNav() {
           box-shadow: 0 0 8px rgba(212, 160, 23, 0.9);
         }
 
-        @media (max-width: 960px) {
+        @media all and (display-mode: standalone) {
           .bottom-nav-bar {
-            display: flex;
+            display: flex !important;
           }
-          /* Add bottom padding to body/footer so content isn't covered by bottom nav */
           body {
             padding-bottom: 76px !important;
           }

@@ -63,7 +63,7 @@ const faqs = [
 ];
 
 export default function FAQ() {
-  const [openId, setOpenId] = useState("01");
+  const [openId, setOpenId] = useState(null);
   const sectionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const reducedMotion = useReducedMotion();
