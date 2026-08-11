@@ -439,17 +439,17 @@ export default function LoginPage() {
               Access verified property listings, track title allocations, and manage your real estate journey seamlessly.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "420px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "440px" }}>
               <div className="auth-left-feature" style={{ animationDelay: "0.25s" }}>
-                <ShieldCheck size={18} color="#D4A017" />
+                <ShieldCheck size={20} color="#D4A017" />
                 <span>100% Verifiable Legal Documentation & C of O</span>
               </div>
               <div className="auth-left-feature" style={{ animationDelay: "0.35s" }}>
-                <Building2 size={18} color="#D4A017" />
+                <Building2 size={20} color="#D4A017" />
                 <span>Direct Access to Prime Estates in Lagos & Abuja</span>
               </div>
               <div className="auth-left-feature" style={{ animationDelay: "0.45s" }}>
-                <CheckCircle2 size={18} color="#D4A017" />
+                <CheckCircle2 size={20} color="#D4A017" />
                 <span>Transparent Flexible Payment Instalments</span>
               </div>
             </div>
@@ -461,30 +461,35 @@ export default function LoginPage() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "32px",
-              padding: "20px 24px",
-              borderRadius: "18px",
-              background: "rgba(255, 255, 255, 0.04)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              backdropFilter: "blur(16px)",
-              width: "fit-content",
+              justifyContent: "space-between",
+              gap: "24px",
+              padding: "24px 28px",
+              borderRadius: "20px",
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              backdropFilter: "blur(20px)",
+              maxWidth: "440px",
+              marginTop: "40px",
               position: "relative",
               zIndex: 2,
             }}
           >
             <div>
-              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "20px", fontWeight: 800, color: "#ffffff", margin: 0 }}>200+</p>
-              <p style={{ fontSize: "11px", color: "#D4A017", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, margin: 0 }}>Properties</p>
+              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "22px", fontWeight: 900, color: "#ffffff", margin: 0, lineHeight: 1.1 }}>200+</p>
+              <p style={{ fontSize: "11px", color: "#D4A017", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, margin: "4px 0 0" }}>Properties</p>
             </div>
-            <div style={{ width: "1px", height: "30px", background: "rgba(255, 255, 255, 0.12)" }} />
+            <div style={{ width: "1px", height: "36px", background: "rgba(255, 255, 255, 0.14)" }} />
             <div>
-              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "20px", fontWeight: 800, color: "#ffffff", margin: 0 }}>2,500+</p>
-              <p style={{ fontSize: "11px", color: "#D4A017", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, margin: 0 }}>Happy Buyers</p>
+              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "22px", fontWeight: 900, color: "#ffffff", margin: 0, lineHeight: 1.1 }}>2,500+</p>
+              <p style={{ fontSize: "11px", color: "#D4A017", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, margin: "4px 0 0" }}>Happy Buyers</p>
             </div>
-            <div style={{ width: "1px", height: "30px", background: "rgba(255, 255, 255, 0.12)" }} />
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <Star size={16} color="#D4A017" fill="#D4A017" />
-              <span style={{ fontSize: "14px", fontWeight: 800, color: "#ffffff" }}>4.98</span>
+            <div style={{ width: "1px", height: "36px", background: "rgba(255, 255, 255, 0.14)" }} />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <Star size={16} color="#D4A017" fill="#D4A017" />
+                <span style={{ fontSize: "16px", fontWeight: 900, color: "#ffffff" }}>4.98</span>
+              </div>
+              <span style={{ fontSize: "10.5px", color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>Top Rated</span>
             </div>
           </div>
         </div>

@@ -13,7 +13,12 @@ export default function NavbarWrapper() {
   }, []);
 
   // Hide on dashboard and auth pages
-  if (pathname.startsWith("/dashboard") || pathname === "/login" || pathname === "/signup") {
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/forgot-password"
+  ) {
     return null;
   }
   return <Navbar />;

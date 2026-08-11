@@ -499,17 +499,17 @@ export default function SignupPage() {
               Join thousands of discerning property buyers, realtors, and hotel managers accessing Nigeria's premier estate platform.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "420px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "440px" }}>
               <div className="auth-left-feature" style={{ animationDelay: "0.25s" }}>
-                <ShieldCheck size={18} color="#D4A017" />
+                <ShieldCheck size={20} color="#D4A017" />
                 <span>Instant Property Verification & Legal Transparency</span>
               </div>
               <div className="auth-left-feature" style={{ animationDelay: "0.35s" }}>
-                <Building2 size={18} color="#D4A017" />
+                <Building2 size={20} color="#D4A017" />
                 <span>Seamless Account Dashboard & Real-Time Tracking</span>
               </div>
               <div className="auth-left-feature" style={{ animationDelay: "0.45s" }}>
-                <CheckCircle2 size={18} color="#D4A017" />
+                <CheckCircle2 size={20} color="#D4A017" />
                 <span>Dedicated 24/7 Client Advisory Support</span>
               </div>
             </div>
@@ -518,20 +518,21 @@ export default function SignupPage() {
           <div
             className="auth-testimonial-card"
             style={{
-              padding: "20px 24px",
-              borderRadius: "18px",
-              background: "rgba(255, 255, 255, 0.04)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              backdropFilter: "blur(16px)",
-              maxWidth: "420px",
+              padding: "24px 28px",
+              borderRadius: "20px",
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              backdropFilter: "blur(20px)",
+              maxWidth: "440px",
+              marginTop: "40px",
               position: "relative",
               zIndex: 2,
             }}
           >
-            <p style={{ fontSize: "13.5px", color: "rgba(255,255,255,0.85)", fontStyle: "italic", margin: 0, lineHeight: 1.6 }}>
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.85)", fontStyle: "italic", margin: 0, lineHeight: 1.65 }}>
               "The registration process was seamless. Within minutes, I had access to verified title documents for my Lekki investment."
             </p>
-            <p style={{ fontSize: "12px", fontWeight: 700, color: "#D4A017", margin: "10px 0 0" }}>
+            <p style={{ fontSize: "12.5px", fontWeight: 800, color: "#D4A017", margin: "12px 0 0" }}>
               — Chief O. Adebayo, Verified Buyer
             </p>
           </div>

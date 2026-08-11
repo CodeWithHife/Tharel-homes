@@ -9,6 +9,7 @@ export default function FooterWrapper() {
     pathname.startsWith("/dashboard") ||
     pathname === "/login" ||
     pathname === "/signup" ||
+    pathname === "/forgot-password" ||
     pathname === "/properties" ||
     pathname === "/contact"
   ) {
