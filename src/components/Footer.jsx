@@ -1,23 +1,9 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, MapPin, ArrowUp, Send, CheckCircle2 } from "lucide-react";
+import { Phone, Mail, MapPin, ArrowUp } from "lucide-react";
 
 export default function Footer() {
-  const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!newsletterEmail) return;
-    setSubscribed(true);
-    setTimeout(() => {
-      setSubscribed(false);
-      setNewsletterEmail("");
-    }, 4000);
-  };
-
   const scrollToTop = () => {
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -127,82 +113,6 @@ export default function Footer() {
       />
 
       <div style={{ maxWidth: "1240px", margin: "0 auto", padding: "0 24px", position: "relative", zIndex: 2 }}>
-        {/* Newsletter Subscription Strip */}
-        <div
-          style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(212, 160, 23, 0.25)",
-            borderRadius: "20px",
-            padding: "28px 36px",
-            marginBottom: "56px",
-            backdropFilter: "blur(16px)",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "24px",
-          }}
-        >
-          <div>
-            <h4 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: "18px", color: "#ffffff", marginBottom: "4px" }}>
-              Subscribe For Exclusive Property Deals
-            </h4>
-            <p style={{ color: "#94A3B8", fontSize: "13.5px" }}>
-              Be the first to receive verified land allocations & VIP investment discounts.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubscribe} style={{ display: "flex", gap: "10px", flex: 1, maxWidth: "420px" }}>
-            {subscribed ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#D4A017", fontWeight: "700", fontSize: "14px" }}>
-                <CheckCircle2 size={18} />
-                <span>Thank you! You are subscribed to VIP updates.</span>
-              </div>
-            ) : (
-              <>
-                <input
-                  type="email"
-                  placeholder="Enter your email address..."
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  required
-                  style={{
-                    flex: 1,
-                    padding: "12px 18px",
-                    borderRadius: "10px",
-                    background: "rgba(255, 255, 255, 0.06)",
-                    border: "1px solid rgba(255, 255, 255, 0.12)",
-                    color: "#ffffff",
-                    fontSize: "13.5px",
-                    outline: "none",
-                  }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    padding: "12px 20px",
-                    borderRadius: "10px",
-                    background: "#D4A017",
-                    color: "#0F172A",
-                    fontWeight: 700,
-                    fontSize: "13.5px",
-                    border: "none",
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    boxShadow: "0 4px 14px rgba(212, 160, 23, 0.3)",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  <Send size={14} />
-                  <span>Join VIP</span>
-                </button>
-              </>
-            )}
-          </form>
-        </div>
-
         {/* 4 Footer Columns */}
         <div
           style={{
@@ -239,21 +149,56 @@ export default function Footer() {
 
             {/* Social Icons */}
             <div style={{ display: "flex", gap: "10px" }}>
-              {["facebook", "instagram", "twitter", "youtube"].map((platform) => (
+              {[
+                {
+                  name: "Facebook",
+                  href: "https://www.facebook.com/share/1D32ewJt3c/",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                    </svg>
+                  ),
+                },
+                {
+                  name: "Instagram",
+                  href: "https://www.instagram.com/tharelhomesandproperties?igsh=dWJ5YnMzdmd4ZWY2",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                    </svg>
+                  ),
+                },
+                {
+                  name: "YouTube",
+                  href: "https://www.youtube.com/@tharelhomesandproperties",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
+                      <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" />
+                    </svg>
+                  ),
+                },
+                {
+                  name: "TikTok",
+                  href: "https://vm.tiktok.com/ZS9NqjKBahcQC-xwDvK/",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .58.04.86.12V9.32a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.57a6.34 6.34 0 0 0 10.86 4.47v-8.4a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.07z" />
+                    </svg>
+                  ),
+                },
+              ].map((item) => (
                 <a
-                  key={platform}
-                  href={`https://${platform}.com/tharelhomes`}
+                  key={item.name}
+                  href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="footer-social-btn"
-                  aria-label={platform}
+                  aria-label={item.name}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    {platform === "facebook" && <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />}
-                    {platform === "instagram" && <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></>}
-                    {platform === "twitter" && <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" />}
-                    {platform === "youtube" && <><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" /><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" /></>}
-                  </svg>
+                  {item.icon}
                 </a>
               ))}
             </div>
@@ -297,7 +242,7 @@ export default function Footer() {
               ].map((loc) => (
                 <li key={loc}>
                   <span className="footer-link-item" style={{ cursor: "default" }}>
-                    <span>📍</span>
+                    <span>›</span>
                     <span>{loc}</span>
                   </span>
                 </li>

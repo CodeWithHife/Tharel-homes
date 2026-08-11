@@ -861,26 +861,10 @@ export default function Hero() {
               Nigeria&apos;s premier real estate platform connecting discerning buyers, top realtors, and luxury hospitality spaces seamlessly.
             </p>
 
-            {/* AUDIENCE CHIPS */}
-            <div className="h-audience-wrapper">
-              <span className="h-audience-label">One platform, three ways in</span>
-              <div className="h-audience-row">
-                {audiences.map((a) => (
-                  <Link key={a.role} href={`/signup?role=${a.role}`} className="h-audience-chip">
-                    <span className="h-audience-icon">{a.icon}</span>
-                    <span className="h-audience-text">
-                      <span className="h-audience-role">{a.label}</span>
-                      <span className="h-audience-sub">{a.sub}</span>
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
             {/* ACTION BUTTONS */}
             <div className="h-buttons-row">
-              <Link href="/about" className="h-btn-primary">
-                <span>Explore Properties</span>
+              <Link href="/signup" className="h-btn-primary">
+                <span>Get Started</span>
                 <span className="btn-arrow">→</span>
               </Link>
               <Link href="/contact" className="h-btn-secondary">

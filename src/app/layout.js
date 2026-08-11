@@ -2,6 +2,7 @@ import "./globals.css";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import FooterWrapper from "@/components/FooterWrapper";
 import AdminSeeder from "@/components/AdminSeeder";
+import SmoothScroll from "@/components/SmoothScroll";
 import Script from "next/script";
 
 export const metadata = {
@@ -38,9 +39,11 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
         />
         <AdminSeeder />
-        <NavbarWrapper />
-        {children}
-        <FooterWrapper />
+        <SmoothScroll>
+          <NavbarWrapper />
+          {children}
+          <FooterWrapper />
+        </SmoothScroll>
       </body>
     </html>
   );

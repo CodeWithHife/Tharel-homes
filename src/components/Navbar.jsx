@@ -8,20 +8,11 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      setScrolled(currentScroll > 20);
-
-      // Calculate scroll progress percentage
-      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      if (height > 0) {
-        setScrollProgress((winScroll / height) * 100);
-      }
+      setScrolled(window.scrollY > 20);
     };
 
     const handleResize = () => setIsMobile(window.innerWidth < 960);
@@ -350,20 +341,7 @@ export default function Navbar() {
         }
       `}</style>
 
-      {/* Dynamic Scroll Progress Bar */}
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: `${scrollProgress}%`,
-          height: "3px",
-          background: "linear-gradient(90deg, #D4A017 0%, #F59E0B 50%, #EAB308 100%)",
-          zIndex: 1002,
-          transition: "width 0.1s ease-out",
-          boxShadow: "0 0 10px rgba(212, 160, 23, 0.8)",
-        }}
-      />
+
 
       <header
         style={{

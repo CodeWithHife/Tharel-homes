@@ -120,7 +120,6 @@ const track1 = allTestimonials.slice(0, 5);
 const track2 = allTestimonials.slice(5, 10);
 
 export default function Testimonials() {
-  const [activeFilter, setActiveFilter] = useState("all");
   const reducedMotion = useReducedMotion();
   const sectionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -135,10 +134,6 @@ export default function Testimonials() {
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
   }, []);
-
-  const filteredItems = activeFilter === "all"
-    ? allTestimonials
-    : allTestimonials.filter((item) => item.category === activeFilter);
 
   return (
     <section
@@ -420,80 +415,16 @@ export default function Testimonials() {
               fontSize: "15.5px",
               lineHeight: 1.65,
               maxWidth: "560px",
-              margin: "0 auto 28px",
+              margin: "0 auto",
             }}
           >
             Real stories from verified property owners, diaspora buyers, and top investors across Nigeria and worldwide.
           </p>
-
-          {/* Stats Bar */}
-          <div
-            style={{
-              display: "inline-flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "24px",
-              padding: "12px 28px",
-              background: "#ffffff",
-              borderRadius: "999px",
-              border: "1px solid rgba(15, 23, 42, 0.08)",
-              boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)",
-              marginBottom: "32px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "700", color: "#0F172A" }}>
-              <Star size={16} color="#D4A017" fill="#D4A017" />
-              <span>4.98 / 5.0 Rating</span>
-            </div>
-            <span style={{ color: "#E2E8F0" }}>|</span>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "700", color: "#0F172A" }}>
-              <ThumbsUp size={15} color="#D4A017" />
-              <span>2,500+ Happy Buyers</span>
-            </div>
-            <span style={{ color: "#E2E8F0" }}>|</span>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "700", color: "#0F172A" }}>
-              <Globe size={15} color="#D4A017" />
-              <span>12+ Countries Served</span>
-            </div>
-          </div>
-
-          {/* Filter Pills */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
-            <button
-              onClick={() => setActiveFilter("all")}
-              className={`tm-filter-btn ${activeFilter === "all" ? "active" : ""}`}
-            >
-              <Sparkles size={14} />
-              <span>All Reviews ({allTestimonials.length})</span>
-            </button>
-            <button
-              onClick={() => setActiveFilter("investor")}
-              className={`tm-filter-btn ${activeFilter === "investor" ? "active" : ""}`}
-            >
-              <Building2 size={14} />
-              <span>Investors</span>
-            </button>
-            <button
-              onClick={() => setActiveFilter("diaspora")}
-              className={`tm-filter-btn ${activeFilter === "diaspora" ? "active" : ""}`}
-            >
-              <Globe size={14} />
-              <span>Diaspora Buyers</span>
-            </button>
-            <button
-              onClick={() => setActiveFilter("buyer")}
-              className={`tm-filter-btn ${activeFilter === "buyer" ? "active" : ""}`}
-            >
-              <HeartHandshake size={14} />
-              <span>Home & Landowners</span>
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Render Marquee Tracks when Filter = "all" and Reduced Motion is false */}
-      {activeFilter === "all" && !reducedMotion ? (
+      {/* Render Marquee Tracks when Reduced Motion is false */}
+      {!reducedMotion ? (
         <>
           {/* Track 1: Moving Left */}
           <div className="tm-marquee-container" style={{ marginBottom: "20px" }}>
@@ -633,7 +564,7 @@ export default function Testimonials() {
               gap: "24px",
             }}
           >
-            {filteredItems.map((item, idx) => (
+            {allTestimonials.map((item, idx) => (
               <div key={`grid-${idx}`} className="tm-card" style={{ width: "100%" }}>
                 <Quote size={36} className="tm-card-quote" />
                 <div>
