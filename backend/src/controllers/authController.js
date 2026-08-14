@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
-const { createUser, findUserByEmail } = require('../config/database');
+const { createUser, findUserByEmail, findUserById, updateUserById } = require('../config/database');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -114,11 +114,7 @@ exports.getMe = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { firstName, lastName, phone } = req.body;
-    const updated = await User.findByIdAndUpdate(
-      req.user._id,
-      { firstName, lastName, phone },
-      { new: true, runValidators: true }
-    );
+    const updated = await updateUserById(req.user._id, { firstName, lastName, phone });
     res.status(200).json({
       status: 'success',
       data: {
@@ -143,11 +139,10 @@ exports.updateProfile = async (req, res) => {
 exports.completeOnboarding = async (req, res) => {
   try {
     const { answers } = req.body;
-    const updated = await User.findByIdAndUpdate(
-      req.user._id,
-      { onboardingDone: true, onboardingAnswers: answers || {} },
-      { new: true }
-    );
+    const updated = await updateUserById(req.user._id, {
+      onboardingDone: true,
+      onboardingAnswers: answers || {},
+    });
     res.status(200).json({
       status: 'success',
       data: {

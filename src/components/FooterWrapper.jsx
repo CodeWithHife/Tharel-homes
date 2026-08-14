@@ -7,10 +7,11 @@ export default function FooterWrapper() {
   // Hide on dashboard, auth, and selected public pages
   if (
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/properties") ||
     pathname === "/login" ||
     pathname === "/signup" ||
     pathname === "/forgot-password" ||
-    pathname === "/properties" ||
+    pathname === "/onboarding" ||
     pathname === "/contact"
   ) {
     return null;

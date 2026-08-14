@@ -30,7 +30,7 @@ export default function BottomNav() {
   }, []);
 
   // Hide bottom nav if not in PWA mode or on dashboard pages
-  if (!isPWA || pathname.startsWith("/dashboard")) return null;
+  if (!isPWA || pathname.startsWith("/dashboard") || pathname.startsWith("/properties")) return null;
 
   const isActive = (href) => {
     if (href === "/") return pathname === "/";

@@ -1,11 +1,14 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import PropertyCard from "@/components/PropertyCard";
 import { getAllProperties } from "@/lib/properties";
 import { getAllHotels } from "@/lib/hotels";
+import { getStoredAuthUser } from "@/lib/auth";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 export default function PropertiesPage() {
+  const router = useRouter();
   const [allProperties, setAllProperties] = useState([]);
   const [loadingProps, setLoadingProps] = useState(true);
 
@@ -16,8 +19,14 @@ export default function PropertiesPage() {
   const [maxPrice, setMaxPrice] = useState(700000000);
   const [sortBy, setSortBy] = useState("featured");
 
-  // ── Fetch live properties and hotels from backend ────────────────────────────
+  // ── Auth Check & Fetch properties ────────────────────────────────────────────
   useEffect(() => {
+    const user = getStoredAuthUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
     Promise.all([
       getAllProperties().catch(() => []),
       getAllHotels().catch(() => [])
@@ -202,10 +211,44 @@ export default function PropertiesPage() {
       style={{
         background: "#f5efe6",
         minHeight: "100vh",
-        padding: "140px 20px 60px",
+        padding: "40px 20px 60px",
+        fontFamily: "'Inter', sans-serif",
       }}
     >
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+        {/* Back to Dashboard bar */}
+        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "flex-start" }}>
+          <button
+            onClick={() => router.push("/dashboard/buyer")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "9px 18px",
+              borderRadius: "12px",
+              background: "#0F172A",
+              color: "#D4A017",
+              fontWeight: "700",
+              fontSize: "13.5px",
+              border: "1px solid rgba(212, 160, 23, 0.4)",
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(15, 23, 42, 0.15)",
+              transition: "all 0.25s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#D4A017";
+              e.currentTarget.style.color = "#0F172A";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#0F172A";
+              e.currentTarget.style.color = "#D4A017";
+            }}
+          >
+            <span style={{ fontSize: "16px", fontWeight: "900" }}>←</span>
+            <span>Back to Dashboard</span>
+          </button>
+        </div>
+
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <h1

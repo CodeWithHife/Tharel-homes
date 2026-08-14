@@ -356,17 +356,17 @@ export default function Navbar() {
           display: "flex",
           alignItems: "center",
           background: scrolled
-            ? "rgba(245, 239, 230, 0.88)"
-            : "#f5efe6",
+            ? "rgba(245, 239, 230, 0.92)"
+            : "transparent",
           backdropFilter: scrolled ? "blur(18px) saturate(180%)" : "none",
           WebkitBackdropFilter: scrolled ? "blur(18px) saturate(180%)" : "none",
           boxShadow: scrolled
             ? "0 10px 30px -5px rgba(15, 23, 42, 0.08), 0 0 20px rgba(212, 160, 23, 0.12)"
-            : "0 1px 0 rgba(15, 23, 42, 0.05)",
+            : "none",
           borderRadius: scrolled ? "16px" : "0px",
           border: scrolled
             ? "1px solid rgba(212, 160, 23, 0.22)"
-            : "1px solid rgba(15, 23, 42, 0.05)",
+            : "none",
           transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
           fontFamily: "'Inter', sans-serif",
           padding: isMobile ? "0 16px" : "0 28px",

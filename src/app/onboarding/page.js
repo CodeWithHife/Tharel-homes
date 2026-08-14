@@ -133,149 +133,337 @@ export default function OnboardingPage() {
   return (
     <>
       <style>{`
+        @keyframes obFadeUp {
+          from { opacity: 0; transform: translate3d(0, 20px, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes obGlowPulse {
+          0%, 100% { opacity: 0.35; transform: scale(1); }
+          50% { opacity: 0.65; transform: scale(1.15); }
+        }
+
+        @keyframes obBadgePulse {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px rgba(212,160,23,0.9); }
+        }
+
         .ob-page {
           min-height: 100vh;
-          background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+          width: 100%;
+          background: linear-gradient(145deg, #0F172A 0%, #080D1A 100%);
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 100px 20px 40px;
+          padding: 40px 20px;
           font-family: "Inter", sans-serif;
-        }
-        .ob-card {
-          background: #fff;
-          border-radius: 24px;
-          box-shadow: 0 20px 60px rgba(15,23,42,0.12);
-          padding: 48px 40px;
-          width: 100%;
-          max-width: 560px;
           position: relative;
           overflow: hidden;
         }
-        .ob-card::before {
-          content: '';
+
+        .ob-glow {
           position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, #D4A017, #b8860c);
+          top: -120px;
+          right: -120px;
+          width: 550px;
+          height: 550px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(212, 160, 23, 0.2) 0%, transparent 70%);
+          filter: blur(60px);
+          pointer-events: none;
+          animation: obGlowPulse 7s ease-in-out infinite;
         }
-        @media (max-width: 600px) { .ob-card { padding: 32px 20px; } }
-        .ob-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-        .ob-logo-icon { width: 40px; height: 40px; border-radius: 10px; background: #D4A017; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .ob-logo-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.5; }
-        .ob-logo-name { font-size: 14px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.03em; }
-        .ob-logo-sub { font-size: 9px; color: #D4A017; text-transform: uppercase; letter-spacing: 0.08em; }
-        .ob-role-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(212,160,23,0.1); color: #D4A017; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 999px; margin-bottom: 20px; text-transform: capitalize; }
-        .ob-progress-wrap { margin-bottom: 32px; }
-        .ob-progress-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .ob-step-label { font-size: 13px; color: #64748b; font-weight: 500; }
-        .ob-step-count { font-size: 13px; color: #D4A017; font-weight: 700; }
-        .ob-progress-bar { height: 6px; background: #E2E8F0; border-radius: 999px; overflow: hidden; }
-        .ob-progress-fill { height: 100%; background: linear-gradient(90deg, #D4A017, #b8860c); border-radius: 999px; transition: width 0.5s ease; }
-        .ob-question { font-size: clamp(20px, 2.5vw, 24px); font-weight: 800; color: #0F172A; margin-bottom: 24px; line-height: 1.3; }
-        .ob-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
-        .ob-option { padding: 15px 18px; border-radius: 12px; border: 2px solid #E2E8F0; background: #fff; font-size: 14.5px; font-weight: 500; color: #334155; cursor: pointer; transition: all 0.25s ease; text-align: left; display: flex; align-items: center; gap: 12px; }
-        .ob-option:hover { border-color: #D4A017; background: rgba(212,160,23,0.04); color: #0F172A; transform: translateX(4px); }
-        .ob-option.selected { border-color: #D4A017; background: rgba(212,160,23,0.08); color: #D4A017; font-weight: 700; }
-        .ob-option .check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #E2E8F0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.25s ease; }
-        .ob-option.selected .check { border-color: #D4A017; background: #D4A017; }
-        .ob-option.selected .check svg { stroke: #fff; }
-        .ob-text-input { width: 100%; padding: 15px 18px; border-radius: 12px; border: 2px solid #E2E8F0; font-size: 16px; outline: none; transition: border-color 0.2s; background: #fff; margin-bottom: 32px; }
-        .ob-text-input:focus { border-color: #D4A017; }
-        .ob-text-input::placeholder { color: #94A3B8; }
-        .ob-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 13.5px; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; }
-        .ob-actions { display: flex; gap: 12px; }
-        .ob-back-btn { padding: 0 24px; height: 50px; border-radius: 12px; border: 2px solid #E2E8F0; background: #fff; color: #64748b; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .ob-back-btn:hover { border-color: #94a3b8; color: #0F172A; }
-        .ob-next-btn { flex: 1; height: 50px; border-radius: 12px; border: none; background: #D4A017; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .ob-next-btn:hover:not(:disabled) { background: #b8860c; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(212,160,23,0.3); }
-        .ob-next-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-        .ob-spinner { width: 22px; height: 22px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 480px) {
-          .ob-actions { flex-direction: column-reverse; gap: 8px; }
-          .ob-back-btn { justify-content: center; width: 100%; }
-          .ob-next-btn { width: 100%; flex: none; }
-          .ob-text-input { font-size: 16px; }
+
+        .ob-glow-bottom {
+          position: absolute;
+          bottom: -150px;
+          left: -100px;
+          width: 450px;
+          height: 450px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(30, 41, 59, 0.8) 0%, transparent 70%);
+          filter: blur(50px);
+          pointer-events: none;
         }
-        @media (max-width: 380px) { .ob-card { padding: 24px 16px; } }
+
+        .ob-card {
+          background: rgba(255, 255, 255, 0.98);
+          border-radius: 24px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 25px rgba(212, 160, 23, 0.15);
+          border: 1px solid rgba(212, 160, 23, 0.35);
+          padding: 48px 40px;
+          width: 100%;
+          max-width: 580px;
+          position: relative;
+          z-index: 2;
+          animation: obFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @media (max-width: 600px) {
+          .ob-card { padding: 32px 20px; border-radius: 20px; }
+        }
+
+        .ob-role-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(212, 160, 23, 0.12);
+          border: 1px solid rgba(212, 160, 23, 0.3);
+          color: #B8860B;
+          font-size: 11.5px;
+          font-weight: 800;
+          padding: 6px 16px;
+          border-radius: 999px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          margin-bottom: 20px;
+        }
+
+        .ob-progress-bar {
+          height: 8px;
+          background: #E2E8F0;
+          border-radius: 999px;
+          overflow: hidden;
+        }
+
+        .ob-progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #D4A017 0%, #B8860B 100%);
+          border-radius: 999px;
+          transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ob-question {
+          font-family: 'Montserrat', sans-serif;
+          font-size: clamp(20px, 2.5vw, 24px);
+          font-weight: 900;
+          color: #0F172A;
+          margin-bottom: 24px;
+          line-height: 1.3;
+          letter-spacing: -0.01em;
+        }
+
+        .ob-options {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 32px;
+        }
+
+        .ob-option {
+          padding: 16px 20px;
+          border-radius: 14px;
+          border: 1.5px solid #E2E8F0;
+          background: #ffffff;
+          font-size: 14.5px;
+          font-weight: 600;
+          color: #334155;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          text-align: left;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .ob-option:hover {
+          border-color: #D4A017;
+          background: rgba(212, 160, 23, 0.05);
+          color: #0F172A;
+          transform: translate3d(4px, -1px, 0);
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+        }
+
+        .ob-option.selected {
+          border-color: #D4A017;
+          background: rgba(212, 160, 23, 0.12);
+          color: #0F172A;
+          font-weight: 800;
+          box-shadow: 0 4px 16px rgba(212, 160, 23, 0.2);
+          transform: translate3d(4px, -1px, 0);
+        }
+
+        .ob-input-field {
+          width: 100%;
+          padding: 16px 20px;
+          border-radius: 14px;
+          border: 1.5px solid #E2E8F0;
+          background: #ffffff;
+          font-size: 15px;
+          outline: none;
+          color: #0F172A;
+          transition: all 0.3s ease;
+        }
+
+        .ob-input-field:focus {
+          border-color: #D4A017;
+          box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.16);
+        }
+
+        .ob-btn-primary {
+          padding: 16px 28px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+          color: #ffffff;
+          font-weight: 800;
+          font-size: 14.5px;
+          border: 1px solid rgba(212, 160, 23, 0.3);
+          cursor: pointer;
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .ob-btn-primary:hover:not(:disabled) {
+          background: linear-gradient(135deg, #D4A017 0%, #B8860B 100%);
+          color: #0F172A;
+          border-color: #D4A017;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 30px rgba(212, 160, 23, 0.4);
+        }
+
+        .ob-btn-primary:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
       `}</style>
 
-      <div className="ob-page">
+      <main className="ob-page">
+        <div className="ob-glow" />
+        <div className="ob-glow-bottom" />
+
         <div className="ob-card">
-          <div className="ob-logo">
-            <div className="ob-logo-icon">
-              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "#0F172A", border: "1px solid rgba(212, 160, 23, 0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: "18px", color: "#D4A017", fontWeight: 900 }}>10</span>
+              </div>
+              <div>
+                <h3 style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "14px", fontWeight: 900, color: "#0F172A", margin: 0 }}>
+                  The 10th Homes
+                </h3>
+                <p style={{ fontSize: "10px", fontWeight: 800, color: "#D4A017", letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
+                  Profile Personalization
+                </p>
+              </div>
             </div>
-            <div>
-              <div className="ob-logo-name">The 10th Homes</div>
-              <div className="ob-logo-sub">& Apartments Ltd</div>
+
+            <div className="ob-role-badge">
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#D4A017", animation: "obBadgePulse 2s infinite" }} />
+              <span>{role} Setup</span>
             </div>
           </div>
 
-          <div className="ob-role-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            {user.role}
-          </div>
-
-          <div className="ob-progress-wrap">
-            <div className="ob-progress-top">
-              <span className="ob-step-label">Question {step + 1} of {total}</span>
-              <span className="ob-step-count">{Math.round(progress)}% complete</span>
+          <div style={{ marginBottom: "28px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12.5px", color: "#64748B", fontWeight: 600 }}>Question {step + 1} of {total}</span>
+              <span style={{ fontSize: "12.5px", color: "#D4A017", fontWeight: 800 }}>{Math.round(progress)}% Completed</span>
             </div>
             <div className="ob-progress-bar">
-              <div className="ob-progress-fill" style={{ width: progress + "%" }} />
+              <div className="ob-progress-fill" style={{ width: `${progress}%` }} />
             </div>
           </div>
 
           <h2 className="ob-question">{current.question}</h2>
 
-          {error && <div className="ob-error">{error}</div>}
-
-          {current.type === "text" ? (
-            <input
-              className="ob-text-input"
-              type="text"
-              value={textValue}
-              onChange={handleTextChange}
-              placeholder={current.placeholder || "Enter your answer..."}
-              autoFocus
-            />
-          ) : (
-            <div className="ob-options">
-              {current.options.map(function (opt) {
-                return (
-                  <button key={opt} className={"ob-option " + (selected === opt ? "selected" : "")} onClick={function () { handleSelect(opt); }}>
-                    <div className="check">
-                      {selected === opt && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      )}
-                    </div>
-                    {opt}
-                  </button>
-                );
-              })}
+          {error && (
+            <div style={{ padding: "12px 16px", borderRadius: "12px", background: "#FEF2F2", color: "#991B1B", fontSize: "13.5px", fontWeight: 600, marginBottom: "20px" }}>
+              {error}
             </div>
           )}
 
-          <div className="ob-actions">
-            {step > 0 && (
-              <button className="ob-back-btn" onClick={handleBack}>
-                <ArrowLeft size={18} /> Back
+          {current.type === "text" ? (
+            <div style={{ marginBottom: "32px" }}>
+              <input
+                type="text"
+                value={textValue}
+                onChange={handleTextChange}
+                placeholder={current.placeholder}
+                className="ob-input-field"
+                autoFocus
+              />
+            </div>
+          ) : (
+            <div className="ob-options">
+              {current.options.map((option, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`ob-option ${selected === option ? "selected" : ""}`}
+                  onClick={() => handleSelect(option)}
+                >
+                  <span
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      borderRadius: "50%",
+                      border: selected === option ? "6px solid #D4A017" : "2px solid #CBD5E1",
+                      background: "#fff",
+                      display: "inline-block",
+                      flexShrink: 0,
+                      transition: "all 0.2s",
+                    }}
+                  />
+                  <span>{option}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {step > 0 ? (
+              <button
+                type="button"
+                onClick={handleBack}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: "12px",
+                  background: "none",
+                  border: "none",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: "#64748B",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#0F172A")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#64748B")}
+              >
+                <ArrowLeft size={16} />
+                <span>Previous</span>
               </button>
-            )}
-            <button className="ob-next-btn" onClick={handleNext} disabled={isNextDisabled}>
+            ) : <div />}
+
+            <button
+              type="button"
+              className="ob-btn-primary"
+              disabled={isNextDisabled}
+              onClick={handleNext}
+            >
               {saving ? (
-                <div className="ob-spinner" />
+                <span>Completing Setup...</span>
               ) : step === total - 1 ? (
-                <>Complete <CheckCircle2 size={18} /></>
+                <>
+                  <span>Enter My Dashboard</span>
+                  <CheckCircle2 size={18} />
+                </>
               ) : (
-                <>Next <ArrowRight size={18} /></>
+                <>
+                  <span>Continue</span>
+                  <ArrowRight size={18} />
+                </>
               )}
             </button>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }

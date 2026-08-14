@@ -4,6 +4,7 @@ import FooterWrapper from "@/components/FooterWrapper";
 import AdminSeeder from "@/components/AdminSeeder";
 import SmoothScroll from "@/components/SmoothScroll";
 import BottomNav from "@/components/BottomNav";
+import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import Script from "next/script";
 
 export const viewport = {
@@ -59,6 +60,7 @@ export default function RootLayout({ children }) {
           {children}
           <FooterWrapper />
           <BottomNav />
+          <PwaInstallPrompt />
         </SmoothScroll>
       </body>
     </html>

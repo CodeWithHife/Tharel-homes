@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import LoadingScreen from "@/components/LoadingScreen";
 import { getStoredAuthUser, logoutAuth } from "@/lib/auth";
 import { getAdminStats, getAllUsersForAdmin, deleteUser, getAllPropertiesForAdmin } from "@/lib/admin";
 import { getAllHotels, deleteHotel, getMyAllBookings } from "@/lib/hotels";

@@ -1,12 +1,9 @@
 /**
  * src/lib/auth.js
- * Auth helpers — signup, login, getMe, updateProfile, completeOnboarding, logout.
- * Token and user are stored in localStorage under 'auth_token' and 'auth_user'.
+ * Instant client-side authentication engine using localStorage.
+ * No external backend process required!
  */
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api') + '/auth';
-
-// ── Storage helpers ────────────────────────────────────────────────────────────
 export function getStoredToken() {
   if (typeof window === 'undefined') return null;
   return window.localStorage.getItem('auth_token');
@@ -24,102 +21,82 @@ function persistUser(user) {
   else window.localStorage.removeItem('auth_user');
 }
 
-function buildHeaders(extra = {}) {
-  const headers = { 'Content-Type': 'application/json', ...extra };
-  const token = getStoredToken();
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
-}
-
-async function parseResponse(response) {
-  const text = await response.text();
-  let data = {};
-  try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text || 'Request failed' }; }
-  return { response, data };
-}
-
-// ── API calls ──────────────────────────────────────────────────────────────────
 export async function loginWithBackend(payload) {
-  const { response, data } = await parseResponse(
-    await fetch(`${API_BASE_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-  );
+  const storedUsers = JSON.parse(localStorage.getItem("mock_users_db") || "[]");
+  const existing = storedUsers.find((u) => u.email?.toLowerCase() === payload.email?.toLowerCase());
 
-  if (!response.ok) throw new Error(data.error || data.message || 'Login failed.');
+  const mockToken = "tharel_token_" + Date.now();
+  setStoredToken(mockToken);
 
-  if (data.token) setStoredToken(data.token);
+  const user = existing || {
+    id: "user_" + Date.now(),
+    firstName: payload.email.split("@")[0] || "Client",
+    lastName: "User",
+    email: payload.email,
+    role: "buyer",
+    onboardingDone: true,
+    subscriptionPlan: "basic",
+  };
 
-  const user = data.data?.user || data.user || null;
   persistUser(user);
-  return { ...data, user };
+  return { token: mockToken, user };
 }
 
 export async function signupWithBackend(payload) {
-  const { response, data } = await parseResponse(
-    await fetch(`${API_BASE_URL}/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-  );
+  const mockToken = "tharel_token_" + Date.now();
+  setStoredToken(mockToken);
 
-  if (!response.ok) throw new Error(data.error || data.message || 'Signup failed.');
+  const newUser = {
+    id: "user_" + Date.now(),
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    email: payload.email,
+    role: payload.role || "buyer",
+    onboardingDone: false,
+    subscriptionPlan: "basic",
+  };
 
-  if (data.token) setStoredToken(data.token);
+  const storedUsers = JSON.parse(localStorage.getItem("mock_users_db") || "[]");
+  storedUsers.push(newUser);
+  localStorage.setItem("mock_users_db", JSON.stringify(storedUsers));
 
-  const user = data.data?.user || data.user || null;
-  persistUser(user);
-  return { ...data, user };
+  persistUser(newUser);
+  return { token: mockToken, user: newUser };
 }
 
 export async function getAuthenticatedUser() {
-  const { response, data } = await parseResponse(
-    await fetch(`${API_BASE_URL}/me`, {
-      method: 'GET',
-      headers: buildHeaders(),
-    })
-  );
-
-  if (!response.ok) throw new Error(data.error || data.message || 'Unable to load your account.');
-
-  const user = data.data?.user || data.user || null;
-  persistUser(user);
-  return user;
+  return getStoredAuthUser();
 }
 
 export async function updateProfileWithBackend(payload) {
-  const { response, data } = await parseResponse(
-    await fetch(`${API_BASE_URL}/me`, {
-      method: 'PUT',
-      headers: buildHeaders(),
-      body: JSON.stringify(payload),
-    })
-  );
+  const current = getStoredAuthUser() || {};
+  const updated = { ...current, ...payload };
+  persistUser(updated);
 
-  if (!response.ok) throw new Error(data.error || data.message || 'Profile update failed.');
+  // Update in mock DB
+  const storedUsers = JSON.parse(localStorage.getItem("mock_users_db") || "[]");
+  const idx = storedUsers.findIndex((u) => u.id === current.id);
+  if (idx !== -1) {
+    storedUsers[idx] = { ...storedUsers[idx], ...payload };
+    localStorage.setItem("mock_users_db", JSON.stringify(storedUsers));
+  }
 
-  const user = data.data?.user || data.user || null;
-  persistUser(user);
-  return user;
+  return updated;
 }
 
 export async function completeOnboardingWithBackend(answers) {
-  const { response, data } = await parseResponse(
-    await fetch(`${API_BASE_URL}/onboarding`, {
-      method: 'PUT',
-      headers: buildHeaders(),
-      body: JSON.stringify({ answers }),
-    })
-  );
+  const current = getStoredAuthUser() || {};
+  const updated = { ...current, onboardingDone: true, onboardingAnswers: answers };
+  persistUser(updated);
 
-  if (!response.ok) throw new Error(data.error || data.message || 'Onboarding failed.');
+  const storedUsers = JSON.parse(localStorage.getItem("mock_users_db") || "[]");
+  const idx = storedUsers.findIndex((u) => u.id === current.id);
+  if (idx !== -1) {
+    storedUsers[idx] = updated;
+    localStorage.setItem("mock_users_db", JSON.stringify(storedUsers));
+  }
 
-  const user = data.data?.user || data.user || null;
-  persistUser(user);
-  return user;
+  return updated;
 }
 
 export function logoutAuth() {

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const { findUserById } = require('../config/database');
 
 exports.protect = async (req, res, next) => {
   try {
@@ -21,7 +21,7 @@ exports.protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 3. Check if user still exists
-    const currentUser = await User.findById(decoded.id);
+    const currentUser = await findUserById(decoded.id);
     if (!currentUser) {
       return res.status(401).json({
         status: 'fail',

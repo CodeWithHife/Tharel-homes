@@ -15,9 +15,11 @@ export default function NavbarWrapper() {
   // Hide on dashboard and auth pages
   if (
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/properties") ||
     pathname === "/login" ||
     pathname === "/signup" ||
-    pathname === "/forgot-password"
+    pathname === "/forgot-password" ||
+    pathname === "/onboarding"
   ) {
     return null;
   }

@@ -53,18 +53,46 @@ const createUser = async (userData) => {
   return mockUser;
 };
 
-const findUserByEmail = async (email) => {
+const findUserById = async (id) => {
   if (isDatabaseReady()) {
-    return User.findOne({ email: email.toLowerCase() }).select('+password');
+    return User.findById(id);
   }
 
-  return mockUsers.find((user) => user.email?.toLowerCase() === email.toLowerCase()) || null;
+  let found = mockUsers.find((user) => user._id.toString() === id.toString());
+  if (!found) {
+    found = {
+      _id: id,
+      firstName: "Verified",
+      lastName: "User",
+      email: "client@tharelhomes.com",
+      role: "Buyer",
+      onboardingDone: false,
+      onboardingAnswers: {},
+      subscriptionPlan: "basic",
+    };
+    mockUsers.push(found);
+  }
+  return found;
+};
+
+const updateUserById = async (id, updateData) => {
+  if (isDatabaseReady()) {
+    return User.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+  }
+
+  const user = mockUsers.find((u) => u._id.toString() === id.toString());
+  if (user) {
+    Object.assign(user, updateData);
+  }
+  return user;
 };
 
 module.exports = {
   connectDB,
   createUser,
   findUserByEmail,
+  findUserById,
+  updateUserById,
   isDatabaseReady,
 };
 

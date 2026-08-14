@@ -38,28 +38,9 @@ const faqs = [
     categoryLabel: "Inspection & Process",
     question: "Can I do a site inspection before buying?",
     answer: "Yes, site inspections are available for all our properties. We strongly encourage all buyers to visit the site before making any payment. Reach out to us on 08168426592 to schedule a free inspection visit at your convenience. For diaspora investors, we can arrange live HD video tours with our on-ground team.",
-  },
-  {
-    id: "06",
-    category: "inspection",
-    categoryLabel: "Inspection & Process",
-    question: "What locations do you cover?",
-    answer: "We cover properties across Lagos (Lekki, Ajah, Ibeju-Lekki, Ikorodu, Sangotedo, Maryland), Abuja (Kabusa, Apo, Kuje), Ogun State (Mowe, Abeokuta, Odeda), Oyo State (Ibadan), and Enugu. Our portfolio spans residential land, commercial plots, luxury duplexes, apartments, and farmland investments.",
-  },
-  {
-    id: "07",
-    category: "realtor",
-    categoryLabel: "Realtors & Partners",
-    question: "Do you work with realtors and agents?",
-    answer: "Yes. We have a structured realtor and partner programme with competitive commission structures. Register on our platform to gain access to our full property catalogue, marketing materials, commission dashboard, and dedicated realtor support. We have active realtors across Lagos, Abuja, Ibadan, and in the diaspora.",
-  },
-  {
-    id: "08",
-    category: "legal",
-    categoryLabel: "Legal & Title",
-    question: "Is my investment safe with The 10th Homes?",
-    answer: "We only partner with reputable developers and estates that have proper title documents and a proven track record. We also encourage all buyers to conduct independent legal due diligence before completing any transaction. Our team is available to answer any questions and provide all necessary documentation for verification.",
-  },
+  }
+
+
 ];
 
 export default function FAQ() {
@@ -428,7 +409,7 @@ export default function FAQ() {
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
               </svg>
               <span>Chat on WhatsApp</span>
             </a>

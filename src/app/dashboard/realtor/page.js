@@ -1,30 +1,67 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import LoadingScreen from "@/components/LoadingScreen";
 import { getStoredAuthUser, logoutAuth, updateProfileWithBackend } from "@/lib/auth";
 import { getRealtorProperties, createProperty, updateProperty, deleteProperty } from "@/lib/properties";
 import { uploadToCloudinary } from "@/lib/cloudinary";
-import { Home, User, LogOut, Plus, Edit, Trash2, Eye, MessageCircle, LayoutDashboard, Crown, Zap, CheckCircle2, X, Search, Save, Edit2 } from "lucide-react";
+import {
+  Home,
+  User,
+  LogOut,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  MessageCircle,
+  LayoutDashboard,
+  Crown,
+  Zap,
+  CheckCircle2,
+  X,
+  Search,
+  Save,
+  Edit2,
+  Building2,
+  SlidersHorizontal,
+  Bell,
+  Sparkles,
+  ArrowUpRight,
+  Send,
+  Phone,
+  Mail,
+  Clock,
+  ShieldCheck
+} from "lucide-react";
 
 const SUBSCRIPTION_PLANS = [
   { id: "basic", name: "Basic", icon: <Home size={20} />, price: "Free", listings: 1, features: ["1 listing", "Basic visibility"] },
   { id: "plus", name: "Plus", icon: <Zap size={20} />, price: "₦5,000", listings: 5, features: ["5 listings", "Enhanced visibility"] },
   { id: "premium", name: "Premium", icon: <Crown size={20} />, price: "₦25,000", listings: 20, features: ["20 listings", "Premium visibility"] },
-  { id: "super", name: "Super", icon: <Crown size={20} style={{ color: "#FFD700" }} />, price: "₦50,000", listings: "Unlimited", features: ["Unlimited listings", "Top tier visibility"] },
+  { id: "super", name: "Super", icon: <Crown size={20} style={{ color: "#D4A017" }} />, price: "₦50,000", listings: "Unlimited", features: ["Unlimited listings", "Top tier visibility"] },
 ];
 
 export default function RealtorDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("properties");
   const [properties, setProperties] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
+
+  // Inquiries & Live Chat State
+  const [inquiriesList, setInquiriesList] = useState([]);
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [replyInput, setReplyInput] = useState("");
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "", location: "", price: "", priceLabel: "", type: "",
+    name: "", location: "", price: "", priceLabel: "", type: "Residential",
     beds: "", baths: "", size: "", image: "", description: "", features: "", phone: "",
   });
 
@@ -44,13 +81,24 @@ export default function RealtorDashboard() {
       .then((props) => setProperties(props || []))
       .catch(() => setProperties([]))
       .finally(() => setLoading(false));
+
+    // Load buyer inquiries sent to Obadimu Ifeoluwa / Realtor
+    try {
+      const storedInquiries = JSON.parse(window.localStorage.getItem("tharel_buyer_inquiries") || "[]");
+      setInquiriesList(storedInquiries);
+      if (storedInquiries.length > 0) {
+        setSelectedInquiry(storedInquiries[0]);
+      }
+    } catch {
+      setInquiriesList([]);
+    }
   }, []);
 
   function handleLogout() { logoutAuth(); router.push("/"); }
 
   function resetForm() {
     setFormData({
-      name: "", location: "", price: "", priceLabel: "", type: "",
+      name: "", location: "", price: "", priceLabel: "", type: "Residential",
       beds: "", baths: "", size: "", image: "", description: "", features: "", phone: user?.phone || "08168426592",
     });
   }
@@ -87,7 +135,7 @@ export default function RealtorDashboard() {
   }
 
   async function handleDeleteProperty(id) {
-    if (!confirm("Delete this property?")) return;
+    if (!confirm("Delete this property listing?")) return;
     try {
       await deleteProperty(id);
       setProperties(properties.filter((p) => (p._id || p.id) !== id));
@@ -99,378 +147,292 @@ export default function RealtorDashboard() {
   function openEdit(property) {
     setEditingProperty(property);
     setFormData({
-      name: property.name,
-      location: property.location,
-      price: property.price,
-      priceLabel: property.priceLabel,
-      type: property.type,
+      name: property.name || "",
+      location: property.location || "",
+      price: property.price || "",
+      priceLabel: property.priceLabel || "",
+      type: property.type || "Residential",
       beds: property.beds || "",
       baths: property.baths || "",
-      size: property.size,
-      image: property.image,
+      size: property.size || "",
+      image: property.image || "",
       description: property.description || "",
-      features: property.features ? property.features.join(", ") : "",
-      phone: property.phone || "08168426592",
+      features: Array.isArray(property.features) ? property.features.join(", ") : "",
+      phone: property.phone || user?.phone || "08168426592",
     });
   }
 
-  function handleEditProfile(e) { setEditForm({ ...editForm, [e.target.name]: e.target.value }); }
-
-  async function saveProfile() {
-    if (!user) return;
+  async function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadLoading(true);
     try {
-      const updated = await updateProfileWithBackend(editForm);
-      setUser({ ...user, ...(updated || editForm) });
-      setSaveMessage("Profile updated successfully!");
-      setIsEditing(false);
-      setTimeout(() => setSaveMessage(""), 3000);
+      const url = await uploadToCloudinary(file);
+      setFormData((prev) => ({ ...prev, image: url }));
     } catch (err) {
-      setSaveMessage("Error saving profile: " + err.message);
+      alert("Image upload failed: " + err.message);
+    } finally {
+      setUploadLoading(false);
     }
   }
 
-  const activePlan = SUBSCRIPTION_PLANS[0];
-  const planListings = activePlan.listings === "Unlimited" ? Infinity : activePlan.listings;
-  const usedListings = properties.length;
-  const remainingListings = planListings === Infinity ? "∞" : Math.max(0, planListings - usedListings);
+  // Handle Realtor Direct Reply to Buyer In-App
+  function handleSendRealtorReply(e) {
+    e.preventDefault();
+    if (!replyInput.trim() || !selectedInquiry) return;
+
+    const pId = String(selectedInquiry.propertyId);
+    const replyMsg = {
+      id: "msg_realtor_" + Date.now(),
+      sender: "seller",
+      senderName: `${user.firstName} ${user.lastName || ""}`.trim() + " (Verified Realtor)",
+      text: replyInput.trim(),
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    try {
+      const existingThread = JSON.parse(window.localStorage.getItem("tharel_chat_" + pId) || "[]");
+      const updatedThread = [...existingThread, replyMsg];
+      window.localStorage.setItem("tharel_chat_" + pId, JSON.stringify(updatedThread));
+    } catch {}
+
+    setReplyInput("");
+    alert("Reply sent directly to buyer (" + selectedInquiry.buyerName + ")!");
+  }
+
+  async function saveProfile() {
+    try {
+      const updated = await updateProfileWithBackend(editForm);
+      setUser((prev) => ({ ...prev, ...(updated || editForm) }));
+      setSaveMessage("Profile updated successfully!");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (err) {
+      alert("Error saving profile: " + err.message);
+    }
+  }
+
+  const filteredProperties = properties.filter((p) => {
+    const matchSearch = (p.name || "").toLowerCase().includes(search.toLowerCase()) || (p.location || "").toLowerCase().includes(search.toLowerCase());
+    if (filterStatus === "For Sale") return matchSearch && (p.type || "").toLowerCase().includes("sale");
+    if (filterStatus === "For Rent") return matchSearch && (p.type || "").toLowerCase().includes("rent");
+    return matchSearch;
+  });
 
   if (loading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", paddingTop: "80px" }}>
-        <div style={{ width: "40px", height: "40px", border: "4px solid #E2E8F0", borderTop: "4px solid #D4A017", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
+    return <LoadingScreen message="The 10th Homes · Realtor Portal Loading..." />;
   }
 
   if (!user) return null;
 
-  const tabs = [
-    { id: "overview", label: "Overview", icon: <LayoutDashboard size={18} /> },
-    { id: "properties", label: "Properties", icon: <Home size={18} /> },
-    { id: "subscription", label: "Subscription", icon: <Crown size={18} /> },
-    { id: "profile", label: "Profile", icon: <User size={18} /> },
-  ];
-
   return (
     <>
       <style>{`
-        .db-page { min-height: 100vh; background: #F8FAFC; font-family: "Inter", sans-serif; }
-        .db-nav { background: #fff; border-bottom: 1px solid #E2E8F0; padding: 0 16px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-        @media (min-width: 768px) { .db-nav { padding: 0 32px; height: 68px; } }
-        .db-nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
-        .db-nav-logo-icon { width: 32px; height: 32px; border-radius: 10px; background: #D4A017; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .db-nav-logo-icon svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.5; }
-        @media (min-width: 768px) { .db-nav-logo-icon { width: 36px; height: 36px; } .db-nav-logo-icon svg { width: 18px; height: 18px; } }
-        .db-nav-logo-text { font-size: 13px; font-weight: 800; color: #0F172A; text-transform: uppercase; display: none; }
-        @media (min-width: 480px) { .db-nav-logo-text { display: block; } }
-        .db-nav-right { display: flex; align-items: center; gap: 8px; }
-        .db-nav-name { font-size: 13px; font-weight: 600; color: #0F172A; display: none; }
-        @media (min-width: 480px) { .db-nav-name { display: inline; } }
-        .db-nav-avatar { width: 30px; height: 30px; border-radius: 50%; background: #D4A017; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
-        @media (min-width: 768px) { .db-nav-avatar { width: 34px; height: 34px; font-size: 13px; } }
-        .db-logout-btn { padding: 6px 12px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: #fff; color: #64748b; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
-        .db-logout-btn:hover { border-color: #ef4444; color: #ef4444; }
-        @media (max-width: 380px) { .db-logout-btn span { display: none; } }
-        .db-body { display: flex; min-height: calc(100vh - 64px); }
-        @media (min-width: 768px) { .db-body { min-height: calc(100vh - 68px); } }
-        .db-sidebar { width: 220px; background: #fff; border-right: 1px solid #E2E8F0; padding: 24px 12px; flex-shrink: 0; display: none; }
-        @media (min-width: 768px) { .db-sidebar { display: block; } }
-        .db-sidebar-label { font-size: 10px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.08em; padding: 0 12px; margin-bottom: 8px; }
-        .db-sidebar-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; border: none; background: transparent; font-size: 13.5px; font-weight: 500; color: #64748b; cursor: pointer; transition: all 0.2s; text-align: left; margin-bottom: 2px; }
-        .db-sidebar-btn:hover { background: #F8FAFC; color: #0F172A; }
-        .db-sidebar-btn.active { background: rgba(212,160,23,0.1); color: #D4A017; font-weight: 600; }
-        .db-main { flex: 1; padding: 16px 12px; }
-        @media (min-width: 768px) { .db-main { padding: 32px; } }
-        .db-mobile-tabs { display: flex; overflow-x: auto; gap: 6px; padding: 10px 12px; background: #fff; border-bottom: 1px solid #E2E8F0; scrollbar-width: thin; }
-        .db-mobile-tabs::-webkit-scrollbar { height: 3px; }
-        .db-mobile-tabs::-webkit-scrollbar-thumb { background: #D4A017; border-radius: 10px; }
-        @media (min-width: 768px) { .db-mobile-tabs { display: none; } }
-        .db-mobile-tab { padding: 8px 14px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: #fff; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .db-mobile-tab.active { border-color: #D4A017; background: rgba(212,160,23,0.08); color: #D4A017; }
-        .db-welcome { margin-bottom: 20px; }
-        .db-welcome h1 { font-size: clamp(18px, 4vw, 28px); font-weight: 800; color: #0F172A; margin-bottom: 4px; }
-        .db-welcome p { font-size: 14px; color: #64748b; }
-        .db-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
-        @media (min-width: 480px) { .db-stats { grid-template-columns: repeat(4, 1fr); } }
-        .db-stat-card { background: #fff; border-radius: 12px; padding: 14px 12px; border: 1px solid #E2E8F0; }
-        @media (min-width: 768px) { .db-stat-card { padding: 16px 18px; } }
-        .db-stat-icon { width: 32px; height: 32px; border-radius: 10px; background: rgba(212,160,23,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-        .db-stat-icon svg { width: 16px; height: 16px; stroke: #D4A017; }
-        @media (min-width: 768px) { .db-stat-icon { width: 36px; height: 36px; margin-bottom: 10px; } .db-stat-icon svg { width: 18px; height: 18px; } }
-        .db-stat-num { font-size: 18px; font-weight: 900; color: #0F172A; }
-        @media (min-width: 768px) { .db-stat-num { font-size: 22px; } }
-        .db-stat-lbl { font-size: 11px; color: #64748b; margin-top: 2px; }
-        @media (min-width: 768px) { .db-stat-lbl { font-size: 12px; } }
-        .db-section-header { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 16px; }
-        @media (min-width: 480px) { .db-section-header { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; } }
-        .db-section-title { font-size: 17px; font-weight: 800; color: #0F172A; }
-        .db-add-btn { display: flex; align-items: center; gap: 6px; background: #D4A017; color: #fff; padding: 8px 16px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-        .db-add-btn:hover { background: #b8860c; transform: translateY(-2px); }
-        @media (max-width: 480px) { .db-add-btn { font-size: 12px; padding: 8px 12px; width: 100%; justify-content: center; } }
-        .db-property-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        @media (min-width: 480px) { .db-property-grid { grid-template-columns: 1fr 1fr; } }
-        @media (min-width: 1024px) { .db-property-grid { grid-template-columns: 1fr 1fr 1fr; } }
-        .db-property-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid #E2E8F0; }
-        .db-property-img { width: 100%; height: 160px; object-fit: cover; background: #E2E8F0; }
-        .db-property-body { padding: 14px 16px; }
-        .db-property-name { font-size: 14px; font-weight: 700; color: #0F172A; margin-bottom: 2px; }
-        .db-property-loc { font-size: 12px; color: #64748b; margin-bottom: 6px; }
-        .db-property-price { font-size: 15px; font-weight: 800; color: #D4A017; }
-        .db-property-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .db-prop-btn { padding: 6px 12px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; text-decoration: none; color: #0F172A; }
-        .db-prop-btn.edit:hover { border-color: #D4A017; color: #D4A017; }
-        .db-prop-btn.delete:hover { border-color: #ef4444; color: #ef4444; }
-        .db-plan-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
-        @media (min-width: 480px) { .db-plan-grid { grid-template-columns: 1fr 1fr; } }
-        @media (min-width: 1024px) { .db-plan-grid { grid-template-columns: 1fr 1fr 1fr 1fr; } }
-        .db-plan-card { background: #fff; border-radius: 16px; padding: 20px 16px; border: 2px solid #E2E8F0; text-align: center; transition: all 0.3s; position: relative; }
-        @media (min-width: 768px) { .db-plan-card { padding: 24px 20px; } }
-        .db-plan-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.06); }
-        .db-plan-card.popular { border-color: #D4A017; }
-        .db-plan-card.popular::before { content: 'Most Popular'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #D4A017; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 14px; border-radius: 999px; white-space: nowrap; }
-        .db-plan-card .icon-wrap { width: 44px; height: 44px; border-radius: 12px; background: rgba(212,160,23,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: #D4A017; }
-        @media (min-width: 768px) { .db-plan-card .icon-wrap { width: 48px; height: 48px; } }
-        .db-plan-name { font-size: 16px; font-weight: 800; color: #0F172A; }
-        .db-plan-price { font-size: 20px; font-weight: 900; color: #D4A017; margin: 6px 0; }
-        .db-plan-features { list-style: none; padding: 0; margin: 0 0 16px; text-align: left; }
-        .db-plan-features li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569; padding: 4px 0; }
-        .db-plan-features li svg { color: #D4A017; flex-shrink: 0; width: 14px; height: 14px; }
-        .db-plan-btn { width: 100%; padding: 10px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .db-plan-btn.active { background: #E2E8F0; color: #64748b; cursor: default; }
-        .db-plan-btn:not(.active) { background: #D4A017; color: #fff; }
-        .db-plan-btn:not(.active):hover { background: #b8860c; transform: translateY(-2px); }
-        .db-profile-card { background: #fff; border-radius: 16px; padding: 20px 16px; border: 1px solid #E2E8F0; max-width: 100%; }
-        @media (min-width: 768px) { .db-profile-card { padding: 24px; max-width: 480px; } }
-        .db-profile-avatar { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid #E2E8F0; margin-bottom: 16px; flex-wrap: wrap; }
-        .db-profile-avatar-circle { width: 48px; height: 48px; border-radius: 50%; background: #D4A017; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #fff; flex-shrink: 0; }
-        @media (min-width: 768px) { .db-profile-avatar-circle { width: 56px; height: 56px; font-size: 20px; } }
-        .db-profile-name { font-size: 16px; font-weight: 800; color: #0F172A; }
-        .db-profile-role { font-size: 12px; color: #64748b; text-transform: capitalize; margin-top: 2px; }
-        .db-profile-row { display: flex; flex-direction: column; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #F1F5F9; font-size: 13.5px; gap: 4px; }
-        @media (min-width: 480px) { .db-profile-row { flex-direction: row; justify-content: space-between; align-items: center; padding: 12px 0; } }
-        .db-profile-row:last-child { border-bottom: none; }
-        .db-profile-row-label { color: #64748b; font-weight: 500; flex-shrink: 0; }
-        .db-profile-row-value { color: #0F172A; font-weight: 600; text-transform: capitalize; word-break: break-all; text-align: left; width: 100%; }
-        @media (min-width: 480px) { .db-profile-row-value { text-align: right; max-width: 60%; width: auto; } }
-        .db-profile-edit-input { width: 100%; padding: 6px 10px; border: 1.5px solid #E2E8F0; border-radius: 8px; font-size: 13.5px; outline: none; background: #fff; }
-        .db-profile-edit-input:focus { border-color: #D4A017; }
-        .db-profile-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-        .db-profile-edit-actions button { flex: 1; min-width: 80px; justify-content: center; display: flex; align-items: center; gap: 6px; }
-        .db-profile-save-btn { padding: 8px 20px; border-radius: 8px; border: none; background: #D4A017; color: #fff; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-        .db-profile-save-btn:hover { background: #b8860c; }
-        .db-profile-cancel-btn { padding: 8px 20px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: #fff; color: #64748b; font-weight: 600; cursor: pointer; transition: border-color 0.2s; }
-        .db-profile-cancel-btn:hover { border-color: #94a3b8; }
-        .db-profile-edit-btn { padding: 6px 14px; border-radius: 8px; border: 1.5px solid #D4A017; background: transparent; color: #D4A017; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-        .db-profile-edit-btn:hover { background: #D4A017; color: #fff; }
-        .db-save-message { padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
-        .db-save-message.success { background: #dcfce7; color: #16a34a; }
-        .db-save-message.error { background: #fee2e2; color: #dc2626; }
-        .db-empty-state { padding: 40px 20px; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; text-align: center; }
-        .db-empty-state p { color: #94A3B8; margin-bottom: 12px; }
-        .db-view-all-btn { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: #D4A017; border: 2px solid #D4A017; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .db-view-all-btn:hover { background: #D4A017; color: #fff; }
-        .db-listing-usage-card { background: #fff; border-radius: 16px; padding: 16px 20px; border: 1px solid #E2E8F0; margin-bottom: 24px; }
-        @media (min-width: 768px) { .db-listing-usage-card { padding: 20px 24px; } }
-        .db-listing-usage-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .db-listing-usage-label { font-size: 13px; color: #64748b; }
-        .db-listing-usage-numbers { font-size: 20px; font-weight: 800; color: #0F172A; }
-        .db-listing-usage-plan { font-size: 13px; color: #64748b; }
-        .db-listing-usage-plan strong { color: #D4A017; }
-        .db-listing-usage-bar { height: 6px; background: #E2E8F0; border-radius: 999px; margin-top: 12px; overflow: hidden; }
-        .db-listing-usage-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
-        .db-listing-usage-warning { font-size: 12px; color: #ef4444; margin-top: 8px; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
-        .modal-content { background: #fff; border-radius: 20px; padding: 24px 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
-        @media (min-width: 480px) { .modal-content { padding: 32px 24px; } }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-header h2 { font-size: 18px; font-weight: 800; color: #0F172A; }
-        @media (min-width: 480px) { .modal-header h2 { font-size: 20px; } }
-        .modal-close { background: none; border: none; cursor: pointer; color: #94A3B8; padding: 4px; }
-        .modal-close:hover { color: #0F172A; }
-        .form-group { margin-bottom: 14px; }
-        .form-label { display: block; font-size: 12px; font-weight: 600; color: #0F172A; margin-bottom: 4px; }
-        .form-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #E2E8F0; font-size: 14px; outline: none; transition: border-color 0.2s; background: #fff; }
-        @media (max-width: 480px) { .form-input { font-size: 16px; } }
-        .form-input:focus { border-color: #D4A017; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
-        .form-submit { width: 100%; padding: 12px; border-radius: 12px; border: none; background: #D4A017; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
-        .form-submit:hover { background: #b8860c; }
-        @media (max-width: 480px) {
-          .db-stats { grid-template-columns: 1fr 1fr; }
-          .db-property-grid { grid-template-columns: 1fr; }
-          .db-plan-grid { grid-template-columns: 1fr; }
-          .db-section-header { flex-direction: column; align-items: stretch; }
-          .db-add-btn { width: 100%; justify-content: center; }
-          .db-profile-row { flex-direction: column; align-items: flex-start; gap: 4px; }
-          .db-profile-row-value { text-align: left; max-width: 100%; }
-          .db-profile-edit-input { max-width: 100% !important; }
-          .db-plan-card { padding: 16px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #E2E8F0; color: #0F172A; }
+        .pro-dashboard-wrap { min-height: 100vh; background: #E2E8F0; padding: 24px; }
+        .pro-app-card {
+          background: #F8FAFC; border-radius: 28px; border: 1px solid #CBD5E1;
+          box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08); overflow: hidden;
+          max-width: 1440px; margin: 0 auto; display: flex; min-height: 860px;
         }
-        @media (max-width: 380px) {
-          .db-nav { padding: 0 10px; height: 56px; }
-          .db-body { min-height: calc(100vh - 56px); }
-          .db-mobile-tabs { padding: 8px 10px; }
-          .db-mobile-tab { font-size: 11px; padding: 6px 10px; }
-          .db-property-actions { flex-direction: column; align-items: stretch; }
-          .db-prop-btn { justify-content: center; }
+        .pro-sidebar {
+          width: 270px; background: #ffffff; border-right: 1px solid #E2E8F0;
+          padding: 28px 20px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0;
         }
+        .pro-sidebar-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; text-decoration: none; }
+        .pro-brand-logo { width: 38px; height: 38px; border-radius: 12px; background: #059669; display: flex; align-items: center; justify-content: center; color: #ffffff; }
+        .pro-sidebar-section { font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0 10px 10px; }
+        .pro-nav-btn {
+          display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px;
+          border-radius: 12px; border: none; background: transparent; font-size: 14px; font-weight: 600;
+          color: #64748B; cursor: pointer; transition: all 0.25s ease; margin-bottom: 4px; text-align: left;
+        }
+        .pro-nav-btn:hover { background: #F1F5F9; color: #0F172A; }
+        .pro-nav-btn.active { background: #ECFDF5; color: #059669; font-weight: 700; }
+        .pro-upgrade-card { background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #A7F3D0; border-radius: 20px; padding: 18px; margin-top: 24px; }
+        .pro-upgrade-title { font-size: 14px; font-weight: 800; color: #065F46; }
+        .pro-upgrade-sub { font-size: 12px; color: #047857; line-height: 1.4; margin-bottom: 14px; }
+        .pro-upgrade-btn { width: 100%; padding: 10px; border-radius: 10px; background: #059669; color: #ffffff; font-weight: 700; font-size: 13px; border: none; cursor: pointer; }
+        .pro-main-content { flex: 1; padding: 32px; overflow-y: auto; }
+        .pro-top-bar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; }
+        .pro-page-title { font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 800; color: #0F172A; }
+        .pro-search-box { position: relative; width: 280px; }
+        .pro-search-input { width: 100%; padding: 10px 14px 10px 40px; border-radius: 12px; border: 1px solid #CBD5E1; font-size: 13.5px; outline: none; background: #ffffff; }
+        .pro-btn-add { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 12px; background: #059669; color: #ffffff; font-weight: 700; font-size: 13.5px; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25); }
+        .pro-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; }
+        .pro-card { background: #ffffff; border-radius: 20px; border: 1px solid #E2E8F0; overflow: hidden; transition: all 0.3s ease; position: relative; }
+        .pro-card-img-wrap { position: relative; width: 100%; height: 180px; background: #CBD5E1; }
+        .pro-card-img { width: 100%; height: 100%; object-fit: cover; }
+        .pro-card-body { padding: 16px 18px; }
+        .pro-card-title { font-size: 15px; font-weight: 800; color: #0F172A; margin-bottom: 4px; }
+        .pro-card-price { font-size: 17px; font-weight: 900; color: #059669; }
+        .pro-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .pro-modal-card { background: #ffffff; border-radius: 24px; max-width: 580px; width: 100%; padding: 32px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3); max-height: 90vh; overflow-y: auto; }
+        .pro-field { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #CBD5E1; font-size: 14px; outline: none; margin-bottom: 12px; }
       `}</style>
 
-      <div className="db-page">
-        <nav className="db-nav">
-          <Link href="/" className="db-nav-logo">
-            <div className="db-nav-logo-icon">
-              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
-            <div className="db-nav-logo-text">The 10th Homes</div>
-          </Link>
-          <div className="db-nav-right">
-            <span className="db-nav-name">{user.firstName}</span>
-            <div className="db-nav-avatar">{user.firstName[0]}{user.lastName[0]}</div>
-            <button className="db-logout-btn" onClick={handleLogout}>
-              <LogOut size={14} /> <span>Logout</span>
-            </button>
-          </div>
-        </nav>
-
-        <div className="db-mobile-tabs">
-          {tabs.map(t => (
-            <button key={t.id} className={"db-mobile-tab " + (tab === t.id ? "active" : "")} onClick={() => setTab(t.id)}>
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="db-body">
-          <aside className="db-sidebar">
-            <div style={{marginBottom:"24px"}}>
-              <div className="db-sidebar-label">Menu</div>
-              {tabs.map(t => (
-                <button key={t.id} className={"db-sidebar-btn " + (tab === t.id ? "active" : "")} onClick={() => setTab(t.id)}>
-                  {t.icon} {t.label}
-                </button>
-              ))}
-            </div>
+      <div className="pro-dashboard-wrap">
+        <div className="pro-app-card">
+          {/* LEFT SIDEBAR */}
+          <aside className="pro-sidebar">
             <div>
-              <div className="db-sidebar-label">Quick Links</div>
-              <Link href="/properties" style={{textDecoration:"none"}}><button className="db-sidebar-btn"><Search size={18} /> Browse Properties</button></Link>
-              <Link href="/" style={{textDecoration:"none"}}><button className="db-sidebar-btn"><Home size={18} /> Back to Home</button></Link>
-              <button className="db-sidebar-btn" onClick={handleLogout} style={{ color: "#ef4444", borderTop: "1px solid #E2E8F0", marginTop: "8px", paddingTop: "12px" }}>
-                <LogOut size={18} /> Logout
+              <Link href="/" className="pro-sidebar-brand">
+                <div className="pro-brand-logo">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "15px", fontWeight: 900, color: "#0F172A" }}>The 10th Homes</div>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#059669", textTransform: "uppercase" }}>Realtor Portal</div>
+                </div>
+              </Link>
+
+              <div className="pro-sidebar-section">Menu</div>
+              <button
+                className={`pro-nav-btn ${tab === "overview" ? "active" : ""}`}
+                onClick={() => setTab("overview")}
+              >
+                <LayoutDashboard size={18} />
+                <span>Dashboard</span>
               </button>
+
+              <button
+                className={`pro-nav-btn ${tab === "properties" ? "active" : ""}`}
+                onClick={() => setTab("properties")}
+              >
+                <Home size={18} />
+                <span>My Properties</span>
+                <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 800, background: "#E2E8F0", padding: "2px 8px", borderRadius: "999px" }}>
+                  {properties.length}
+                </span>
+              </button>
+
+              {/* BUYER INQUIRIES & DIRECT CHAT TAB */}
+              <button
+                className={`pro-nav-btn ${tab === "inquiries" ? "active" : ""}`}
+                onClick={() => setTab("inquiries")}
+              >
+                <MessageCircle size={18} />
+                <span>Buyer Inquiries</span>
+                {inquiriesList.length > 0 && (
+                  <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 800, background: "#059669", color: "#ffffff", padding: "2px 8px", borderRadius: "999px" }}>
+                    {inquiriesList.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                className={`pro-nav-btn ${tab === "subscription" ? "active" : ""}`}
+                onClick={() => setTab("subscription")}
+              >
+                <Crown size={18} />
+                <span>Subscription Plan</span>
+              </button>
+
+              <div className="pro-sidebar-section">General</div>
+              <button
+                className={`pro-nav-btn ${tab === "profile" ? "active" : ""}`}
+                onClick={() => setTab("profile")}
+              >
+                <User size={18} />
+                <span>Account Settings</span>
+              </button>
+
+              <button className="pro-nav-btn" onClick={handleLogout} style={{ color: "#EF4444" }}>
+                <LogOut size={18} />
+                <span>Logout</span>
+              </button>
+            </div>
+
+            {/* SIDEBAR BOTTOM UPGRADE CARD */}
+            <div className="pro-upgrade-card">
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                <Sparkles size={16} color="#059669" />
+                <span className="pro-upgrade-title">Realtor Pro Active</span>
+              </div>
+              <p className="pro-upgrade-sub">
+                Logged in as {user.firstName} {user.lastName}. Manage buyer inquiries &amp; properties.
+              </p>
             </div>
           </aside>
 
-          <main className="db-main">
-            {tab === "overview" && (
+          {/* MAIN CONTENT AREA */}
+          <main className="pro-main-content">
+            {/* TOP HEADER */}
+            <div className="pro-top-bar">
               <div>
-                <div className="db-welcome">
-                  <h1>Welcome back, {user.firstName}! 👋</h1>
-                  <p>Here's your realtor dashboard overview.</p>
-                </div>
-                <div className="db-stats">
-                  <div className="db-stat-card"><div className="db-stat-icon"><Home size={18} /></div><div className="db-stat-num">{properties.length}</div><div className="db-stat-lbl">Total Listings</div></div>
-                  <div className="db-stat-card"><div className="db-stat-icon"><Eye size={18} /></div><div className="db-stat-num">0</div><div className="db-stat-lbl">Views</div></div>
-                  <div className="db-stat-card"><div className="db-stat-icon"><MessageCircle size={18} /></div><div className="db-stat-num">0</div><div className="db-stat-lbl">Enquiries</div></div>
-                  <div className="db-stat-card"><div className="db-stat-icon"><Crown size={18} /></div><div className="db-stat-num">{activePlan.name}</div><div className="db-stat-lbl">Plan</div></div>
-                </div>
-
-                <div className="db-listing-usage-card">
-                  <div className="db-listing-usage-top">
-                    <div>
-                      <div className="db-listing-usage-label">Listings Used</div>
-                      <div className="db-listing-usage-numbers">{usedListings} / {typeof remainingListings === "string" ? remainingListings : planListings}</div>
-                    </div>
-                    <div className="db-listing-usage-plan">Plan: <strong>{activePlan.name}</strong></div>
-                  </div>
-                  <div className="db-listing-usage-bar">
-                    <div className="db-listing-usage-fill" style={{
-                      width: planListings === Infinity ? "30%" : Math.min(100, (usedListings / planListings) * 100) + "%",
-                      background: usedListings >= planListings ? "#ef4444" : "linear-gradient(90deg, #D4A017, #b8860c)"
-                    }} />
-                  </div>
-                  {usedListings >= planListings && planListings !== Infinity && (
-                    <div className="db-listing-usage-warning">You've reached your listing limit. Upgrade your plan to add more.</div>
-                  )}
-                </div>
-
-                <div className="db-section-header">
-                  <div className="db-section-title">Recent Listings</div>
-                  <button className="db-add-btn" onClick={() => setShowAddModal(true)}>
-                    <Plus size={16} /> Add Property
-                  </button>
-                </div>
-
-                {properties.length === 0 ? (
-                  <div className="db-empty-state">
-                    <p>You haven't listed any properties yet.</p>
-                    <button className="db-add-btn" style={{ display: "inline-flex", width: "auto" }} onClick={() => setShowAddModal(true)}>
-                      <Plus size={16} /> Add Your First Property
-                    </button>
-                  </div>
-                ) : (
-                  <div className="db-property-grid">
-                    {properties.slice(0,3).map(p => (
-                      <div key={p._id || p.id} className="db-property-card">
-                        <img className="db-property-img" src={p.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80"} alt={p.name} />
-                        <div className="db-property-body">
-                          <div className="db-property-name">{p.name}</div>
-                          <div className="db-property-loc">📍 {p.location}</div>
-                          <div className="db-property-price">{p.priceLabel}</div>
-                          <div className="db-property-actions">
-                            <Link href={"/properties/" + p.slug} className="db-prop-btn" style={{textDecoration:"none"}}>View</Link>
-                            <button className="db-prop-btn edit" onClick={() => openEdit(p)}>Edit</button>
-                            <button className="db-prop-btn delete" onClick={() => handleDeleteProperty(p.id)}>Delete</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {properties.length > 3 && (
-                  <div style={{textAlign:"center", marginTop:"16px"}}>
-                    <button className="db-view-all-btn" onClick={() => setTab("properties")}>
-                      View All ({properties.length})
-                    </button>
-                  </div>
-                )}
+                <h1 className="pro-page-title">
+                  {tab === "inquiries" ? "Buyer Inquiries & Direct Chat Desk" : "Realtor Portal & Estate Listings"}
+                </h1>
+                <p style={{ fontSize: "13.5px", color: "#64748B" }}>
+                  {tab === "inquiries"
+                    ? "View messages sent by buyers from property inspection pages and reply in real-time."
+                    : "Manage, list, and analyze your estate listings on The 10th Homes."}
+                </p>
               </div>
-            )}
 
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
+                <button
+                  className="pro-btn-add"
+                  onClick={() => { resetForm(); setShowAddModal(true); }}
+                >
+                  <Plus size={18} />
+                  <span>Add Property</span>
+                </button>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "10px", borderLeft: "1px solid #CBD5E1" }}>
+                  <div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#059669", color: "#fff", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>
+                    {user.firstName[0]}{user.lastName[0]}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 800, color: "#0F172A" }}>{user.firstName} {user.lastName}</div>
+                    <div style={{ fontSize: "11px", color: "#64748B" }}>{user.email}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* TAB CONTENT: PROPERTIES */}
             {tab === "properties" && (
               <div>
-                <div className="db-section-header">
-                  <div className="db-welcome" style={{marginBottom:0}}>
-                    <h1>My Properties</h1>
-                    <p>Manage all your property listings.</p>
+                <div className="pro-filter-bar">
+                  <div className="pro-filter-chips">
+                    {["All", "For Sale", "For Rent"].map((status) => (
+                      <button
+                        key={status}
+                        className={`pro-chip ${filterStatus === status ? "active" : ""}`}
+                        onClick={() => setFilterStatus(status)}
+                      >
+                        {status}
+                      </button>
+                    ))}
                   </div>
-                  <button className="db-add-btn" onClick={() => setShowAddModal(true)}>
-                    <Plus size={16} /> Add Property
-                  </button>
+                  <span style={{ fontSize: "13px", color: "#64748B", fontWeight: 600 }}>
+                    Showing {filteredProperties.length} of {properties.length} properties
+                  </span>
                 </div>
-                {properties.length === 0 ? (
-                  <div className="db-empty-state">
-                    <p>You haven't listed any properties yet.</p>
-                    <button className="db-add-btn" style={{ display: "inline-flex", width: "auto" }} onClick={() => setShowAddModal(true)}>
-                      <Plus size={16} /> Add Your First Property
-                    </button>
+
+                {filteredProperties.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "20px", border: "1px solid #E2E8F0" }}>
+                    <Home size={40} color="#94A3B8" style={{ marginBottom: "12px" }} />
+                    <h3 style={{ fontSize: "17px", fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>No properties found</h3>
+                    <p style={{ fontSize: "13.5px", color: "#64748B", margin: "0 0 20px" }}>Click "+ Add Property" to publish your first estate listing.</p>
                   </div>
                 ) : (
-                  <div className="db-property-grid">
-                    {properties.map(p => (
-                      <div key={p._id || p.id} className="db-property-card">
-                        <img className="db-property-img" src={p.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80"} alt={p.name} />
-                        <div className="db-property-body">
-                          <div className="db-property-name">{p.name}</div>
-                          <div className="db-property-loc">📍 {p.location}</div>
-                          <div className="db-property-price">{p.priceLabel}</div>
-                          <div className="db-property-actions">
-                            <Link href={"/properties/" + p.slug} className="db-prop-btn" style={{textDecoration:"none"}}>View</Link>
-                            <button className="db-prop-btn edit" onClick={() => openEdit(p)}>Edit</button>
-                            <button className="db-prop-btn delete" onClick={() => handleDeleteProperty(p.id)}>Delete</button>
-                          </div>
+                  <div className="pro-grid">
+                    {filteredProperties.map((p) => (
+                      <div key={p._id || p.id} className="pro-card">
+                        <div className="pro-card-img-wrap">
+                          <img
+                            src={p.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80"}
+                            alt={p.name}
+                            className="pro-card-img"
+                          />
+                          <span className="pro-card-badge">{p.type || "Residential"}</span>
+                        </div>
+                        <div className="pro-card-body">
+                          <h4 className="pro-card-title">{p.name}</h4>
+                          <p className="pro-card-loc">{p.location}</p>
+                          <div className="pro-card-price">{formatPrice(p.price)}</div>
                         </div>
                       </div>
                     ))}
@@ -479,164 +441,202 @@ export default function RealtorDashboard() {
               </div>
             )}
 
+            {/* TAB CONTENT: BUYER INQUIRIES & LIVE CHAT DESK */}
+            {tab === "inquiries" && (
+              <div>
+                {inquiriesList.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "20px", border: "1px solid #E2E8F0" }}>
+                    <MessageCircle size={44} color="#059669" style={{ marginBottom: "12px" }} />
+                    <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>No buyer inquiries yet</h3>
+                    <p style={{ fontSize: "14px", color: "#64748B" }}>
+                      When buyers send direct messages on your property inspection pages, they will appear here instantly.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: "24px" }}>
+                    {/* Left: Inquiries List */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {inquiriesList.map((inq) => (
+                        <div
+                          key={inq.id}
+                          onClick={() => setSelectedInquiry(inq)}
+                          style={{
+                            background: selectedInquiry?.id === inq.id ? "#ECFDF5" : "#ffffff",
+                            border: selectedInquiry?.id === inq.id ? "1.5px solid #059669" : "1px solid #E2E8F0",
+                            borderRadius: "16px",
+                            padding: "16px",
+                            cursor: "pointer",
+                            transition: "all 0.2s",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                            <span style={{ fontSize: "14px", fontWeight: 800, color: "#0F172A" }}>{inq.buyerName}</span>
+                            <span style={{ fontSize: "11px", color: "#64748B" }}>{inq.time}</span>
+                          </div>
+                          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#059669", marginBottom: "6px" }}>
+                            {inq.propertyName}
+                          </div>
+                          <div style={{ fontSize: "13px", color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {inq.message}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Right: Selected Inquiry & Reply Drawer */}
+                    {selectedInquiry && (
+                      <div style={{ background: "#ffffff", borderRadius: "20px", border: "1px solid #E2E8F0", padding: "28px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px", paddingBottom: "16px", borderBottom: "1px solid #E2E8F0" }}>
+                            <div>
+                              <span style={{ fontSize: "11px", fontWeight: 800, color: "#059669", textTransform: "uppercase" }}>
+                                Buyer Property Inquiry
+                              </span>
+                              <h3 style={{ fontSize: "19px", fontWeight: 900, color: "#0F172A", margin: "4px 0 0" }}>
+                                {selectedInquiry.propertyName}
+                              </h3>
+                              <p style={{ fontSize: "13px", color: "#64748B", marginTop: "2px" }}>
+                                Location: {selectedInquiry.propertyLocation || "Lagos"}
+                              </p>
+                            </div>
+
+                            <span style={{ background: "#ECFDF5", color: "#059669", padding: "6px 14px", borderRadius: "30px", fontSize: "12px", fontWeight: 800 }}>
+                              Active Buyer Message
+                            </span>
+                          </div>
+
+                          <div style={{ background: "#F8FAFC", borderRadius: "16px", padding: "18px", marginBottom: "24px", border: "1px solid #E2E8F0" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                              <UserCheck size={18} color="#059669" />
+                              <span style={{ fontSize: "14px", fontWeight: 800, color: "#0F172A" }}>{selectedInquiry.buyerName}</span>
+                              <span style={{ fontSize: "12px", color: "#64748B" }}>({selectedInquiry.buyerPhone || "Verified Buyer"})</span>
+                            </div>
+                            <p style={{ fontSize: "14px", color: "#334155", lineHeight: 1.6 }}>
+                              "{selectedInquiry.message}"
+                            </p>
+                          </div>
+                        </div>
+
+                        <form onSubmit={handleSendRealtorReply}>
+                          <label style={{ display: "block", fontSize: "12px", fontWeight: 800, color: "#059669", marginBottom: "8px", textTransform: "uppercase" }}>
+                            Send Direct Reply to Buyer
+                          </label>
+                          <div style={{ display: "flex", gap: "10px" }}>
+                            <input
+                              type="text"
+                              placeholder={`Reply to ${selectedInquiry.buyerName}...`}
+                              value={replyInput}
+                              onChange={(e) => setReplyInput(e.target.value)}
+                              className="pro-field"
+                              style={{ marginBottom: 0, flex: 1 }}
+                              required
+                            />
+                            <button type="submit" className="pro-btn-add" style={{ padding: "12px 24px" }}>
+                              <Send size={16} /> Send Reply
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB: SUBSCRIPTION */}
             {tab === "subscription" && (
               <div>
-                <div className="db-welcome"><h1>Subscription Plans</h1><p>Choose a plan that fits your needs.</p></div>
-                <div className="db-plan-grid">
-                  {SUBSCRIPTION_PLANS.map(plan => {
-                    const isActive = activePlan.id === plan.id;
-                    return (
-                      <div key={plan.id} className={"db-plan-card" + (plan.id === "plus" ? " popular" : "")}>
-                        <div className="icon-wrap">{plan.icon}</div>
-                        <div className="db-plan-name">{plan.name}</div>
-                        <div className="db-plan-price">{plan.price}</div>
-                        <div className="db-plan-listing">{plan.listings === "Unlimited" ? "Unlimited listings" : plan.listings + " listings"}</div>
-                        <ul className="db-plan-features">{plan.features.map((f,i) => <li key={i}><CheckCircle2 size={14} /> {f}</li>)}</ul>
-                        <button className={"db-plan-btn " + (isActive ? "active" : "")} disabled={isActive}>{isActive ? "Current Plan" : "Upgrade"}</button>
-                      </div>
-                    );
-                  })}
+                <h3 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "16px" }}>Subscription Plans</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+                  {SUBSCRIPTION_PLANS.map((plan) => (
+                    <div key={plan.id} style={{ background: "#ffffff", borderRadius: "18px", border: "1.5px solid #E2E8F0", padding: "24px" }}>
+                      <div style={{ fontSize: "18px", fontWeight: 800, color: "#0F172A" }}>{plan.name}</div>
+                      <div style={{ fontSize: "24px", fontWeight: 900, color: "#059669", margin: "8px 0 16px" }}>{plan.price}</div>
+                      <button style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "#059669", color: "#fff", fontWeight: 700, border: "none", cursor: "pointer" }}>
+                        Select Plan
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
+            {/* TAB: PROFILE */}
             {tab === "profile" && (
-              <div>
-                <div className="db-welcome">
-                  <h1>My Profile</h1>
-                  <p>Your account information.</p>
-                  {saveMessage && <div className={"db-save-message " + (saveMessage.includes("Error") ? "error" : "success")}>{saveMessage}</div>}
+              <div style={{ background: "#ffffff", padding: "28px", borderRadius: "20px", border: "1px solid #E2E8F0", maxWidth: "560px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 800, marginBottom: "16px" }}>Account Settings</h3>
+                {saveMessage && <div style={{ padding: "10px", background: "#ECFDF5", color: "#047857", borderRadius: "8px", marginBottom: "12px", fontSize: "13px" }}>{saveMessage}</div>}
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 600, color: "#64748B", marginBottom: "4px" }}>First Name</label>
+                  <input type="text" value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} className="pro-field" />
                 </div>
-                <div className="db-profile-card">
-                  <div className="db-profile-avatar">
-                    <div className="db-profile-avatar-circle">{user.firstName[0]}{user.lastName[0]}</div>
-                    <div><div className="db-profile-name">{user.firstName} {user.lastName}</div><div className="db-profile-role">{user.role}</div></div>
-                  </div>
-                  {isEditing ? (
-                    <>
-                      <div className="db-profile-row">
-                        <span className="db-profile-row-label">First Name</span>
-                        <input className="db-profile-edit-input" name="firstName" value={editForm.firstName} onChange={handleEditProfile} style={{ maxWidth: "200px" }} />
-                      </div>
-                      <div className="db-profile-row">
-                        <span className="db-profile-row-label">Last Name</span>
-                        <input className="db-profile-edit-input" name="lastName" value={editForm.lastName} onChange={handleEditProfile} style={{ maxWidth: "200px" }} />
-                      </div>
-                      <div className="db-profile-row">
-                        <span className="db-profile-row-label">Phone</span>
-                        <input className="db-profile-edit-input" name="phone" value={editForm.phone} onChange={handleEditProfile} placeholder="080XXXXXXXX" style={{ maxWidth: "200px" }} />
-                      </div>
-                      <div className="db-profile-row">
-                        <span className="db-profile-row-label">Email</span>
-                        <span className="db-profile-row-value">{user.email}</span>
-                      </div>
-                      <div className="db-profile-edit-actions">
-                        <button className="db-profile-save-btn" onClick={saveProfile}><Save size={16} /> Save</button>
-                        <button className="db-profile-cancel-btn" onClick={() => { setIsEditing(false); setEditForm({ firstName: user.firstName, lastName: user.lastName, phone: user.phone || "" }); }}><X size={16} /> Cancel</button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="db-profile-row"><span className="db-profile-row-label">First Name</span><span className="db-profile-row-value">{user.firstName}</span></div>
-                      <div className="db-profile-row"><span className="db-profile-row-label">Last Name</span><span className="db-profile-row-value">{user.lastName}</span></div>
-                      <div className="db-profile-row"><span className="db-profile-row-label">Phone</span><span className="db-profile-row-value">{user.phone || "Not set"}</span></div>
-                      <div className="db-profile-row"><span className="db-profile-row-label">Email</span><span className="db-profile-row-value">{user.email}</span></div>
-                      <div className="db-profile-row"><span className="db-profile-row-label">Role</span><span className="db-profile-row-value">{user.role}</span></div>
-                      <div className="db-profile-row"><span className="db-profile-row-label">Plan</span><span className="db-profile-row-value">{activePlan.name} (read‑only)</span></div>
-                      <div className="db-profile-row"><span className="db-profile-row-label">Member Since</span><span className="db-profile-row-value">{new Date(user.createdAt).toLocaleDateString("en-NG", { year:"numeric", month:"long", day:"numeric" })}</span></div>
-                      <button className="db-profile-edit-btn" style={{ marginTop: "16px" }} onClick={() => { setIsEditing(true); setEditForm({ firstName: user.firstName, lastName: user.lastName, phone: user.phone || "" }); }}>
-                        <Edit2 size={16} /> Edit Profile
-                      </button>
-                    </>
-                  )}
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 600, color: "#64748B", marginBottom: "4px" }}>Last Name</label>
+                  <input type="text" value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} className="pro-field" />
                 </div>
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 600, color: "#64748B", marginBottom: "4px" }}>Phone Number</label>
+                  <input type="text" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="pro-field" />
+                </div>
+                <button onClick={saveProfile} style={{ padding: "11px 24px", borderRadius: "10px", background: "#059669", color: "#fff", fontWeight: 700, border: "none", cursor: "pointer" }}>
+                  Save Profile
+                </button>
               </div>
             )}
           </main>
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* ADD / EDIT PROPERTY MODAL */}
       {(showAddModal || editingProperty) && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowAddModal(false); setEditingProperty(null); resetForm(); } }}>
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>{editingProperty ? "Edit Property" : "Add New Property"}</h2>
-              <button className="modal-close" onClick={() => { setShowAddModal(false); setEditingProperty(null); resetForm(); }}><X size={24} /></button>
+        <div className="pro-modal-overlay">
+          <div className="pro-modal-card">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: 800, margin: 0 }}>{editingProperty ? "Edit Property Listing" : "Add New Property Listing"}</h3>
+              <button onClick={() => { setShowAddModal(false); setEditingProperty(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#64748B" }}>
+                <X size={20} />
+              </button>
             </div>
-            <div className="form-group"><label className="form-label">Property Name *</label><input className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Luxury Duplex in Lekki" /></div>
-            <div className="form-group"><label className="form-label">Location *</label><input className="form-input" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="e.g. Lekki Phase 1, Lagos" /></div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Price *</label><input className="form-input" type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} placeholder="150000000" /></div>
-              <div className="form-group"><label className="form-label">Price Label *</label><input className="form-input" value={formData.priceLabel} onChange={e => setFormData({...formData, priceLabel: e.target.value})} placeholder="₦150,000,000" /></div>
+
+            <div style={{ marginBottom: "12px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 700, color: "#475569" }}>Property Name</label>
+              <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="pro-field" placeholder="e.g. Modern Downtown Villa" />
             </div>
-            <div className="form-group"><label className="form-label">Property Type *</label><input className="form-input" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} placeholder="e.g. Duplex, Land, Apartment" /></div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Beds</label><input className="form-input" type="number" value={formData.beds} onChange={e => setFormData({...formData, beds: e.target.value})} placeholder="3" /></div>
-              <div className="form-group"><label className="form-label">Baths</label><input className="form-input" type="number" value={formData.baths} onChange={e => setFormData({...formData, baths: e.target.value})} placeholder="2" /></div>
-            </div>
-            <div className="form-group"><label className="form-label">Size</label><input className="form-input" value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 250 sqm, 1 Acre" /></div>
-            <div className="form-group">
-              <label className="form-label">Property Image *</label>
-              {formData.image && (
-                <div style={{ position: "relative", marginBottom: "8px", borderRadius: "8px", overflow: "hidden", height: "120px", border: "1px solid #E2E8F0" }}>
-                  <img src={formData.image} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <button type="button" onClick={() => setFormData({...formData, image: ""})} style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(15,23,42,0.8)", border: "none", color: "#fff", borderRadius: "50%", padding: "4px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={14} /></button>
-                </div>
-              )}
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  id="realtor-file-upload"
-                  style={{ display: "none" }} 
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setUploadLoading(true);
-                    try {
-                      const url = await uploadToCloudinary(file);
-                      setFormData(prev => ({ ...prev, image: url }));
-                    } catch (err) {
-                      alert(err.message + ". Using demo fallback image.");
-                      setFormData(prev => ({ ...prev, image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80" }));
-                    } finally {
-                      setUploadLoading(false);
-                    }
-                  }} 
-                />
-                <label 
-                  htmlFor="realtor-file-upload" 
-                  style={{ 
-                    display: "inline-flex", 
-                    alignItems: "center", 
-                    gap: "6px", 
-                    padding: "10px 16px", 
-                    borderRadius: "10px", 
-                    border: "1.5px dashed #D4A017", 
-                    color: "#D4A017", 
-                    fontWeight: 600, 
-                    fontSize: "13px", 
-                    cursor: "pointer", 
-                    background: "rgba(212,160,23,0.05)",
-                    flexShrink: 0
-                  }}
-                >
-                  {uploadLoading ? "Uploading..." : "Upload Image"}
-                </label>
-                <input 
-                  className="form-input" 
-                  value={formData.image} 
-                  onChange={e => setFormData({...formData, image: e.target.value})} 
-                  placeholder="Or paste image URL" 
-                />
+
+            <div className="pro-input-grid">
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "#475569" }}>Location</label>
+                <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="pro-field" placeholder="e.g. Lekki Phase 1, Lagos" />
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "#475569" }}>Price (₦)</label>
+                <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="pro-field" placeholder="e.g. 85000000" />
               </div>
             </div>
-            <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Describe your property..." /></div>
-            <div className="form-group"><label className="form-label">Features (comma separated)</label><input className="form-input" value={formData.features} onChange={e => setFormData({...formData, features: e.target.value})} placeholder="Gated estate, 24/7 security, Swimming pool" /></div>
-            <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="08168426592" /></div>
-            <button className="form-submit" onClick={editingProperty ? handleEditProperty : handleAddProperty}>
-              {editingProperty ? "Update Property" : "Add Property"}
+
+            <div className="pro-input-grid">
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "#475569" }}>Bedrooms</label>
+                <input type="number" value={formData.beds} onChange={(e) => setFormData({ ...formData, beds: e.target.value })} className="pro-field" placeholder="e.g. 4" />
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "#475569" }}>Bathrooms</label>
+                <input type="number" value={formData.baths} onChange={(e) => setFormData({ ...formData, baths: e.target.value })} className="pro-field" placeholder="e.g. 4" />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "12px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 700, color: "#475569" }}>Image File or URL</label>
+              <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "block", marginBottom: "6px" }} />
+              {uploadLoading && <span style={{ fontSize: "12px", color: "#059669" }}>Uploading image...</span>}
+              <input type="text" value={formData.image} onChange={(e) => setFormData({ ...formData, image: e.target.value })} className="pro-field" placeholder="or enter Image URL" />
+            </div>
+
+            <button
+              onClick={editingProperty ? handleEditProperty : handleAddProperty}
+              style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#059669", color: "#fff", fontWeight: 800, border: "none", cursor: "pointer", marginTop: "10px" }}
+            >
+              {editingProperty ? "Update Listing" : "Publish Listing"}
             </button>
           </div>
         </div>
