@@ -38,9 +38,14 @@ const faqs = [
     categoryLabel: "Inspection & Process",
     question: "Can I do a site inspection before buying?",
     answer: "Yes, site inspections are available for all our properties. We strongly encourage all buyers to visit the site before making any payment. Reach out to us on 08168426592 to schedule a free inspection visit at your convenience. For diaspora investors, we can arrange live HD video tours with our on-ground team.",
+  },
+  {
+    id: "06",
+    category: "booking",
+    categoryLabel: "Short-Let & Reservations",
+    question: "How do short-let apartment bookings and stay reservations work?",
+    answer: "You can easily reserve short-let apartments and luxury suites directly on our platform. Select your check-in dates, number of guests, and complete your reservation online or via instant WhatsApp concierge. You will receive immediate booking confirmation and full check-in details.",
   }
-
-
 ];
 
 export default function FAQ() {
